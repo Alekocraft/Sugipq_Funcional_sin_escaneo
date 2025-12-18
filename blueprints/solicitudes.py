@@ -55,7 +55,8 @@ def listar_solicitudes():
         rol = (session.get('rol') or '').lower()
         oficina_id = session.get('oficina_id')
 
-        if rol in ['administrador', 'aprobador', 'lider_inventario', 'oficina_coq']:
+        if rol in ['administrador', 'aprobador', 'lider_inventario'
+                   , 'oficina_coq']:
             if filtro_oficina != 'todas' and str(filtro_oficina).isdigit():
                 solicitudes = SolicitudModel.obtener_todas_ordenadas(int(filtro_oficina))
             else:
@@ -363,11 +364,6 @@ def api_solicitudes_pendientes():
 # NOVEDADES 
 # ==========
 
-@solicitudes_bp.route('/test-novedad')
-@login_required
-def test_novedad_form():
-    return render_template('test_novedad.html')
-
 
 @solicitudes_bp.route('/registrar-novedad', methods=['POST'])
 @login_required
@@ -431,8 +427,8 @@ def registrar_novedad():
         return jsonify({'success': False, 'message': 'Error interno del servidor'}), 500
 
 
-@solicitudes_bp.route('/api/<int:solicitud_id>/novedad')
-@login_required
+@solicitudes_bp.route('/api/<int:solicitud_id>/novedad') 
+@role_required('administrador', 'aprobador', 'lider_inventario')
 def obtener_novedad_solicitud(solicitud_id):
     """Obtiene la última novedad de una solicitud - CORREGIDA CON CLAVES DE SESIÓN"""
     print(f"🔍 DEBUG obtener_novedad_solicitud: Llamando con solicitud_id={solicitud_id}")
