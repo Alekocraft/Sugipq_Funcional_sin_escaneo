@@ -92,8 +92,14 @@
     <Compile Include="utils\helpers.py" />
     <Compile Include="utils\ldap_auth.py" />
     <Compile Include="utils\permissions.py" />
+    <Compile Include="utils\permissions_functions.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="envirt\" />
+    <Folder Include="envirt\Lib\" />
+    <Folder Include="envirt\Lib\site-packages\" />
+    <Folder Include="envirt\Lib\site-packages\importlib_metadata\" />
+    <Folder Include="envirt\Lib\site-packages\importlib_metadata\compat\" />
     <Folder Include="models\" />
     <Folder Include="blueprints\" />
     <Folder Include="config\" />

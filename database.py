@@ -12,13 +12,9 @@ class Database:
     Utiliza autenticación integrada de Windows (Trusted_Connection)
     """
     def __init__(self):
-        # CORREGIDO: Agregar nombre de instancia SQLEXPRESS
-        self.server = 'localhost\\SQLEXPRESS'  # ← CAMBIO CRÍTICO AQUÍ
         
-        # Alternativas si esta no funciona (descomenta una):
-        # self.server = '.\\SQLEXPRESS'           # Usar punto para localhost
-        # self.server = '127.0.0.1\\SQLEXPRESS'   # Usar IP local
-        # self.server = '(local)\\SQLEXPRESS'     # Usar alias local
+        self.server = 'localhost\\SQLEXPRESS'   
+       
         
         self.database = 'SistemaGestionInventariost'
         self.driver = '{ODBC Driver 17 for SQL Server}'

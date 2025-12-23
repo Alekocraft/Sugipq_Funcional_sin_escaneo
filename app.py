@@ -1,4 +1,6 @@
-﻿import os
+﻿#app/app.py
+
+import os
 import logging
 from datetime import datetime
 from flask import (
@@ -16,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Configuración de logging para LDAP
 ldap_logger = logging.getLogger('ldap3')
-ldap_logger.setLevel(logging.WARNING)  # Cambiar a DEBUG para troubleshooting
+ldap_logger.setLevel(logging.WARNING)
 
 # Configurar formato para LDAP
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -53,8 +55,20 @@ from utils.initialization import inicializar_oficina_principal
 from utils.permissions import (
     can_access, can_view_actions,
     get_accessible_modules,
-    can_create_novedad, can_manage_novedad
+    can_create_novedad, can_manage_novedad,
+    can_approve_solicitud, can_approve_partial_solicitud,
+    can_reject_solicitud, can_return_solicitud,
+    can_view_novedades
 )
+
+# Importar funciones de permisos para templates
+try:
+    from utils.permissions_functions import PERMISSION_FUNCTIONS
+    logger.info("Funciones de permisos para templates cargadas correctamente")
+except ImportError as e:
+    logger.warning(f"No se encontró permissions_functions.py, usando funciones por defecto: {e}")
+    # Definir funciones por defecto si no existe el archivo
+    PERMISSION_FUNCTIONS = {}
 
 # Importación de blueprints principales (siempre disponibles)
 from blueprints.auth import auth_bp
@@ -124,19 +138,183 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 logger.info(f"Directorio de uploads configurado en: {os.path.abspath(UPLOAD_FOLDER)}")
 
-# Context processor para funciones de utilidad en templates
+
+# ============================================================================
+# FUNCIONES DE PERMISOS PARA TEMPLATES (DEFINIDAS LOCALMENTE)
+# ============================================================================
+
+# Roles con permisos completos
+ROLES_GESTION_COMPLETA = ['administrador', 'lider_inventario', 'aprobador']
+
+# Roles de oficina
+ROLES_OFICINA = [
+    'oficina_coq', 'oficina_cali', 'oficina_pereira', 'oficina_neiva',
+    'oficina_kennedy', 'oficina_bucaramanga', 'oficina_polo_club',
+    'oficina_nogal', 'oficina_tunja', 'oficina_cartagena', 'oficina_morato',
+    'oficina_medellin', 'oficina_cedritos', 'oficina_lourdes', 'oficina_regular'
+]
+
+
+def get_user_role():
+    """Obtiene el rol del usuario actual"""
+    return session.get('rol', '').lower()
+
+
+def has_gestion_completa():
+    """Verifica si el usuario tiene permisos de gestión completa"""
+    return get_user_role() in ROLES_GESTION_COMPLETA
+
+
+def is_oficina_role():
+    """Verifica si el usuario tiene rol de oficina"""
+    return get_user_role() in ROLES_OFICINA
+
+
+def can_create_or_view():
+    """Verifica si puede crear novedades o ver detalles"""
+    rol = get_user_role()
+    return rol in ROLES_GESTION_COMPLETA or rol in ROLES_OFICINA
+
+
+def should_show_devolucion_button(solicitud):
+    """Determina si mostrar botón de devolución"""
+    if not solicitud:
+        return False
+    if not can_create_or_view():
+        return False
+    
+    estado_id = solicitud.get('estado_id') or 1
+    estados_permitidos = [2, 4, 5]  # Aprobada, Entregada Parcial, Completada
+    
+    if estado_id not in estados_permitidos:
+        return False
+    
+    cantidad_entregada = solicitud.get('cantidad_entregada', 0) or 0
+    cantidad_devuelta = solicitud.get('cantidad_devuelta', 0) or 0
+    
+    return cantidad_entregada > cantidad_devuelta
+
+
+def should_show_novedad_button(solicitud):
+    """Determina si mostrar botón de crear novedad"""
+    if not solicitud:
+        return False
+    if not can_create_or_view():
+        return False
+    
+    estado_id = solicitud.get('estado_id') or 1
+    estados_permitidos = [2, 4, 5]  # Aprobada, Entregada Parcial, Completada
+    estados_con_novedad = [7, 8, 9]
+    
+    if estado_id in estados_con_novedad:
+        return False
+    
+    return estado_id in estados_permitidos
+
+
+def should_show_gestion_novedad_button(solicitud):
+    """Determina si mostrar botón de gestionar novedad (aprobar/rechazar)"""
+    if not solicitud:
+        return False
+    if not has_gestion_completa():
+        return False
+    
+    estado_id = solicitud.get('estado_id') or 1
+    return estado_id == 7  # Novedad Registrada
+
+
+def should_show_aprobacion_buttons(solicitud):
+    """Determina si mostrar botones de aprobación/rechazo de solicitudes"""
+    if not solicitud:
+        return False
+    if not has_gestion_completa():
+        return False
+    
+    estado_id = solicitud.get('estado_id') or 1
+    return estado_id == 1  # Pendiente
+
+
+def should_show_detalle_button(solicitud):
+    """Determina si mostrar botón de ver detalles"""
+    return solicitud is not None and can_create_or_view()
+
+
+# ============================================================================
+# CONTEXT PROCESSOR
+# ============================================================================
+
 @app.context_processor
 def utility_processor():
     """Inyecta funciones de permisos en todos los templates"""
-    return dict(
-        can_create_novedad=can_create_novedad,
-        can_manage_novedad=can_manage_novedad,
-        can_access=can_access,
-        can_view_actions=can_view_actions,
-        get_accessible_modules=get_accessible_modules
-    )
+    all_functions = {}
+    
+    # Agregar funciones principales de utils.permissions
+    try:
+        from utils.permissions import (
+            can_access, can_create_novedad, can_manage_novedad,
+            can_view_novedades, can_approve_solicitud, 
+            can_reject_solicitud, can_return_solicitud,
+            can_approve_partial_solicitud, can_view_actions,
+            get_accessible_modules
+        )
+        
+        all_functions.update({
+            'can_access': can_access,
+            'can_create_novedad': can_create_novedad,
+            'can_manage_novedad': can_manage_novedad,
+            'can_view_novedades': can_view_novedades,
+            'can_approve_solicitud': can_approve_solicitud,
+            'can_reject_solicitud': can_reject_solicitud,
+            'can_return_solicitud': can_return_solicitud,
+            'can_approve_partial_solicitud': can_approve_partial_solicitud,
+            'can_view_actions': can_view_actions,
+            'get_accessible_modules': get_accessible_modules
+        })
+    except ImportError as e:
+        logger.error(f"No se pudieron importar funciones de permisos: {e}")
+    
+    # Agregar funciones de PERMISSION_FUNCTIONS si existen
+    if PERMISSION_FUNCTIONS:
+        all_functions.update(PERMISSION_FUNCTIONS)
+    
+    # AGREGAR FUNCIONES should_show_* LOCALES (SIEMPRE)
+    all_functions.update({
+        'should_show_devolucion_button': should_show_devolucion_button,
+        'should_show_novedad_button': should_show_novedad_button,
+        'should_show_gestion_novedad_button': should_show_gestion_novedad_button,
+        'should_show_aprobacion_buttons': should_show_aprobacion_buttons,
+        'should_show_detalle_button': should_show_detalle_button,
+        'has_gestion_completa': has_gestion_completa,
+        'is_oficina_role': is_oficina_role,
+        'can_create_or_view': can_create_or_view,
+        'get_user_role': get_user_role,
+    })
+    
+    # Funciones adicionales
+    def can_view_solicitud_detalle():
+        """Todos los roles pueden ver detalles de solicitudes"""
+        return True
+    
+    def get_estados_novedad():
+        """Obtiene los estados de novedad"""
+        return {
+            'registrada': 'registrada',
+            'aceptada': 'aceptada', 
+            'rechazada': 'rechazada'
+        }
+    
+    all_functions.update({
+        'can_view_solicitud_detalle': can_view_solicitud_detalle,
+        'get_estados_novedad': get_estados_novedad
+    })
+    
+    return all_functions
 
-# Registro de blueprints principales
+
+# ============================================================================
+# REGISTRO DE BLUEPRINTS
+# ============================================================================
+
 app.register_blueprint(solicitudes_bp, url_prefix='/solicitudes')
 app.register_blueprint(auth_bp)
 app.register_blueprint(materiales_bp)
@@ -146,41 +324,91 @@ app.register_blueprint(reportes_bp)
 app.register_blueprint(api_bp)
 app.register_blueprint(usuarios_bp)
 
-# Registro de blueprints opcionales
+# Blueprints opcionales
 app.register_blueprint(prestamos_bp, url_prefix='/prestamos')
 logger.info("Blueprint de préstamos registrado")
 
 app.register_blueprint(inventario_corporativo_bp, url_prefix='/inventario-corporativo')
 logger.info("Blueprint de inventario corporativo registrado")
 
-# Ruta principal y redirección
+
+# ============================================================================
+# RUTAS PRINCIPALES
+# ============================================================================
+
 @app.route('/')
 def index():
     """Redirige usuarios autenticados al dashboard, otros al login"""
-    if 'user_id' in session:
+    if 'usuario_id' in session:
         return redirect('/dashboard')
     return redirect('/auth/login')
+
 
 @app.route('/dashboard')
 def dashboard():
     """Página principal del dashboard de la aplicación"""
-    if 'user_id' not in session:
+    if 'usuario_id' not in session:
         logger.warning("Intento de acceso al dashboard sin autenticación")
         return redirect('/auth/login')
-    return render_template('dashboard.html')
+    
+    # Cargar datos para el dashboard
+    from models.materiales_model import MaterialModel
+    from models.oficinas_model import OficinaModel
+    from models.solicitudes_model import SolicitudModel
+    from models.usuarios_model import UsuarioModel
+    from utils.permissions import user_can_view_all
+    
+    try:
+        oficina_id = None if user_can_view_all() else session.get('oficina_id')
+        
+        materiales = MaterialModel.obtener_todos(oficina_id) or []
+        oficinas = OficinaModel.obtener_todas() or []
+        solicitudes = SolicitudModel.obtener_todas(oficina_id) or []
+        aprobadores = UsuarioModel.obtener_aprobadores() or []
+        
+        return render_template('dashboard.html',
+            materiales=materiales,
+            oficinas=oficinas,
+            solicitudes=solicitudes,
+            aprobadores=aprobadores
+        )
+    except Exception as e:
+        logger.error(f"Error cargando dashboard: {e}")
+        return render_template('dashboard.html',
+            materiales=[],
+            oficinas=[],
+            solicitudes=[],
+            aprobadores=[]
+        )
 
-# Manejadores de errores
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    """Redirige logout al blueprint de auth"""
+    return redirect('/auth/logout')
+
+@app.route('/test-ldap', methods=['GET', 'POST'])
+def test_ldap():
+    """Redirige a la ruta de test-ldap en auth"""
+    return redirect('/auth/test-ldap')
+
+
+# ============================================================================
+# MANEJADORES DE ERRORES
+# ============================================================================
+
 @app.errorhandler(404)
 def pagina_no_encontrada(error):
     """Maneja errores 404 - Página no encontrada"""
     logger.warning(f"Página no encontrada: {request.path}")
     return render_template('error/404.html'), 404
 
+
 @app.errorhandler(500)
 def error_interno(error):
     """Maneja errores 500 - Error interno del servidor"""
     logger.error(f"Error interno del servidor: {error}", exc_info=True)
     return render_template('error/500.html'), 500
+
 
 @app.errorhandler(413)
 def archivo_demasiado_grande(error):
@@ -189,7 +417,11 @@ def archivo_demasiado_grande(error):
     flash('El archivo es demasiado grande. Tamaño máximo: 16MB', 'danger')
     return redirect(request.url)
 
-# Punto de entrada de la aplicación
+
+# ============================================================================
+# PUNTO DE ENTRADA
+# ============================================================================
+
 if __name__ == '__main__':
     logger.info("Iniciando servidor Flask de Sistema de Gestión de Inventarios")
     logger.info(f"Logging de LDAP activo en: {ldap_log_file}")

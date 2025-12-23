@@ -88,7 +88,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background-color: #532D8C;">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="/dashboard">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('dashboard') }}">
                 <img src="{{ url_for('static', filename='images/Qualitas_Logo.svg') }}" alt="Quálitas" height="70" class="me-2">
                 <div class="d-flex flex-column">
                     <span>Sistema de Inventarios</span>
@@ -104,7 +104,7 @@
                 {% if current_path.startswith('/inventario-corporativo') %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if current_path == '/dashboard' %}active{% endif %}" href="/dashboard">
+                        <a class="nav-link {% if current_path == '/dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                             <i class="fas fa-tachometer-alt me-1"></i> Dashboard
                         </a>
                     </li>
@@ -114,21 +114,21 @@
                                              and not current_path.startswith('/inventario-corporativo/sede-principal') 
                                              and not current_path.startswith('/inventario-corporativo/oficinas-servicio') 
                                              and not current_path.startswith('/inventario-corporativo/crear') %}active{% endif %}" 
-                           href="/inventario-corporativo">
+                           href="{{ url_for('inventario_corporativo.listar') }}">
                             <i class="fas fa-boxes me-1"></i> Todos los Productos
                         </a>
                     </li>
 
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/inventario-corporativo/sede-principal') %}active{% endif %}" 
-                           href="/inventario-corporativo/sede-principal">
+                           href="{{ url_for('inventario_corporativo.sede_principal') }}">
                             <i class="fas fa-building me-1"></i> Sede Principal
                         </a>
                     </li>
 
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/inventario-corporativo/oficinas-servicio') %}active{% endif %}" 
-                           href="/inventario-corporativo/oficinas-servicio">
+                           href="{{ url_for('inventario_corporativo.oficinas_servicio') }}">
                             <i class="fas fa-map-marker-alt me-1"></i> Oficinas de Servicio
                         </a>
                     </li>
@@ -136,7 +136,7 @@
                     {% if can_access is defined and can_access('inventario_corporativo', 'create') %}
                         <li class="nav-item">
                             <a class="nav-link {% if current_path.startswith('/inventario-corporativo/crear') %}active{% endif %}" 
-                               href="/inventario-corporativo/crear">
+                               href="{{ url_for('inventario_corporativo.crear') }}">
                                 <i class="fas fa-plus-circle me-1"></i> Nuevo Producto
                             </a>
                         </li>
@@ -146,7 +146,7 @@
                 {% elif current_path.startswith('/prestamos') %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if current_path == '/dashboard' %}active{% endif %}" href="/dashboard">
+                        <a class="nav-link {% if current_path == '/dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                             <i class="fas fa-tachometer-alt me-1"></i> Dashboard
                         </a>
                     </li>
@@ -155,7 +155,7 @@
                         <a class="nav-link {% if current_path.startswith('/prestamos') 
                                              and not current_path.startswith('/prestamos/crear') 
                                              and not current_path.startswith('/prestamos/listar') %}active{% endif %}" 
-                           href="/prestamos">
+                           href="{{ url_for('prestamos.listar') }}">
                             <i class="fas fa-clipboard-list me-1"></i> Todos los Préstamos
                         </a>
                     </li>
@@ -163,7 +163,7 @@
                     {% if can_access is defined and can_access('prestamos', 'create') %}
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/prestamos/crear') %}active{% endif %}" 
-                           href="/prestamos/crear">
+                           href="{{ url_for('prestamos.crear') }}">
                             <i class="fas fa-plus-circle me-1"></i> Nuevo Préstamo
                         </a>
                     </li>
@@ -172,7 +172,7 @@
                     {% if can_access is defined and can_access('materiales', 'view') %}
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/prestamos/elementos') %}active{% endif %}" 
-                           href="/prestamos/elementos">
+                           href="{{ url_for('prestamos.elementos') }}">
                             <i class="fas fa-box me-1"></i> Materiales
                         </a>
                     </li>
@@ -181,7 +181,7 @@
                     {% if can_access is defined and can_access('reportes', 'view') %}
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/prestamos/reportes') %}active{% endif %}" 
-                           href="/prestamos/reportes">
+                           href="{{ url_for('prestamos.reportes') }}">
                             <i class="fas fa-chart-bar me-1"></i> Reportes
                         </a>
                     </li>
@@ -191,7 +191,7 @@
                 {% else %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if current_path == '/dashboard' %}active{% endif %}" href="/dashboard">
+                        <a class="nav-link {% if current_path == '/dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                             <i class="fas fa-tachometer-alt me-1"></i> Dashboard
                         </a>
                     </li>
@@ -232,10 +232,10 @@
                     </li>
                     {% endif %}
                     
-                    <!-- Gestión de Usuarios - Solo visible para admin y administrador -->
-                    {% if session.usuario and session.rol in ['admin', 'administrador'] %}
+                    <!-- Gestión de Usuarios - Solo visible para administrador -->
+                    {% if session.usuario and session.rol == 'administrador' %}
                     <li class="nav-item">
-                        <a class="nav-link {% if current_path.startswith('/usuarios') %}active{% endif %}" href="{{ url_for('usuarios.listar_usuarios') }}">
+                        <a class="nav-link {% if current_path.startswith('/usuarios') %}active{% endif %}" href="/usuarios">
                             <i class="fas fa-users me-1"></i>
                             <span>Gestión de Usuarios</span>
                         </a>
@@ -283,9 +283,11 @@
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item text-danger d-flex align-items-center" href="/logout">
-                                    <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
-                                </a>
+                                <form action="/logout" method="POST" style="display: inline;">
+                                    <button type="submit" class="dropdown-item text-danger d-flex align-items-center" style="background: none; border: none; width: 100%; text-align: left;">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
+                                    </button>
+                                </form>
                             </li>
                         </ul>
                     </li>

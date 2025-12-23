@@ -7,7 +7,8 @@ import bcrypt
 from database import get_database_connection
 
 logger = logging.getLogger(__name__)
-auth_bp = Blueprint('auth_bp', __name__, url_prefix='')
+# CORRECCIÓN: Cambia 'auth_bp' por 'auth' y añade url_prefix
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')  # <-- CAMBIADO
 
 # ======================
 # DECORADORES DE AYUDA
@@ -19,7 +20,7 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if 'usuario_id' not in session:
             flash('Por favor inicie sesión para acceder a esta página', 'warning')
-            return redirect('/login')
+            return redirect('/auth/login')  # <-- Actualizado
         return f(*args, **kwargs)
     return decorated_function
 
@@ -72,7 +73,7 @@ def index():
     """Redirige a dashboard si está autenticado, sino a login"""
     if 'usuario_id' in session:
         return redirect('/dashboard')
-    return redirect('/login')
+    return redirect('/auth/login')  # <-- Actualizado
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 @logout_required
@@ -167,7 +168,7 @@ def logout():
     session.clear()
     logger.info(f"🔒 Logout exitoso para: {usuario}")
     flash('Sesión cerrada correctamente', 'info')
-    return redirect('/login')
+    return redirect('/auth/login')  # <-- Actualizado
 
 @auth_bp.route('/dashboard')
 @login_required
@@ -205,78 +206,6 @@ def dashboard():
             'aprobadores': []
         }
         return render_template('dashboard.html', **empty_data)
-
-    @auth_bp.route('/admin/test-ldap', methods=['GET', 'POST'])
-    @login_required
-    def admin_test_ldap():
-        """Endpoint de prueba LDAP para administradores"""
-        # Solo administradores
-        if session.get('rol') != 'admin':
-            flash('Acceso denegado. Solo para administradores.', 'danger')
-            return redirect('/dashboard')
-    
-        if request.method == 'POST':
-            username = request.form.get('username', '').strip()
-            password = request.form.get('password', '')
-        
-            result = {
-                'test_type': 'LDAP Authentication',
-                'username': username,
-                'ldap_enabled': Config.LDAP_ENABLED,
-                'success': False
-            }
-        
-            if Config.LDAP_ENABLED and username and password:
-                try:
-                    from utils.ldap_auth import ad_auth
-                
-                    # 1. Probar autenticación
-                    ad_user = ad_auth.authenticate_user(username, password)
-                
-                    if ad_user:
-                        result['success'] = True
-                        result['message'] = '✅ Autenticación LDAP exitosa'
-                        result['user_info'] = {
-                            'username': ad_user.get('username'),
-                            'full_name': ad_user.get('full_name'),
-                            'email': ad_user.get('email'),
-                            'department': ad_user.get('department'),
-                            'role_from_ad': ad_user.get('role'),
-                            'groups_count': len(ad_user.get('groups', []))
-                        }
-                    
-                        # 2. Probar sincronización
-                        usuario_sync = UsuarioModel.sync_user_from_ad(ad_user)
-                        if usuario_sync:
-                            result['sync_success'] = True
-                            result['sync_info'] = {
-                                'user_id': usuario_sync.get('id'),
-                                'system_role': usuario_sync.get('rol'),
-                                'office_id': usuario_sync.get('oficina_id')
-                            }
-                            result['message'] += ' - ✅ Usuario sincronizado'
-                        else:
-                            result['sync_success'] = False
-                            result['message'] += ' - ⚠️ Error en sincronización'
-                    else:
-                        result['success'] = False
-                        result['message'] = '❌ Autenticación LDAP fallida'
-                    
-                except Exception as e:
-                    result['success'] = False
-                    result['message'] = f'❌ Error: {str(e)}'
-                    import traceback
-                    result['traceback'] = traceback.format_exc()
-            else:
-                result['message'] = '❌ LDAP deshabilitado o credenciales vacías'
-        
-            return render_template('auth/test_ldap_simple.html', result=result)
-    
-        return render_template('auth/test_ldap_simple.html', result=None)
-
-    # ======================
-# RUTAS DE ADMINISTRACIÓN LDAP
-# ======================
 
 @auth_bp.route('/test-ldap', methods=['GET', 'POST'])
 def test_ldap():
@@ -348,16 +277,3 @@ def test_ldap():
         return render_template('auth/test_ldap_simple.html', result=result)
     
     return render_template('auth/test_ldap_simple.html', result=None)
-
-
-    @auth_bp.route('/admin/test-ldap', methods=['GET', 'POST'])
-    @login_required
-    def admin_test_ldap():
-        """Endpoint protegido para probar LDAP (requiere login)"""
-        # Verificar si es administrador
-        if session.get('rol') != 'admin':
-            flash('Acceso denegado. Solo para administradores.', 'danger')
-            return redirect('/dashboard')
-    
-        # Misma lógica que el endpoint público
-        return test_ldap()

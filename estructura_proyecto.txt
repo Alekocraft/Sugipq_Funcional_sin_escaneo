@@ -1,6 +1,7 @@
 ESTRUCTURA DEL PROYECTO FLASK 
 ============================= 
-Fecha: Thu 12/11/2025 15:04:12.24 
+Fecha: Fri 12/19/2025 10:54:06.26 
+Directorio actual: C:\Users\sinventarios\source\repos\sugipqt 
  
 [ARCHIVOS PRINCIPALES .PY] 
 -------------------------- 
@@ -101,10 +102,44 @@ static\css\login.css
 --------------------------- 
 requirements.txt 
  
+[ARCHIVOS DE ENTORNO] 
+-------------------- 
+ 
+[ARCHIVOS DE LOGS] 
+------------------ 
+logs\ldap.log 
+logs\ldap.log 
+ 
+[ARCHIVOS LOG EN RAIZ] 
+---------------------- 
+ 
+[CARPETAS PRINCIPALES (excluyendo entornos virtuales)] 
+------------------------------------------------------ 
+[.git] 
+[.vs] 
+[blueprints] 
+[config] 
+[logs] 
+[models] 
+[repos] 
+[services] 
+[static] 
+[templates] 
+[utils] 
+[__pycache__] 
+ 
 Resumen: 
 --------- 
-Archivos .py: 3 
-Archivos HTML: 2 
-Archivos CSS: 0 
+Archivos .py: 3487 
+Archivos HTML: 39 
+Archivos CSS: 5 
 Archivos JS: 0 
+Archivos de entorno: 0 
+Archivos de logs: 2 
+Carpetas (sin entornos virtuales): 12 
+ 
+[ENTORNOS VIRTUALES EXCLUIDOS] 
+------------------------------ 
+.venv 
+envirt 
  

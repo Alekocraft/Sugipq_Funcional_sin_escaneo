@@ -342,8 +342,126 @@ class SolicitudModel:
     # ==========================
 
     @staticmethod
-    def obtener_todas(oficina_id=None):
-        return SolicitudModel.obtener_todas_ordenadas(oficina_id)
+    def obtener_todas(estado=None, oficina=None, material=None, solicitante=None):
+        """
+        Obtiene todas las solicitudes con información de novedades
+        """
+        conn = get_database_connection()
+        if conn is None:
+            return []
+        
+        cursor = conn.cursor()
+        try:
+            sql = """
+                SELECT 
+                    sm.SolicitudId,
+                    sm.OficinaSolicitanteId,
+                    sm.MaterialId,
+                    sm.CantidadSolicitada,
+                    sm.FechaSolicitud,
+                    sm.EstadoId,
+                    sm.PorcentajeOficina,
+                    sm.AprobadorId,
+                    sm.FechaAprobacion,
+                    sm.CantidadEntregada,
+                    sm.FechaUltimaEntrega,
+                    sm.ValorTotalSolicitado,
+                    sm.ValorOficina,
+                    sm.ValorSedePrincipal,
+                    sm.FechaCalculoValores,
+                    sm.UsuarioSolicitante,
+                    sm.Observacion,
+                    sm.TieneNovedad,
+                    o.NombreOficina as OficinaNombre,
+                    m.NombreElemento as MaterialNombre,
+                    es.NombreEstado as EstadoNombre,
+                    a.NombreAprobador as AprobadorNombre,
+                    -- Obtener información de novedad si existe
+                    ns.EstadoNovedad,
+                    ns.TipoNovedad,
+                    ns.Descripcion as NovedadDescripcion,
+                    ns.CantidadAfectada,
+                    -- Calcular cantidad devuelta
+                    ISNULL((SELECT SUM(d.CantidadDevuelta) 
+                           FROM Devoluciones d 
+                           WHERE d.SolicitudId = sm.SolicitudId), 0) as CantidadDevuelta
+                FROM SolicitudesMaterial sm
+                INNER JOIN Oficinas o ON sm.OficinaSolicitanteId = o.OficinaId
+                INNER JOIN Materiales m ON sm.MaterialId = m.MaterialId
+                INNER JOIN EstadosSolicitud es ON sm.EstadoId = es.EstadoId
+                LEFT JOIN Aprobadores a ON sm.AprobadorId = a.AprobadorId
+                LEFT JOIN NovedadesSolicitudes ns ON sm.SolicitudId = ns.SolicitudId 
+                    AND ns.EstadoNovedad = 'registrada'
+            """
+            
+            where_clauses = []
+            params = []
+            
+            if estado and estado != 'todos':
+                where_clauses.append("sm.EstadoId = ?")
+                params.append(estado)
+            
+            if oficina and oficina != 'todas':
+                where_clauses.append("o.NombreOficina = ?")
+                params.append(oficina)
+            
+            if material:
+                where_clauses.append("m.NombreElemento LIKE ?")
+                params.append(f"%{material}%")
+            
+            if solicitante:
+                where_clauses.append("sm.UsuarioSolicitante LIKE ?")
+                params.append(f"%{solicitante}%")
+            
+            if where_clauses:
+                sql += " WHERE " + " AND ".join(where_clauses)
+            
+            sql += " ORDER BY sm.FechaSolicitud DESC"
+            
+            cursor.execute(sql, params)
+            
+            solicitudes = []
+            for row in cursor.fetchall():
+                solicitudes.append({
+                    'solicitud_id': row[0],
+                    'oficina_solicitante_id': row[1],
+                    'material_id': row[2],
+                    'cantidad_solicitada': row[3],
+                    'fecha_solicitud': row[4],
+                    'estado_id': row[5],
+                    'porcentaje_oficina': row[6],
+                    'aprobador_id': row[7],
+                    'fecha_aprobacion': row[8],
+                    'cantidad_entregada': row[9] or 0,
+                    'fecha_ultima_entrega': row[10],
+                    'valor_total_solicitado': row[11],
+                    'valor_oficina': row[12],
+                    'valor_sede_principal': row[13],
+                    'fecha_calculo_valores': row[14],
+                    'usuario_solicitante': row[15],
+                    'observacion': row[16],
+                    'tiene_novedad': bool(row[17]),
+                    'oficina_nombre': row[18],
+                    'material_nombre': row[19],
+                    'estado_nombre': row[20],
+                    'aprobador_nombre': row[21],
+                    'estado_novedad': row[22],
+                    'tipo_novedad': row[23],
+                    'novedad_descripcion': row[24],
+                    'cantidad_afectada': row[25] or 0,
+                    'cantidad_devuelta': row[26] or 0
+                })
+            
+            return solicitudes
+            
+        except Exception as e:
+            print(f"❌ Error obteniendo solicitudes: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+        finally:
+            cursor.close()
+            conn.close()
 
     @staticmethod
     def obtener_todas_ordenadas(oficina_id=None):
