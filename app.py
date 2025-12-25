@@ -403,8 +403,8 @@ def utility_processor():
 # REGISTRO DE BLUEPRINTS
 # ============================================================================
 
-# Registrar blueprints principales
-app.register_blueprint(auth_bp)
+ 
+app.register_blueprint(auth_bp, name='auth_bp')
 app.register_blueprint(materiales_bp)
 app.register_blueprint(solicitudes_bp, url_prefix='/solicitudes')
 app.register_blueprint(oficinas_bp)

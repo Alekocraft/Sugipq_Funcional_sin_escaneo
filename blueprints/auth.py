@@ -185,13 +185,185 @@ def logout():
     flash('Sesión cerrada correctamente', 'info')
     return redirect('/login')
 
+ 
+@auth_bp.route('/test-ldap', methods=['GET', 'POST'])
+def test_ldap():
+    """
+    Ruta para probar conexión LDAP.
+    Accesible desde: /test-ldap
+    """
+    try:
+        result = None
+        
+        if request.method == 'POST':
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '')
+            
+            if not username or not password:
+                flash('Debe ingresar usuario y contraseña', 'danger')
+                return render_template('auth/test_ldap.html')
+            
+            try:
+                # Verificar si hay módulo LDAP configurado
+                try:
+                    from config.config import LDAP_CONFIG
+                    ldap_enabled = True
+                    ldap_server = LDAP_CONFIG.get('server', 'No configurado')
+                    ldap_domain = LDAP_CONFIG.get('domain', 'No configurado')
+                except:
+                    ldap_enabled = False
+                    ldap_server = 'No configurado'
+                    ldap_domain = 'No configurado'
+                
+                # Intentar autenticar con LDAP si está disponible
+                try:
+                    from utils.auth import authenticate_ldap_user
+                    
+                    ldap_result = authenticate_ldap_user(username, password)
+                    
+                    if ldap_result.get('authenticated', False):
+                        # Información simulada para prueba
+                        user_info = {
+                            'username': username,
+                            'full_name': f"Usuario {username}",
+                            'email': f"{username}@qualitascolombia.com.co",
+                            'department': 'Departamento de prueba',
+                            'role_from_ad': 'Usuario',
+                            'groups_count': 1
+                        }
+                        
+                        result = {
+                            'success': True,
+                            'message': '✅ Autenticación LDAP exitosa (modo prueba)',
+                            'ldap_enabled': ldap_enabled,
+                            'ldap_server': ldap_server,
+                            'ldap_domain': ldap_domain,
+                            'username': username,
+                            'user_info': user_info,
+                            'sync_info': None,
+                            'sync_error': None
+                        }
+                    else:
+                        result = {
+                            'success': False,
+                            'message': '❌ Autenticación LDAP fallida',
+                            'ldap_enabled': ldap_enabled,
+                            'ldap_server': ldap_server,
+                            'ldap_domain': ldap_domain,
+                            'username': username,
+                            'user_info': None,
+                            'sync_info': None,
+                            'sync_error': 'Credenciales inválidas o servidor LDAP no disponible',
+                            'traceback': None
+                        }
+                        
+                except ImportError:
+                    # Si no hay módulo LDAP, mostrar modo simulación
+                    result = {
+                        'success': True,
+                        'message': '✅ Prueba de formulario exitosa (LDAP no configurado)',
+                        'ldap_enabled': False,
+                        'ldap_server': 'Simulación',
+                        'ldap_domain': 'qualitascolombia.com.co',
+                        'username': username,
+                        'user_info': {
+                            'username': username,
+                            'full_name': f"Usuario {username} (simulado)",
+                            'email': f"{username}@qualitascolombia.com.co",
+                            'department': 'Departamento simulado',
+                            'role_from_ad': 'Usuario simulado',
+                            'groups_count': 3
+                        },
+                        'sync_info': {
+                            'user_id': 999,
+                            'system_role': 'usuario',
+                            'office_id': 1
+                        },
+                        'sync_error': None
+                    }
+                except Exception as e:
+                    import traceback
+                    result = {
+                        'success': False,
+                        'message': f'❌ Error en conexión LDAP: {str(e)}',
+                        'ldap_enabled': False,
+                        'ldap_server': 'Error',
+                        'ldap_domain': 'Error',
+                        'username': username,
+                        'user_info': None,
+                        'sync_info': None,
+                        'sync_error': str(e),
+                        'traceback': traceback.format_exc()
+                    }
+                    
+            except Exception as e:
+                import traceback
+                result = {
+                    'success': False,
+                    'message': f'❌ Error general: {str(e)}',
+                    'ldap_enabled': False,
+                    'ldap_server': 'Error',
+                    'ldap_domain': 'Error',
+                    'username': username,
+                    'user_info': None,
+                    'sync_info': None,
+                    'sync_error': str(e),
+                    'traceback': traceback.format_exc()
+                }
+        
+        else:  # GET request
+            # Mostrar configuración actual
+            try:
+                from config.config import LDAP_CONFIG
+                result = {
+                    'success': None,
+                    'message': 'Configure los parámetros LDAP y haga clic en Probar',
+                    'ldap_enabled': True,
+                    'ldap_server': LDAP_CONFIG.get('server', 'No configurado'),
+                    'ldap_domain': LDAP_CONFIG.get('domain', 'No configurado'),
+                    'username': None,
+                    'user_info': None,
+                    'sync_info': None,
+                    'sync_error': None
+                }
+            except ImportError:
+                result = {
+                    'success': None,
+                    'message': 'LDAP no está configurado en el sistema',
+                    'ldap_enabled': False,
+                    'ldap_server': 'No configurado',
+                    'ldap_domain': 'No configurado',
+                    'username': None,
+                    'user_info': None,
+                    'sync_info': None,
+                    'sync_error': None
+                }
+        
+        return render_template('auth/test_ldap.html', result=result)
+        
+    except Exception as e:
+        import traceback
+        result = {
+            'success': False,
+            'message': f'❌ Error en la página: {str(e)}',
+            'ldap_enabled': False,
+            'ldap_server': 'Error',
+            'ldap_domain': 'Error',
+            'username': None,
+            'user_info': None,
+            'sync_info': None,
+            'sync_error': str(e),
+            'traceback': traceback.format_exc()
+        }
+        return render_template('auth/test_ldap.html', result=result)
+
 @auth_bp.route('/dashboard')
 @require_login
 def dashboard():
     try:
         print("📊 Cargando dashboard...")
         
-        # Obtener filtro de oficina según permisos
+        # ✅ NUEVO: Obtener filtro de oficina según permisos
         from utils.permissions import user_can_view_all
         oficina_id = None if user_can_view_all() else session.get('oficina_id')
         
@@ -299,3 +471,4 @@ def extend_session():
         'message': 'Sesión extendida',
         'new_timeout_seconds': SESSION_TIMEOUT_MINUTES * 60
     })
+

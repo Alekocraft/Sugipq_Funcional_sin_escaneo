@@ -72,7 +72,7 @@
                             
                             <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-primary">Probar Autenticación LDAP</button>
-                                <a href="/login" class="btn btn-secondary">Volver al Login</a>
+                                <a href="{{ url_for('auth_bp.login') }}" class="btn btn-secondary">Volver al Login</a>
                                 {% if session.get('usuario_id') %}
                                 <a href="/dashboard" class="btn btn-outline-secondary">Volver al Dashboard</a>
                                 {% endif %}
