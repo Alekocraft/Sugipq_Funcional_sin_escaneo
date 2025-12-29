@@ -191,7 +191,7 @@ class SolicitudModel:
     def obtener_info_devolucion(solicitud_id):
         """
         - 1er SELECT: info de la solicitud, material, oficina, estado
-        - 2do SELECT: suma de devoluciones
+        - 2do SELECT: suma de devoluciones COMPLETADAS
         - Se convierten TODAS las cantidades a int para que jsonify no explote.
         """
         conn = get_database_connection()
@@ -200,7 +200,7 @@ class SolicitudModel:
 
         cursor = conn.cursor()
         try:
-            # 1) Info base de la solicitud
+            # 1) Info base de la solicitud (con imagen del material)
             cursor.execute("""
                 SELECT 
                     sm.SolicitudId,
@@ -210,7 +210,8 @@ class SolicitudModel:
                     ISNULL(sm.CantidadEntregada, 0) AS CantidadEntregada,
                     m.NombreElemento,
                     o.NombreOficina,
-                    sm.UsuarioSolicitante
+                    sm.UsuarioSolicitante,
+                    m.RutaImagen
                 FROM dbo.SolicitudesMaterial sm
                 INNER JOIN dbo.EstadosSolicitud es ON sm.EstadoId = es.EstadoId
                 INNER JOIN dbo.Materiales m ON sm.MaterialId = m.MaterialId
@@ -230,12 +231,13 @@ class SolicitudModel:
             material_nombre = row[5]
             oficina_nombre = row[6]
             solicitante_nombre = row[7]
+            material_imagen = row[8]
 
-            # 2) Total devuelto hasta ahora
+            # 2) Total devuelto hasta ahora (solo devoluciones COMPLETADAS)
             cursor.execute("""
                 SELECT ISNULL(SUM(CantidadDevuelta), 0)
                 FROM dbo.Devoluciones
-                WHERE SolicitudId = ?
+                WHERE SolicitudId = ? AND EstadoDevolucion = 'COMPLETADA'
             """, (solicitud_id_db,))
             row_dev = cursor.fetchone()
             cantidad_ya_devuelta = int(row_dev[0]) if row_dev and row_dev[0] is not None else 0
@@ -255,6 +257,7 @@ class SolicitudModel:
                 "material_nombre": material_nombre,
                 "oficina_nombre": oficina_nombre,
                 "solicitante_nombre": solicitante_nombre,
+                "material_imagen": material_imagen,
             }
         except Exception as e:
             print("❌ ERROR en obtener_info_devolucion:", str(e))
@@ -384,7 +387,10 @@ class SolicitudModel:
                     -- Calcular cantidad devuelta
                     ISNULL((SELECT SUM(d.CantidadDevuelta) 
                            FROM Devoluciones d 
-                           WHERE d.SolicitudId = sm.SolicitudId), 0) as CantidadDevuelta
+                           WHERE d.SolicitudId = sm.SolicitudId), 0) as CantidadDevuelta,
+                    -- ✅ Agregar imagen del material y de la novedad
+                    m.RutaImagen as MaterialImagen,
+                    ns.RutaImagen as NovedadImagen
                 FROM SolicitudesMaterial sm
                 INNER JOIN Oficinas o ON sm.OficinaSolicitanteId = o.OficinaId
                 INNER JOIN Materiales m ON sm.MaterialId = m.MaterialId
@@ -458,7 +464,10 @@ class SolicitudModel:
                     'tipo_novedad': row[23],
                     'novedad_descripcion': row[24],
                     'cantidad_afectada': row[25] or 0,
-                    'cantidad_devuelta': row[26] or 0
+                    'cantidad_devuelta': row[26] or 0,
+                    # ✅ Agregar imágenes
+                    'material_imagen': row[27],
+                    'novedad_imagen': row[28]
                 })
             
             return solicitudes
@@ -543,7 +552,8 @@ class SolicitudModel:
                     m.ValorUnitario,
                     m.CantidadDisponible,
                     sm.FechaAprobacion,
-                    sm.CantidadEntregada
+                    sm.CantidadEntregada,
+                    m.RutaImagen as MaterialImagen
                 FROM dbo.SolicitudesMaterial sm
                 INNER JOIN dbo.Materiales m ON sm.MaterialId = m.MaterialId
                 INNER JOIN dbo.Oficinas o ON sm.OficinaSolicitanteId = o.OficinaId
@@ -552,7 +562,10 @@ class SolicitudModel:
             """, (solicitud_id,))
             rows = cursor.fetchall()
             if rows:
-                return SolicitudModel._mapear_solicitudes(rows)[0]
+                resultado = SolicitudModel._mapear_solicitudes(rows)[0]
+                # ✅ Agregar imagen del material
+                resultado['material_imagen'] = rows[0][18] if len(rows[0]) > 18 else None
+                return resultado
             return None
         finally:
             cursor.close()
@@ -886,3 +899,280 @@ class SolicitudModel:
                 cursor.close()
             if conn:
                 conn.close()
+
+    # ==========================
+    # DEVOLUCIONES CON APROBACIÓN
+    # ==========================
+
+    @staticmethod
+    def solicitar_devolucion(solicitud_id, cantidad_devuelta, usuario_solicita, motivo="", ruta_imagen=None):
+        """
+        Registra una SOLICITUD de devolución (pendiente de aprobación).
+        No modifica el stock hasta que sea aprobada.
+        """
+        conn = get_database_connection()
+        if conn is None:
+            return False, "❌ Error de conexión a la base de datos"
+        
+        cursor = conn.cursor()
+        try:
+            # Validar la solicitud
+            cursor.execute("""
+                SELECT 
+                    sm.MaterialId,
+                    sm.CantidadEntregada,
+                    sm.EstadoId,
+                    ISNULL(sm.CantidadEntregada, 0) 
+                      - ISNULL((SELECT SUM(d.CantidadDevuelta) FROM Devoluciones d 
+                                WHERE d.SolicitudId = sm.SolicitudId AND d.EstadoDevolucion = 'COMPLETADA'), 0) AS CantidadPuedeDevolver
+                FROM dbo.SolicitudesMaterial sm
+                WHERE sm.SolicitudId = ?
+            """, (solicitud_id,))
+            row = cursor.fetchone()
+            
+            if not row:
+                return False, "❌ Solicitud no encontrada"
+            
+            material_id = row[0]
+            estado_id = row[2]
+            cantidad_puede_devolver = row[3] or 0
+            
+            # Validar estado (solo aprobadas o entregadas parciales)
+            if estado_id not in (2, 4, 5):  # Aprobada, Entregada Parcial, Completada
+                return False, "❌ Solo se pueden devolver solicitudes aprobadas o entregadas"
+            
+            if cantidad_devuelta <= 0:
+                return False, "❌ La cantidad a devolver debe ser mayor a 0"
+            
+            if cantidad_devuelta > cantidad_puede_devolver:
+                return False, f"❌ No puede devolver más de {cantidad_puede_devolver} unidades"
+            
+            # Verificar que no haya otra devolución pendiente
+            cursor.execute("""
+                SELECT COUNT(*) FROM Devoluciones 
+                WHERE SolicitudId = ? AND EstadoDevolucion = 'PENDIENTE'
+            """, (solicitud_id,))
+            pendientes = cursor.fetchone()[0]
+            
+            if pendientes > 0:
+                return False, "❌ Ya existe una solicitud de devolución pendiente para esta solicitud"
+            
+            # Insertar solicitud de devolución con estado PENDIENTE
+            cursor.execute("""
+                INSERT INTO Devoluciones (
+                    SolicitudId, MaterialId, CantidadDevuelta, FechaDevolucion,
+                    UsuarioDevolucion, Observaciones, EstadoDevolucion, CondicionMaterial, RutaImagen
+                )
+                VALUES (?, ?, ?, GETDATE(), ?, ?, 'PENDIENTE', 'BUENO', ?)
+            """, (solicitud_id, material_id, cantidad_devuelta, usuario_solicita, motivo, ruta_imagen))
+            
+            conn.commit()
+            return True, "✅ Solicitud de devolución registrada. Pendiente de aprobación."
+            
+        except Exception as e:
+            conn.rollback()
+            print(f"❌ Error en solicitud de devolución: {e}")
+            import traceback
+            traceback.print_exc()
+            return False, f"❌ Error: {str(e)}"
+        finally:
+            cursor.close()
+            conn.close()
+
+    @staticmethod
+    def aprobar_devolucion(devolucion_id, usuario_aprueba, observaciones=""):
+        """
+        Aprueba una devolución y actualiza el stock.
+        """
+        conn = get_database_connection()
+        if conn is None:
+            return False, "❌ Error de conexión a la base de datos"
+        
+        cursor = conn.cursor()
+        try:
+            # Obtener información de la devolución
+            cursor.execute("""
+                SELECT d.SolicitudId, d.MaterialId, d.CantidadDevuelta, d.EstadoDevolucion
+                FROM Devoluciones d
+                WHERE d.DevolucionId = ?
+            """, (devolucion_id,))
+            row = cursor.fetchone()
+            
+            if not row:
+                return False, "❌ Devolución no encontrada"
+            
+            solicitud_id, material_id, cantidad_devuelta, estado = row
+            
+            if estado != 'PENDIENTE':
+                return False, f"❌ Esta devolución ya fue procesada (estado: {estado})"
+            
+            # Actualizar estado de la devolución a COMPLETADA
+            cursor.execute("""
+                UPDATE Devoluciones 
+                SET EstadoDevolucion = 'COMPLETADA',
+                    FechaAprobacion = GETDATE(),
+                    UsuarioAprobador = ?,
+                    ObservacionesAprobacion = ?
+                WHERE DevolucionId = ?
+            """, (usuario_aprueba, observaciones, devolucion_id))
+            
+            # Actualizar stock del material
+            cursor.execute("""
+                UPDATE Materiales
+                SET CantidadDisponible = CantidadDisponible + ?
+                WHERE MaterialId = ?
+            """, (cantidad_devuelta, material_id))
+            
+            # Verificar si se devolvió todo lo entregado
+            cursor.execute("""
+                SELECT 
+                    sm.CantidadEntregada,
+                    ISNULL((SELECT SUM(d.CantidadDevuelta) FROM Devoluciones d 
+                            WHERE d.SolicitudId = sm.SolicitudId AND d.EstadoDevolucion = 'COMPLETADA'), 0) as TotalDevuelto
+                FROM SolicitudesMaterial sm
+                WHERE sm.SolicitudId = ?
+            """, (solicitud_id,))
+            row = cursor.fetchone()
+            
+            if row:
+                cantidad_entregada = row[0] or 0
+                total_devuelto = row[1] or 0
+                
+                # Si se devolvió todo, cambiar estado a "Devuelta"
+                if total_devuelto >= cantidad_entregada:
+                    cursor.execute("""
+                        UPDATE SolicitudesMaterial
+                        SET EstadoId = 6, FechaUltimaEntrega = GETDATE()
+                        WHERE SolicitudId = ?
+                    """, (solicitud_id,))
+            
+            conn.commit()
+            return True, f"✅ Devolución aprobada. Se reintegraron {cantidad_devuelta} unidades al inventario."
+            
+        except Exception as e:
+            conn.rollback()
+            print(f"❌ Error aprobando devolución: {e}")
+            import traceback
+            traceback.print_exc()
+            return False, f"❌ Error: {str(e)}"
+        finally:
+            cursor.close()
+            conn.close()
+
+    @staticmethod
+    def rechazar_devolucion(devolucion_id, usuario_rechaza, observaciones=""):
+        """
+        Rechaza una solicitud de devolución.
+        """
+        conn = get_database_connection()
+        if conn is None:
+            return False, "❌ Error de conexión a la base de datos"
+        
+        cursor = conn.cursor()
+        try:
+            # Verificar estado actual
+            cursor.execute("""
+                SELECT EstadoDevolucion FROM Devoluciones WHERE DevolucionId = ?
+            """, (devolucion_id,))
+            row = cursor.fetchone()
+            
+            if not row:
+                return False, "❌ Devolución no encontrada"
+            
+            if row[0] != 'PENDIENTE':
+                return False, f"❌ Esta devolución ya fue procesada (estado: {row[0]})"
+            
+            # Actualizar estado a RECHAZADA
+            cursor.execute("""
+                UPDATE Devoluciones 
+                SET EstadoDevolucion = 'RECHAZADA',
+                    FechaAprobacion = GETDATE(),
+                    UsuarioAprobador = ?,
+                    ObservacionesAprobacion = ?
+                WHERE DevolucionId = ?
+            """, (usuario_rechaza, observaciones, devolucion_id))
+            
+            conn.commit()
+            return True, "✅ Devolución rechazada"
+            
+        except Exception as e:
+            conn.rollback()
+            print(f"❌ Error rechazando devolución: {e}")
+            return False, f"❌ Error: {str(e)}"
+        finally:
+            cursor.close()
+            conn.close()
+
+    @staticmethod
+    def obtener_devolucion_pendiente(solicitud_id):
+        """
+        Obtiene la devolución pendiente de aprobación para una solicitud.
+        """
+        conn = get_database_connection()
+        if conn is None:
+            return None
+        
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                SELECT 
+                    d.DevolucionId,
+                    d.SolicitudId,
+                    d.MaterialId,
+                    d.CantidadDevuelta,
+                    d.FechaDevolucion,
+                    d.UsuarioDevolucion,
+                    d.Observaciones,
+                    d.EstadoDevolucion,
+                    d.RutaImagen,
+                    m.NombreElemento as MaterialNombre,
+                    m.RutaImagen as MaterialImagen
+                FROM Devoluciones d
+                INNER JOIN Materiales m ON d.MaterialId = m.MaterialId
+                WHERE d.SolicitudId = ? AND d.EstadoDevolucion = 'PENDIENTE'
+                ORDER BY d.FechaDevolucion DESC
+            """, (solicitud_id,))
+            
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'devolucion_id': row[0],
+                    'solicitud_id': row[1],
+                    'material_id': row[2],
+                    'cantidad_devuelta': row[3],
+                    'fecha_devolucion': row[4].strftime('%d/%m/%Y %H:%M') if row[4] else '',
+                    'usuario_solicita': row[5],
+                    'motivo': row[6] or '',
+                    'estado': row[7],
+                    'devolucion_imagen': row[8],
+                    'material_nombre': row[9],
+                    'material_imagen': row[10]
+                }
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error obteniendo devolución pendiente: {e}")
+            return None
+        finally:
+            cursor.close()
+            conn.close()
+
+    @staticmethod
+    def tiene_devolucion_pendiente(solicitud_id):
+        """Verifica si una solicitud tiene devolución pendiente de aprobación"""
+        conn = get_database_connection()
+        if conn is None:
+            return False
+        
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                SELECT COUNT(*) FROM Devoluciones 
+                WHERE SolicitudId = ? AND EstadoDevolucion = 'PENDIENTE'
+            """, (solicitud_id,))
+            return cursor.fetchone()[0] > 0
+        except:
+            return False
+        finally:
+            cursor.close()
+            conn.close()

@@ -247,8 +247,19 @@
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#devolucionModal"
                                                         onclick="cargarDevolucion({{ solicitud.id }})"
-                                                        title="Registrar devolución">
+                                                        title="Solicitar devolución">
                                                     <i class="fas fa-undo"></i>
+                                                </button>
+                                                {% endif %}
+                                                
+                                                <!-- Botón de Gestionar Devolución (condicional) -->
+                                                {% if should_show_gestion_devolucion_button(solicitud) %}
+                                                <button type="button" class="btn btn-info btn-sm" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#gestionDevolucionModal"
+                                                        onclick="cargarGestionDevolucion({{ solicitud.id }})"
+                                                        title="Gestionar devolución pendiente">
+                                                    <i class="fas fa-clipboard-check"></i>
                                                 </button>
                                                 {% endif %}
                                                 
@@ -378,15 +389,22 @@
     </div>
 </div>
 
-<!-- Modal Devolución -->
+<!-- Modal Devolución (SOLICITAR) -->
 <div class="modal fade" id="devolucionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-warning">
-                <h5 class="modal-title">Registrar Devolución</h5>
+                <h5 class="modal-title"><i class="fas fa-undo"></i> Solicitar Devolución</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <!-- Imagen del material -->
+                <div id="material-info-devolucion" class="text-center mb-3" style="display: none;">
+                    <img id="material-imagen-devolucion" src="" alt="Material" 
+                         class="img-fluid rounded shadow-sm mb-2" 
+                         style="max-height: 100px; object-fit: contain;">
+                </div>
+                
                 <p><strong>Material:</strong> <span id="material-nombre-devolucion"></span></p>
                 <p><strong>Cantidad Entregada:</strong> <span id="cantidad-entregada"></span></p>
                 <p><strong>Cantidad Ya Devuelta:</strong> <span id="cantidad-ya-devuelta"></span></p>
@@ -398,10 +416,65 @@
                     <input type="number" class="form-control" id="cantidad-devuelta" min="1" required>
                     <div class="form-text">Máximo a devolver: <span id="max-devolver"></span></div>
                 </div>
+                
+                <div class="mb-3">
+                    <label for="motivo-devolucion" class="form-label">Motivo de la devolución:</label>
+                    <textarea class="form-control" id="motivo-devolucion" rows="2" 
+                              placeholder="Explique brevemente el motivo de la devolución..."></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="imagen-devolucion" class="form-label">Imagen del material (opcional):</label>
+                    <input type="file" class="form-control" id="imagen-devolucion" accept="image/*" 
+                           onchange="previsualizarImagenDevolucion(this)">
+                    <div id="preview-imagen-devolucion" class="mt-2 text-center" style="display: none;">
+                        <img id="preview-img-devolucion" src="" alt="Previsualización" 
+                             class="img-fluid rounded border" style="max-height: 120px;">
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Nota:</strong> La devolución quedará pendiente de aprobación por un administrador.
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-warning" onclick="registrarDevolucion()">Registrar Devolución</button>
+                <button type="button" class="btn btn-warning" onclick="solicitarDevolucion()">
+                    <i class="fas fa-paper-plane"></i> Solicitar Devolución
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Gestionar Devolución (APROBAR/RECHAZAR) -->
+<div class="modal fade" id="gestionDevolucionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-clipboard-check"></i> Gestionar Devolución</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="info-devolucion-container">
+                    <!-- Información de la devolución se cargará aquí -->
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Observaciones:</label>
+                    <textarea class="form-control" id="observaciones-devolucion" rows="2" 
+                              placeholder="Observaciones opcionales..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="gestionarDevolucion('rechazar')">
+                    <i class="fas fa-times"></i> Rechazar
+                </button>
+                <button type="button" class="btn btn-success" onclick="gestionarDevolucion('aprobar')">
+                    <i class="fas fa-check"></i> Aprobar
+                </button>
             </div>
         </div>
     </div>
@@ -417,6 +490,14 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="solicitud-id-novedad">
+                
+                <!-- ✅ Contenedor para imagen del material -->
+                <div id="material-info-novedad" class="text-center mb-3" style="display: none;">
+                    <img id="material-imagen-novedad" src="" alt="Material" 
+                         class="img-fluid rounded shadow-sm mb-2" 
+                         style="max-height: 100px; object-fit: contain;">
+                    <p class="mb-0"><strong id="material-nombre-novedad"></strong></p>
+                </div>
                 
                 <div class="mb-3">
                     <label for="tipo-novedad" class="form-label">Tipo de Novedad:</label>
@@ -440,8 +521,22 @@
                 </div>
                 
                 <div class="mb-3">
-                    <label for="imagen-novedad" class="form-label">Imagen (opcional):</label>
-                    <input type="file" class="form-control" id="imagen-novedad" accept="image/*">
+                    <label for="imagen-novedad" class="form-label">
+                        Imagen de evidencia <span class="text-danger">*</span> <small class="text-muted">(obligatorio)</small>
+                    </label>
+                    <input type="file" class="form-control" id="imagen-novedad" accept="image/*" onchange="previsualizarImagenNovedad(this)" required>
+                    <div class="form-text text-warning">
+                        <i class="fas fa-camera"></i> Debe adjuntar una foto del material afectado como evidencia.
+                    </div>
+                    <!-- ✅ Previsualización de imagen -->
+                    <div id="preview-imagen-novedad" class="mt-2 text-center" style="display: none;">
+                        <img id="preview-img-novedad" src="" alt="Previsualización" 
+                             class="img-fluid rounded border" style="max-height: 150px;">
+                        <br>
+                        <button type="button" class="btn btn-sm btn-outline-danger mt-1" onclick="quitarImagenNovedad()">
+                            <i class="fas fa-times"></i> Quitar imagen
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -519,7 +614,22 @@ function cargarDetalleSolicitud(solicitudId) {
                 const solicitud = data.solicitud;
                 const container = document.getElementById('detalle-solicitud-container');
                 
+                // ✅ Construir URL de imagen del material
+                let imagenHtml = '';
+                if (solicitud.material_imagen) {
+                    imagenHtml = `
+                        <div class="text-center mb-3">
+                            <img src="/static/uploads/${solicitud.material_imagen}" 
+                                 alt="${solicitud.material_nombre}" 
+                                 class="img-fluid rounded shadow" 
+                                 style="max-height: 150px; object-fit: contain;"
+                                 onerror="this.style.display='none'">
+                        </div>
+                    `;
+                }
+                
                 let html = `
+                    ${imagenHtml}
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Información Básica</h6>
@@ -708,11 +818,15 @@ function confirmarAprobacionParcial() {
 
 // Función para cargar información de devolución
 function cargarDevolucion(solicitudId) {
+    document.getElementById('solicitud-id-devolucion').value = solicitudId;
+    document.getElementById('motivo-devolucion').value = '';
+    document.getElementById('imagen-devolucion').value = '';
+    document.getElementById('preview-imagen-devolucion').style.display = 'none';
+    
     fetch(`/solicitudes/api/${solicitudId}/info-devolucion`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('solicitud-id-devolucion').value = solicitudId;
                 document.getElementById('material-nombre-devolucion').textContent = data.material_nombre;
                 document.getElementById('cantidad-entregada').textContent = data.cantidad_entregada;
                 document.getElementById('cantidad-ya-devuelta').textContent = data.cantidad_ya_devuelta;
@@ -724,6 +838,16 @@ function cargarDevolucion(solicitudId) {
                 input.max = maxDevolver;
                 input.value = maxDevolver > 0 ? 1 : 0;
                 input.placeholder = `Máximo: ${maxDevolver}`;
+                
+                // Cargar imagen del material si existe
+                const container = document.getElementById('material-info-devolucion');
+                const imagen = document.getElementById('material-imagen-devolucion');
+                if (data.material_imagen) {
+                    imagen.src = `/static/uploads/${data.material_imagen}`;
+                    container.style.display = 'block';
+                } else {
+                    container.style.display = 'none';
+                }
             } else {
                 alert('Error al cargar información para devolución');
             }
@@ -734,11 +858,31 @@ function cargarDevolucion(solicitudId) {
         });
 }
 
-// Función para registrar devolución
-function registrarDevolucion() {
+// Función para previsualizar imagen de devolución
+function previsualizarImagenDevolucion(input) {
+    const preview = document.getElementById('preview-imagen-devolucion');
+    const previewImg = document.getElementById('preview-img-devolucion');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+// Función para SOLICITAR devolución (nuevo flujo con aprobación)
+function solicitarDevolucion() {
     const solicitudId = document.getElementById('solicitud-id-devolucion').value;
     const cantidad = parseInt(document.getElementById('cantidad-devuelta').value);
     const maximo = parseInt(document.getElementById('cantidad-devuelta').max);
+    const motivo = document.getElementById('motivo-devolucion').value.trim();
+    const imagenInput = document.getElementById('imagen-devolucion');
+    const imagenArchivo = imagenInput.files[0];
 
     if (!cantidad || cantidad < 1) {
         alert('Ingrese una cantidad válida');
@@ -750,36 +894,215 @@ function registrarDevolucion() {
         return;
     }
 
-    if (!confirm(`¿Está seguro que desea registrar la devolución de ${cantidad} unidades?`)) {
+    if (!confirm(`¿Está seguro que desea solicitar la devolución de ${cantidad} unidades?\n\nLa solicitud quedará pendiente de aprobación.`)) {
         return;
     }
 
-    fetch(`/solicitudes/devolucion/${solicitudId}`, {
+    const formData = new FormData();
+    formData.append('cantidad_devuelta', cantidad);
+    formData.append('motivo', motivo);
+    
+    if (imagenArchivo) {
+        formData.append('imagen_devolucion', imagenArchivo);
+    }
+
+    fetch(`/solicitudes/solicitar-devolucion/${solicitudId}`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message || 'Solicitud de devolución registrada');
+            location.reload();
+        } else {
+            alert(data.message || 'Error al solicitar la devolución');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al solicitar la devolución');
+    });
+}
+
+// Variable para almacenar ID de devolución actual
+let devolucionActualId = null;
+
+// Función para cargar información de devolución para gestión
+function cargarGestionDevolucion(solicitudId) {
+    fetch(`/solicitudes/api/${solicitudId}/devolucion-pendiente`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.devolucion) {
+                const dev = data.devolucion;
+                const container = document.getElementById('info-devolucion-container');
+                
+                // Construir HTML de imágenes
+                let imagenesHtml = '';
+                
+                if (dev.material_imagen) {
+                    imagenesHtml += `
+                        <div class="col-md-6 text-center mb-2">
+                            <small class="text-muted d-block mb-1">Material</small>
+                            <img src="/static/uploads/${dev.material_imagen}" 
+                                 alt="Material" 
+                                 class="img-fluid rounded shadow-sm" 
+                                 style="max-height: 120px; object-fit: contain;"
+                                 onerror="this.parentElement.style.display='none'">
+                        </div>
+                    `;
+                }
+                
+                if (dev.devolucion_imagen) {
+                    imagenesHtml += `
+                        <div class="col-md-6 text-center mb-2">
+                            <small class="text-muted d-block mb-1">Imagen adjunta</small>
+                            <img src="/static/${dev.devolucion_imagen}" 
+                                 alt="Imagen devolución" 
+                                 class="img-fluid rounded shadow-sm border border-warning" 
+                                 style="max-height: 120px; object-fit: contain;"
+                                 onerror="this.parentElement.style.display='none'">
+                        </div>
+                    `;
+                }
+                
+                let html = `
+                    ${imagenesHtml ? '<div class="row mb-3">' + imagenesHtml + '</div>' : ''}
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-undo"></i> Solicitud de Devolución Pendiente</h6>
+                        <p><strong>Material:</strong> ${dev.material_nombre}</p>
+                        <p><strong>Cantidad a devolver:</strong> ${dev.cantidad_devuelta} unidades</p>
+                        <p><strong>Solicitado por:</strong> ${dev.usuario_solicita}</p>
+                        <p><strong>Fecha:</strong> ${dev.fecha_devolucion}</p>
+                        <p><strong>Motivo:</strong> ${dev.motivo || 'No especificado'}</p>
+                    </div>
+                `;
+                
+                container.innerHTML = html;
+                devolucionActualId = dev.devolucion_id;
+            } else {
+                alert('No se encontró devolución pendiente para esta solicitud');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar información de devolución');
+        });
+}
+
+// Función para gestionar devolución (aprobar/rechazar)
+function gestionarDevolucion(accion) {
+    if (!devolucionActualId) {
+        alert('No se encontró el ID de la devolución');
+        return;
+    }
+
+    const confirmacion = accion === 'aprobar' 
+        ? '¿Está seguro que desea APROBAR esta devolución?\n\nEl stock del material será actualizado.'
+        : '¿Está seguro que desea RECHAZAR esta devolución?';
+
+    if (!confirm(confirmacion)) {
+        return;
+    }
+
+    const observaciones = document.getElementById('observaciones-devolucion').value;
+    const endpoint = accion === 'aprobar' ? '/solicitudes/aprobar-devolucion' : '/solicitudes/rechazar-devolucion';
+
+    fetch(endpoint, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
         },
-        body: JSON.stringify({ cantidad_devuelta: cantidad })
+        body: JSON.stringify({
+            devolucion_id: devolucionActualId,
+            observaciones: observaciones
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message || 'Devolución registrada exitosamente');
+            alert(data.message || `Devolución ${accion === 'aprobar' ? 'aprobada' : 'rechazada'} exitosamente`);
             location.reload();
         } else {
-            alert(data.message || 'Error al registrar la devolución');
+            alert(data.message || `Error al ${accion === 'aprobar' ? 'aprobar' : 'rechazar'} la devolución`);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al registrar la devolución');
+        alert(`Error al ${accion === 'aprobar' ? 'aprobar' : 'rechazar'} la devolución`);
     });
+}
+
+// Mantener función antigua por compatibilidad
+function registrarDevolucion() {
+    solicitarDevolucion();
 }
 
 // Función para cargar información para crear novedad
 function cargarNovedad(solicitudId) {
     document.getElementById('solicitud-id-novedad').value = solicitudId;
+    
+    // ✅ Limpiar formulario
+    document.getElementById('tipo-novedad').value = '';
+    document.getElementById('cantidad-afectada').value = '';
+    document.getElementById('descripcion-novedad').value = '';
+    document.getElementById('imagen-novedad').value = '';
+    document.getElementById('preview-imagen-novedad').style.display = 'none';
+    
+    // ✅ Cargar información del material (incluyendo imagen)
+    fetch(`/solicitudes/api/${solicitudId}/detalles`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.solicitud) {
+                const solicitud = data.solicitud;
+                const container = document.getElementById('material-info-novedad');
+                const imagen = document.getElementById('material-imagen-novedad');
+                const nombre = document.getElementById('material-nombre-novedad');
+                
+                if (solicitud.material_imagen) {
+                    imagen.src = `/static/uploads/${solicitud.material_imagen}`;
+                    imagen.style.display = 'block';
+                    container.style.display = 'block';
+                } else {
+                    imagen.style.display = 'none';
+                }
+                
+                nombre.textContent = solicitud.material_nombre || '';
+                if (solicitud.material_nombre) {
+                    container.style.display = 'block';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando info de material:', error);
+        });
+}
+
+// ✅ Función para previsualizar imagen de novedad
+function previsualizarImagenNovedad(input) {
+    const preview = document.getElementById('preview-imagen-novedad');
+    const previewImg = document.getElementById('preview-img-novedad');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+// ✅ Función para quitar imagen de novedad
+function quitarImagenNovedad() {
+    document.getElementById('imagen-novedad').value = '';
+    document.getElementById('preview-imagen-novedad').style.display = 'none';
 }
 
 // Función para registrar novedad
@@ -806,15 +1129,19 @@ function registrarNovedad() {
         return;
     }
 
+    // ✅ IMAGEN OBLIGATORIA
+    if (!imagenArchivo) {
+        alert('⚠️ La imagen de evidencia es OBLIGATORIA.\nDebe adjuntar una foto del material afectado.');
+        document.getElementById('imagen-novedad').focus();
+        return;
+    }
+
     const formData = new FormData();
     formData.append('solicitud_id', solicitudId);
     formData.append('tipo_novedad', tipoNovedad);
     formData.append('cantidad_afectada', cantidadAfectada);
     formData.append('descripcion', descripcion);
-    
-    if (imagenArchivo) {
-        formData.append('imagen_novedad', imagenArchivo);
-    }
+    formData.append('imagen_novedad', imagenArchivo);
 
     fetch('/solicitudes/registrar-novedad', {
         method: 'POST',
@@ -847,9 +1174,41 @@ function cargarGestionNovedad(solicitudId) {
                 const novedad = data.novedad;
                 const container = document.getElementById('info-novedad-container');
                 
+                // ✅ Construir HTML de imágenes
+                let imagenesHtml = '';
+                
+                // Imagen del material
+                if (novedad.material_imagen) {
+                    imagenesHtml += `
+                        <div class="col-md-6 text-center mb-2">
+                            <small class="text-muted d-block mb-1">Material</small>
+                            <img src="/static/uploads/${novedad.material_imagen}" 
+                                 alt="Material" 
+                                 class="img-fluid rounded shadow-sm" 
+                                 style="max-height: 120px; object-fit: contain;"
+                                 onerror="this.parentElement.style.display='none'">
+                        </div>
+                    `;
+                }
+                
+                // Imagen de la novedad
+                if (novedad.novedad_imagen) {
+                    imagenesHtml += `
+                        <div class="col-md-6 text-center mb-2">
+                            <small class="text-muted d-block mb-1">Evidencia Novedad</small>
+                            <img src="/static/${novedad.novedad_imagen}" 
+                                 alt="Evidencia de novedad" 
+                                 class="img-fluid rounded shadow-sm border border-danger" 
+                                 style="max-height: 120px; object-fit: contain;"
+                                 onerror="this.parentElement.style.display='none'">
+                        </div>
+                    `;
+                }
+                
                 let html = `
+                    ${imagenesHtml ? '<div class="row mb-3">' + imagenesHtml + '</div>' : ''}
                     <div class="alert alert-info">
-                        <h6>Información de la Novedad</h6>
+                        <h6><i class="fas fa-exclamation-circle"></i> Información de la Novedad</h6>
                         <p><strong>Tipo:</strong> ${novedad.tipo_novedad}</p>
                         <p><strong>Descripcion:</strong> ${novedad.descripcion}</p>
                         <p><strong>Cantidad Afectada:</strong> ${novedad.cantidad_afectada}</p>

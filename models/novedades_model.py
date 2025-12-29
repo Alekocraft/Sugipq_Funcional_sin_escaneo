@@ -336,7 +336,10 @@ class NovedadModel:
                     ns.FechaResolucion,
                     ns.UsuarioResuelve,
                     COALESCE(ns.ObservacionesResolucion, '') as ComentarioResolucion,
-                    COALESCE(m.NombreElemento, 'No especificado') as MaterialNombre
+                    COALESCE(m.NombreElemento, 'No especificado') as MaterialNombre,
+                    ns.CantidadAfectada,
+                    ns.RutaImagen as NovedadImagen,
+                    m.RutaImagen as MaterialImagen
                 FROM NovedadesSolicitudes ns
                 LEFT JOIN SolicitudesMaterial sm ON ns.SolicitudId = sm.SolicitudId
                 LEFT JOIN Materiales m ON sm.MaterialId = m.MaterialId
@@ -348,17 +351,22 @@ class NovedadModel:
             for row in cursor.fetchall():
                 novedades.append({
                     "id": row[0],
+                    "novedad_id": row[0],
                     "tipo": row[1] or "General",
                     "tipo_novedad": row[1] or "General",
                     "descripcion": row[2] or "",
                     "estado": row[3] or "pendiente",
                     "fecha_reporte": row[4],
+                    "fecha_registro": row[4],
                     "usuario_registra": row[5] or "Sistema",
                     "usuario_reporta": row[5] or "Sistema",
                     "fecha_resolucion": row[6],
                     "usuario_resuelve": row[7],
                     "comentario_resolucion": row[8] or "",
-                    "material_nombre": row[9] or "No especificado"
+                    "material_nombre": row[9] or "No especificado",
+                    "cantidad_afectada": row[10] or 0,
+                    "novedad_imagen": row[11],
+                    "material_imagen": row[12]
                 })
             
             return novedades

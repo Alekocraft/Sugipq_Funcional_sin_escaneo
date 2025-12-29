@@ -45,6 +45,84 @@ os.makedirs(UPLOAD_FOLDER_NOVEDADES, exist_ok=True)
 
 
 # ============================================================================
+# FUNCIONES HELPER PARA MOSTRAR BOTONES (Context Processors)
+# ============================================================================
+
+def should_show_devolucion_button(solicitud):
+    """Determina si se debe mostrar el botón de solicitar devolución"""
+    if not can_return_solicitud():
+        return False
+    estado = solicitud.get('estado', '').lower()
+    estado_id = solicitud.get('estado_id', 0)
+    # Solo mostrar para solicitudes aprobadas, entregadas parcial o completadas
+    # y que no tengan devolución pendiente
+    return estado_id in (2, 4, 5) or estado in ('aprobada', 'entregada parcial', 'completada')
+
+
+def should_show_gestion_devolucion_button(solicitud):
+    """Determina si se debe mostrar el botón de gestionar devolución"""
+    if not can_manage_novedad():  # Usamos el mismo permiso de gestión
+        return False
+    # Verificar si tiene devolución pendiente
+    solicitud_id = solicitud.get('id') or solicitud.get('solicitud_id')
+    if solicitud_id:
+        return SolicitudModel.tiene_devolucion_pendiente(solicitud_id)
+    return False
+
+
+def should_show_novedad_button(solicitud):
+    """Determina si se debe mostrar el botón de crear novedad"""
+    if not can_create_novedad():
+        return False
+    estado = solicitud.get('estado', '').lower()
+    estado_id = solicitud.get('estado_id', 0)
+    # Solo mostrar para solicitudes aprobadas, entregadas o completadas
+    # y que no tengan novedad activa
+    if estado_id in (2, 4, 5) or estado in ('aprobada', 'entregada parcial', 'completada'):
+        if 'novedad' not in estado:
+            return True
+    return False
+
+
+def should_show_gestion_novedad_button(solicitud):
+    """Determina si se debe mostrar el botón de gestionar novedad"""
+    if not can_manage_novedad():
+        return False
+    estado = solicitud.get('estado', '').lower()
+    estado_id = solicitud.get('estado_id', 0)
+    # Mostrar para solicitudes con novedad registrada (estado 7)
+    return estado_id == 7 or estado == 'novedad registrada'
+
+
+def should_show_aprobacion_buttons(solicitud):
+    """Determina si se deben mostrar los botones de aprobación"""
+    estado = solicitud.get('estado', '').lower()
+    estado_id = solicitud.get('estado_id', 0)
+    # Solo mostrar para solicitudes pendientes
+    return estado_id == 1 or estado == 'pendiente'
+
+
+# Registrar funciones en el contexto del template
+@solicitudes_bp.context_processor
+def utility_processor():
+    """Registra funciones útiles para usar en templates"""
+    return {
+        'should_show_devolucion_button': should_show_devolucion_button,
+        'should_show_gestion_devolucion_button': should_show_gestion_devolucion_button,
+        'should_show_novedad_button': should_show_novedad_button,
+        'should_show_gestion_novedad_button': should_show_gestion_novedad_button,
+        'should_show_aprobacion_buttons': should_show_aprobacion_buttons,
+        'can_approve_solicitud': can_approve_solicitud,
+        'can_reject_solicitud': can_reject_solicitud,
+        'can_approve_partial_solicitud': can_approve_partial_solicitud,
+        'can_return_solicitud': can_return_solicitud,
+        'can_create_novedad': can_create_novedad,
+        'can_manage_novedad': can_manage_novedad,
+        'can_view_novedades': can_view_novedades
+    }
+
+
+# ============================================================================
 # DECORADORES
 # ============================================================================
 
@@ -496,57 +574,166 @@ def rechazar_solicitud(solicitud_id):
 
 
 # ============================================================================
-# RUTAS DE DEVOLUCIÓN
+# RUTAS DE DEVOLUCIÓN (CON FLUJO DE APROBACIÓN)
 # ============================================================================
 
-@solicitudes_bp.route('/devolucion/<int:solicitud_id>', methods=['POST'])
+# Configuración para imágenes de devoluciones
+UPLOAD_FOLDER_DEVOLUCIONES = 'static/images/devoluciones'
+os.makedirs(UPLOAD_FOLDER_DEVOLUCIONES, exist_ok=True)
+
+
+@solicitudes_bp.route('/solicitar-devolucion/<int:solicitud_id>', methods=['POST'])
 @login_required
-def registrar_devolucion(solicitud_id):
-    """Registrar devolución de material"""
+def solicitar_devolucion(solicitud_id):
+    """Solicitar devolución de material (requiere aprobación)"""
     try:
-        data = request.get_json() if request.is_json else request.form
+        # Verificar permiso de solicitar devolución
+        if not can_return_solicitud():
+            return jsonify({'success': False, 'message': 'No tiene permisos para solicitar devoluciones'}), 403
+        
+        data = request.form if request.form else request.get_json()
         cantidad_devuelta = data.get('cantidad_devuelta')
+        motivo = data.get('motivo', '')
         
         if not cantidad_devuelta:
-            return jsonify({'success': False, 'message': 'Debe especificar la cantidad devuelta'})
+            return jsonify({'success': False, 'message': 'Debe especificar la cantidad a devolver'})
         
-        usuario_devolucion = session.get('usuario_nombre', 'Sistema')
-        observacion = data.get('observacion', '')
+        usuario_solicita = session.get('usuario_nombre', 'Sistema')
+        usuario_id = session.get('usuario_id')
         
-        # Obtener info antes de devolver
-        solicitud_info = _obtener_info_solicitud_completa(solicitud_id)
-        estado_anterior = solicitud_info.get('estado', '') if solicitud_info else ''
+        # Procesar imagen si se envió
+        imagen = request.files.get('imagen_devolucion') if hasattr(request, 'files') else None
+        ruta_imagen = None
         
-        success, mensaje = SolicitudModel.registrar_devolucion(
-            solicitud_id, 
-            int(cantidad_devuelta), 
-            usuario_devolucion,
-            observacion
+        if imagen and imagen.filename and allowed_file(imagen.filename):
+            filename = secure_filename(imagen.filename)
+            name, ext = os.path.splitext(filename)
+            filename = f"dev_{solicitud_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
+            filepath = os.path.join(UPLOAD_FOLDER_DEVOLUCIONES, filename)
+            imagen.save(filepath)
+            ruta_imagen = f"images/devoluciones/{filename}"
+            logger.info(f'Imagen guardada para devolución: {filename}')
+        
+        # Registrar solicitud de devolución (estado pendiente)
+        success, mensaje = SolicitudModel.solicitar_devolucion(
+            solicitud_id=solicitud_id,
+            cantidad_devuelta=int(cantidad_devuelta),
+            usuario_solicita=usuario_solicita,
+            motivo=motivo,
+            ruta_imagen=ruta_imagen
         )
         
         if success:
-            # ====== NOTIFICACIÓN: Devolución registrada ======
-            if NOTIFICACIONES_ACTIVAS and solicitud_info and solicitud_info.get('email_solicitante'):
-                try:
-                    NotificationService.notificar_cambio_estado_solicitud(
-                        solicitud_info, 
-                        estado_anterior, 
-                        'Devuelta',
-                        usuario_devolucion,
-                        f'Cantidad devuelta: {cantidad_devuelta}'
-                    )
-                    logger.info(f"📧 Notificación enviada: Devolución solicitud #{solicitud_id}")
-                except Exception as e:
-                    logger.error(f"Error enviando notificación de devolución: {e}")
-            # =============================================
-            
-            return jsonify({'success': True, 'message': mensaje})
+            logger.info(f'Devolución solicitada. Solicitud ID: {solicitud_id}, Cantidad: {cantidad_devuelta}, Usuario: {usuario_solicita}')
+            return jsonify({'success': True, 'message': 'Solicitud de devolución registrada. Pendiente de aprobación.'})
         else:
             return jsonify({'success': False, 'message': mensaje})
         
     except Exception as e:
-        logger.error(f"Error al registrar devolución {solicitud_id}: {str(e)}")
-        return jsonify({'success': False, 'message': 'Error al procesar la devolución'})
+        logger.error(f"Error al solicitar devolución {solicitud_id}: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Error al procesar la solicitud de devolución'})
+
+
+@solicitudes_bp.route('/aprobar-devolucion', methods=['POST'])
+@login_required
+def aprobar_devolucion():
+    """Aprobar una solicitud de devolución"""
+    try:
+        # Verificar permiso de aprobar devolución
+        if not can_manage_novedad():  # Usamos el mismo permiso de gestión
+            return jsonify({'success': False, 'message': 'No tiene permisos para aprobar devoluciones'}), 403
+        
+        data = request.get_json() if request.is_json else request.form
+        devolucion_id = data.get('devolucion_id')
+        observaciones = data.get('observaciones', '')
+        
+        if not devolucion_id:
+            return jsonify({'success': False, 'message': 'ID de devolución requerido'}), 400
+        
+        usuario_aprueba = session.get('usuario_nombre', 'Sistema')
+        
+        # Aprobar y procesar la devolución (actualiza stock)
+        success, mensaje = SolicitudModel.aprobar_devolucion(
+            devolucion_id=int(devolucion_id),
+            usuario_aprueba=usuario_aprueba,
+            observaciones=observaciones
+        )
+        
+        if success:
+            logger.info(f'Devolución aprobada. ID: {devolucion_id}, Usuario: {usuario_aprueba}')
+            return jsonify({'success': True, 'message': 'Devolución aprobada y procesada exitosamente'})
+        else:
+            return jsonify({'success': False, 'message': mensaje})
+        
+    except Exception as e:
+        logger.error(f"Error al aprobar devolución: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Error al aprobar la devolución'})
+
+
+@solicitudes_bp.route('/rechazar-devolucion', methods=['POST'])
+@login_required
+def rechazar_devolucion():
+    """Rechazar una solicitud de devolución"""
+    try:
+        # Verificar permiso
+        if not can_manage_novedad():
+            return jsonify({'success': False, 'message': 'No tiene permisos para rechazar devoluciones'}), 403
+        
+        data = request.get_json() if request.is_json else request.form
+        devolucion_id = data.get('devolucion_id')
+        observaciones = data.get('observaciones', '')
+        
+        if not devolucion_id:
+            return jsonify({'success': False, 'message': 'ID de devolución requerido'}), 400
+        
+        usuario_rechaza = session.get('usuario_nombre', 'Sistema')
+        
+        success, mensaje = SolicitudModel.rechazar_devolucion(
+            devolucion_id=int(devolucion_id),
+            usuario_rechaza=usuario_rechaza,
+            observaciones=observaciones
+        )
+        
+        if success:
+            logger.info(f'Devolución rechazada. ID: {devolucion_id}, Usuario: {usuario_rechaza}')
+            return jsonify({'success': True, 'message': 'Devolución rechazada'})
+        else:
+            return jsonify({'success': False, 'message': mensaje})
+        
+    except Exception as e:
+        logger.error(f"Error al rechazar devolución: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Error al rechazar la devolución'})
+
+
+@solicitudes_bp.route('/api/<int:solicitud_id>/devolucion-pendiente')
+@login_required
+def obtener_devolucion_pendiente(solicitud_id):
+    """Obtiene la devolución pendiente de una solicitud"""
+    try:
+        devolucion = SolicitudModel.obtener_devolucion_pendiente(solicitud_id)
+        
+        if devolucion:
+            return jsonify({
+                'success': True,
+                'devolucion': devolucion
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'No se encontró devolución pendiente para esta solicitud'
+            })
+            
+    except Exception as e:
+        logger.error(f"Error obteniendo devolución pendiente {solicitud_id}: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# Mantener ruta antigua por compatibilidad (redirige al nuevo flujo)
+@solicitudes_bp.route('/devolucion/<int:solicitud_id>', methods=['POST'])
+@login_required
+def registrar_devolucion(solicitud_id):
+    """Registrar devolución de material - REDIRIGE AL NUEVO FLUJO"""
+    return solicitar_devolucion(solicitud_id)
 
 
 # ============================================================================
@@ -570,27 +757,33 @@ def registrar_novedad():
             logger.warning(f'Intento de registro de novedad con datos incompletos. Usuario: {usuario_id}')
             return jsonify({'success': False, 'error': 'Faltan datos requeridos'}), 400
         
+        # ✅ VALIDAR IMAGEN OBLIGATORIA
+        imagen = request.files.get('imagen_novedad')
+        if not imagen or not imagen.filename:
+            logger.warning(f'Intento de registro de novedad sin imagen. Usuario: {usuario_id}')
+            return jsonify({'success': False, 'error': 'La imagen de evidencia es obligatoria'}), 400
+        
         # Obtener info de la solicitud
         solicitud_info = _obtener_info_solicitud_completa(int(solicitud_id))
         
-        imagen = request.files.get('imagen_novedad')
         ruta_imagen = None
         
-        if imagen and imagen.filename:
-            if allowed_file(imagen.filename):
-                filename = secure_filename(imagen.filename)
-                name, ext = os.path.splitext(filename)
-                filename = f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
-                filepath = os.path.join(UPLOAD_FOLDER_NOVEDADES, filename)
-                imagen.save(filepath)
-                ruta_imagen = f"images/novedades/{filename}"
-                logger.info(f'Imagen guardada para novedad: {filename}')
+        if allowed_file(imagen.filename):
+            filename = secure_filename(imagen.filename)
+            name, ext = os.path.splitext(filename)
+            filename = f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
+            filepath = os.path.join(UPLOAD_FOLDER_NOVEDADES, filename)
+            imagen.save(filepath)
+            ruta_imagen = f"images/novedades/{filename}"
+            logger.info(f'Imagen guardada para novedad: {filename}')
+        else:
+            return jsonify({'success': False, 'error': 'Tipo de archivo no permitido. Use: png, jpg, jpeg, gif, webp'}), 400
         
         success = NovedadModel.crear(
             solicitud_id=int(solicitud_id),
             tipo_novedad=tipo_novedad,
             descripcion=descripcion,
-            usuario_reporta=usuario_id,
+            usuario_reporta=usuario_nombre,  # ✅ Corregido: era usuario_id
             cantidad_afectada=int(cantidad_afectada),
             ruta_imagen=ruta_imagen
         )
@@ -797,7 +990,8 @@ def info_devolucion(solicitud_id):
             'cantidad_entregada': info.get('cantidad_entregada', 0),
             'cantidad_ya_devuelta': info.get('cantidad_ya_devuelta', 0),
             'material_nombre': info.get('material_nombre', ''),
-            'solicitante_nombre': info.get('solicitante_nombre', '')
+            'solicitante_nombre': info.get('solicitante_nombre', ''),
+            'material_imagen': info.get('material_imagen', '')
         })
         
     except Exception as e:
