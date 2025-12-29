@@ -1,3 +1,6 @@
+# blueprints/inventario_corporativo.py
+# ARCHIVO ACTUALIZADO CON SOPORTE PARA ASIGNACIÓN A USUARIOS AD
+
 from flask import Blueprint, render_template, request, redirect, session, flash, jsonify, send_file
 from werkzeug.utils import secure_filename
 from models.inventario_corporativo_model import InventarioCorporativoModel
@@ -6,9 +9,29 @@ import os
 import pandas as pd
 from io import BytesIO
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 # =====================================================
-# CONFIGURACIÃ“N DEL BLUEPRINT
+# IMPORTACIONES PARA AD Y NOTIFICACIONES
+# =====================================================
+try:
+    from utils.ldap_auth import ad_auth
+    LDAP_AVAILABLE = True
+except ImportError:
+    LDAP_AVAILABLE = False
+    logger.warning("LDAP no disponible - búsqueda de usuarios AD deshabilitada")
+
+try:
+    from services.notification_service import NotificationService
+    NOTIFICATIONS_AVAILABLE = True
+except ImportError:
+    NOTIFICATIONS_AVAILABLE = False
+    logger.warning("Servicio de notificaciones no disponible")
+
+# =====================================================
+# CONFIGURACIÓN DEL BLUEPRINT
 # =====================================================
 inventario_corporativo_bp = Blueprint(
     'inventario_corporativo',
@@ -20,7 +43,7 @@ inventario_corporativo_bp = Blueprint(
 # FUNCIONES AUXILIARES
 # =====================================================
 def _require_login():
-    """Verifica si el usuario estÃ¡ autenticado"""
+    """Verifica si el usuario está autenticado"""
     return 'usuario_id' in session
 
 def _handle_unauthorized():
@@ -34,7 +57,7 @@ def _handle_not_found():
     return redirect('/inventario-corporativo')
 
 def _calculate_inventory_stats(productos):
-    """Calcula estadÃ­sticas del inventario"""
+    """Calcula estadísticas del inventario"""
     if not productos:
         return {
             'valor_total': 0,
@@ -55,7 +78,7 @@ def _calculate_inventory_stats(productos):
     }
 
 def _handle_image_upload(archivo, producto_actual=None):
-    """Maneja la subida de imÃ¡genes"""
+    """Maneja la subida de imágenes"""
     if not archivo or not archivo.filename:
         return producto_actual.get('ruta_imagen') if producto_actual else None
     
@@ -77,12 +100,12 @@ def _validate_product_form(categorias, proveedores):
     if not nombre:
         errors.append('El nombre del producto es requerido')
     if not categoria_id or categoria_id == '0':
-        errors.append('Debe seleccionar una categorÃ­a')
+        errors.append('Debe seleccionar una categoría')
     if not proveedor_id or proveedor_id == '0':
         errors.append('Debe seleccionar un proveedor')
     
     if not categorias or not proveedores:
-        errors.append('Error: No hay categorÃ­as o proveedores disponibles. Contacte al administrador.')
+        errors.append('Error: No hay categorías o proveedores disponibles. Contacte al administrador.')
     
     if errors:
         for error in errors:
@@ -102,73 +125,18 @@ def _validate_product_form(categorias, proveedores):
     }
 
 # =====================================================
-# HELPER DE PERMISOS PARA /crear
-# =====================================================
-def _tiene_permiso_crear_inventario():
-    """
-    Verifica si el usuario tiene permiso para crear inventario corporativo.
-    Usa can_access y hace fallback manual para:
-    - administrador
-    - lÃ­der inventario
-    - oficina COQ
-    """
-    role_raw = str(session.get('rol', ''))
-    role_norm = role_raw.strip().lower()
-
-    # DEBUG en consola del servidor
-    print("===== DEBUG /inventario-corporativo/crear =====")
-    print(f"Rol en sesiÃ³n: {role_raw!r}")
-
-    # 1) Lo que diga el sistema de permisos central
-    tiene_permiso = can_access('inventario_corporativo', 'create')
-    print(f"can_access('inventario_corporativo', 'create') = {tiene_permiso}")
-
-    if tiene_permiso:
-        print("âœ… Permiso concedido por sistema de permisos.")
-        print("==============================================")
-        return True
-
-    # 2) Fallback: intentamos deducir por texto del rol
-    role_sin_tildes = (
-        role_norm
-        .replace('Ã¡', 'a')
-        .replace('Ã©', 'e')
-        .replace('Ã­', 'i')
-        .replace('Ã³', 'o')
-        .replace('Ãº', 'u')
-        .replace('Ã¼', 'u')
-        .replace('Ã±', 'n')
-    )
-
-    es_admin = 'admin' in role_sin_tildes
-    es_lider_inv = 'lider' in role_sin_tildes and 'invent' in role_sin_tildes
-    es_oficina_coq = 'coq' in role_sin_tildes
-
-    print(f"Fallback: es_admin={es_admin}, es_lider_inv={es_lider_inv}, es_oficina_coq={es_oficina_coq}")
-
-    if es_admin or es_lider_inv or es_oficina_coq:
-        print("âœ… Permiso concedido por fallback de rol (admin/lider/oficina_coq).")
-        print("==============================================")
-        return True
-
-    print("âŒ Sin permiso para crear inventario corporativo.")
-    print("==============================================")
-    return False
-
-# =====================================================
 # RUTAS PRINCIPALES
 # =====================================================
 
 @inventario_corporativo_bp.route('/')
 def listar_inventario_corporativo():
-    """Lista todo el inventario corporativo con estadÃ­sticas"""
+    """Lista todo el inventario corporativo con estadísticas"""
     if not _require_login():
         return redirect('/login')
 
     productos = InventarioCorporativoModel.obtener_todos() or []
     stats = _calculate_inventory_stats(productos)
 
-    # valor_total_inventario se usa en listar.html para el formateo
     return render_template(
         'inventario_corporativo/listar.html',
         productos=productos,
@@ -180,7 +148,7 @@ def listar_inventario_corporativo():
 
 @inventario_corporativo_bp.route('/<int:producto_id>')
 def ver_detalle_producto(producto_id):
-    """Muestra el detalle de un producto especÃ­fico"""
+    """Muestra el detalle de un producto específico"""
     if not _require_login():
         return redirect('/login')
 
@@ -224,7 +192,6 @@ def crear_inventario_corporativo():
                                        categorias=categorias,
                                        proveedores=proveedores)
 
-            # Imagen obligatoria
             archivo = request.files.get('imagen')
             if not archivo or archivo.filename == '':
                 flash('La imagen es obligatoria.', 'danger')
@@ -249,8 +216,8 @@ def crear_inventario_corporativo():
                 flash('No fue posible crear el producto.', 'danger')
 
         except Exception as e:
-            flash('OcurriÃ³ un error al guardar el producto.', 'danger')
-            print(f"[ERROR CREAR] {e}")
+            flash('Ocurrió un error al guardar el producto.', 'danger')
+            logger.error(f"[ERROR CREAR] {e}")
 
     return render_template('inventario_corporativo/crear.html',
                            categorias=categorias,
@@ -298,7 +265,7 @@ def editar_producto_corporativo(producto_id):
                 flash('No fue posible actualizar el producto.', 'danger')
 
         except Exception as e:
-            print(f"[ERROR EDITAR] {e}")
+            logger.error(f"[ERROR EDITAR] {e}")
             flash('Error al actualizar el producto.', 'danger')
 
     return render_template(
@@ -329,17 +296,17 @@ def eliminar_producto_corporativo(producto_id):
             flash('No fue posible eliminar el producto.', 'danger')
 
     except Exception as e:
-        print(f"[ERROR ELIMINAR] {e}")
+        logger.error(f"[ERROR ELIMINAR] {e}")
         flash('Error al eliminar producto.', 'danger')
 
     return redirect('/inventario-corporativo')
 
 # =====================================================
-# VISTAS ESPECÃFICAS POR UBICACIÃ“N
+# VISTAS ESPECÍFICAS POR UBICACIÓN
 # =====================================================
 
 def _render_filtered_view(productos, titulo, subtitulo, tipo):
-    """Renderiza vista filtrada con estadÃ­sticas"""
+    """Renderiza vista filtrada con estadísticas"""
     stats = _calculate_inventory_stats(productos)
     
     if tipo == 'oficinas':
@@ -384,12 +351,12 @@ def listar_oficinas_servicio():
     return _render_filtered_view(productos, 'Oficinas de Servicio', 'Productos en oficinas de servicio', 'oficinas')
 
 # =====================================================
-# ASIGNACIÃ“N DE PRODUCTOS
+# ASIGNACIÓN DE PRODUCTOS - ACTUALIZADO CON USUARIOS AD
 # =====================================================
 
 @inventario_corporativo_bp.route('/asignar/<int:producto_id>', methods=['GET', 'POST'])
 def asignar_producto_corporativo(producto_id):
-    """Asigna un producto a una oficina"""
+    """Asigna un producto a una oficina y usuario del AD"""
     if not _require_login():
         return redirect('/login')
 
@@ -411,42 +378,186 @@ def asignar_producto_corporativo(producto_id):
         try:
             oficina_id = int(request.form.get('oficina_id') or 0)
             cantidad_asignar = int(request.form.get('cantidad') or 0)
+            
+            # Nuevos campos para usuario AD
+            usuario_ad_username = request.form.get('usuario_ad_username', '').strip()
+            usuario_ad_nombre = request.form.get('usuario_ad_nombre', '').strip()
+            usuario_ad_email = request.form.get('usuario_ad_email', '').strip()
+            enviar_notificacion = request.form.get('enviar_notificacion') == 'on'
 
+            # Validaciones
             if cantidad_asignar > producto.get('cantidad', 0):
                 flash('No hay suficiente stock.', 'danger')
                 return redirect(request.url)
+            
+            if not oficina_id:
+                flash('Debe seleccionar una oficina.', 'danger')
+                return redirect(request.url)
 
-            asignado = InventarioCorporativoModel.asignar_a_oficina(
-                producto_id=producto_id,
-                oficina_id=oficina_id,
-                cantidad=cantidad_asignar,
-                usuario_accion=session.get('usuario', 'Sistema')
+            # Obtener nombre de oficina para la notificación
+            oficina_nombre = next(
+                (o['nombre'] for o in oficinas if o['id'] == oficina_id), 
+                'Oficina'
             )
 
-            if asignado:
-                flash('Producto asignado correctamente.', 'success')
-                return redirect(f'/inventario-corporativo/{producto_id}')
+            # Preparar información del usuario AD si se proporcionó
+            usuario_ad_info = None
+            if usuario_ad_username:
+                usuario_ad_info = {
+                    'username': usuario_ad_username,
+                    'full_name': usuario_ad_nombre or usuario_ad_username,
+                    'email': usuario_ad_email,
+                    'department': ''
+                }
+
+            # Realizar asignación
+            if usuario_ad_info:
+                # Usar el método extendido para asignación con usuario AD
+                from models.inventario_corporativo_model_extended import InventarioCorporativoModelExtended
+                
+                resultado = InventarioCorporativoModelExtended.asignar_a_usuario_ad(
+                    producto_id=producto_id,
+                    oficina_id=oficina_id,
+                    cantidad=cantidad_asignar,
+                    usuario_ad_info=usuario_ad_info,
+                    usuario_accion=session.get('usuario', 'Sistema')
+                )
+                
+                if resultado.get('success'):
+                    flash('Producto asignado correctamente.', 'success')
+                    
+                    # Enviar notificación si está habilitado y hay email
+                    if enviar_notificacion and usuario_ad_email and NOTIFICATIONS_AVAILABLE:
+                        try:
+                            NotificationService.enviar_notificacion_asignacion(
+                                destinatario_email=usuario_ad_email,
+                                destinatario_nombre=usuario_ad_nombre or usuario_ad_username,
+                                producto_info=producto,
+                                cantidad=cantidad_asignar,
+                                oficina_nombre=oficina_nombre,
+                                asignador_nombre=session.get('usuario_nombre', session.get('usuario', 'Sistema'))
+                            )
+                            flash(f'Notificación enviada a {usuario_ad_email}', 'info')
+                        except Exception as e:
+                            logger.error(f"Error enviando notificación: {e}")
+                            flash('Producto asignado pero no se pudo enviar la notificación.', 'warning')
+                    
+                    return redirect(f'/inventario-corporativo/{producto_id}')
+                else:
+                    flash(resultado.get('message', 'No se pudo asignar el producto.'), 'danger')
             else:
-                flash('No se pudo asignar el producto.', 'danger')
+                # Usar el método tradicional sin usuario AD específico
+                asignado = InventarioCorporativoModel.asignar_a_oficina(
+                    producto_id=producto_id,
+                    oficina_id=oficina_id,
+                    cantidad=cantidad_asignar,
+                    usuario_accion=session.get('usuario', 'Sistema')
+                )
+
+                if asignado:
+                    flash('Producto asignado correctamente.', 'success')
+                    return redirect(f'/inventario-corporativo/{producto_id}')
+                else:
+                    flash('No se pudo asignar el producto.', 'danger')
 
         except Exception as e:
-            print(f"[ERROR ASIGNAR] {e}")
+            logger.error(f"[ERROR ASIGNAR] {e}")
             flash('Error al asignar producto.', 'danger')
 
     return render_template(
         'inventario_corporativo/asignar.html',
         producto=producto,
         oficinas=oficinas,
-        historial=historial
+        historial=historial,
+        ldap_disponible=LDAP_AVAILABLE
     )
 
 # =====================================================
-# APIS Y EXPORTACIÃ“N
+# API PARA BÚSQUEDA DE USUARIOS AD
+# =====================================================
+
+@inventario_corporativo_bp.route('/api/buscar-usuarios-ad')
+def api_buscar_usuarios_ad():
+    """
+    API para buscar usuarios en Active Directory.
+    Parámetros:
+        q: Término de búsqueda (mínimo 3 caracteres)
+    """
+    if not _require_login():
+        return jsonify({'error': 'No autorizado'}), 401
+    
+    if not LDAP_AVAILABLE:
+        return jsonify({
+            'error': 'Búsqueda de usuarios AD no disponible',
+            'usuarios': []
+        }), 503
+
+    termino = request.args.get('q', '').strip()
+    
+    if len(termino) < 3:
+        return jsonify({
+            'error': 'Ingrese al menos 3 caracteres para buscar',
+            'usuarios': []
+        })
+    
+    try:
+        usuarios = ad_auth.search_user_by_name(termino)
+        
+        return jsonify({
+            'success': True,
+            'usuarios': usuarios,
+            'total': len(usuarios)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error buscando usuarios AD: {e}")
+        return jsonify({
+            'error': 'Error al buscar usuarios',
+            'usuarios': []
+        }), 500
+
+@inventario_corporativo_bp.route('/api/obtener-usuario-ad/<username>')
+def api_obtener_usuario_ad(username):
+    """
+    API para obtener detalles de un usuario específico del AD.
+    """
+    if not _require_login():
+        return jsonify({'error': 'No autorizado'}), 401
+    
+    if not LDAP_AVAILABLE:
+        return jsonify({'error': 'LDAP no disponible'}), 503
+
+    try:
+        usuarios = ad_auth.search_user_by_name(username)
+        
+        # Buscar usuario exacto
+        usuario = next(
+            (u for u in usuarios if u.get('usuario', '').lower() == username.lower()),
+            None
+        )
+        
+        if usuario:
+            return jsonify({
+                'success': True,
+                'usuario': usuario
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Usuario no encontrado'
+            }), 404
+            
+    except Exception as e:
+        logger.error(f"Error obteniendo usuario AD: {e}")
+        return jsonify({'error': 'Error al obtener usuario'}), 500
+
+# =====================================================
+# APIS Y EXPORTACIÓN
 # =====================================================
 
 @inventario_corporativo_bp.route('/api/estadisticas-dashboard')
 def api_estadisticas_dashboard():
-    """API para estadÃ­sticas del dashboard (vista general)"""
+    """API para estadísticas del dashboard (vista general)"""
     if not _require_login():
         return jsonify({'error': 'No autorizado'}), 401
 
@@ -466,7 +577,7 @@ def api_estadisticas_dashboard():
         })
         
     except Exception as e:
-        print(f"Error en API estadÃ­sticas dashboard: {e}")
+        logger.error(f"Error en API estadísticas dashboard: {e}")
         return jsonify({
             "total_productos": 0,
             "valor_total": 0,
@@ -477,11 +588,7 @@ def api_estadisticas_dashboard():
 
 @inventario_corporativo_bp.route('/api/estadisticas')
 def api_estadisticas_inventario():
-    """
-    API para estadÃ­sticas generales del inventario.
-    Usada por el modal de inventario corporativo.
-    Ahora incluye tambiÃ©n productos en sede y en oficinas.
-    """
+    """API para estadísticas generales del inventario."""
     if not _require_login():
         return jsonify({'error': 'No autorizado'}), 401
 
@@ -501,7 +608,7 @@ def api_estadisticas_inventario():
         })
         
     except Exception as e:
-        print(f"Error en API estadÃ­sticas: {e}")
+        logger.error(f"Error en API estadísticas: {e}")
         return jsonify({
             "total_productos": 0,
             "valor_total": 0,

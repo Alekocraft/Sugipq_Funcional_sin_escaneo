@@ -179,7 +179,7 @@ class ADAuth:
             
             conn = Connection(
                 server,
-                user=f"{Config.LDAP_SERVICE_USER}@{self.domain}",
+                user=f"{self.domain}\\{Config.LDAP_SERVICE_USER}",
                 password=Config.LDAP_SERVICE_PASSWORD,
                 authentication=NTLM,
                 auto_bind=True

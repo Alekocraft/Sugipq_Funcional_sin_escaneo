@@ -481,6 +481,7 @@ class InventarioCorporativoModel:
         cursor = None
         try:
             cursor = conn.cursor()
+            # ✅ CORRECCIÓN: Agregados los campos UsuarioAsignadoNombre y UsuarioAsignadoEmail
             cursor.execute("""
                 SELECT 
                     h.HistorialId,
@@ -490,7 +491,9 @@ class InventarioCorporativoModel:
                     h.Accion,
                     h.Cantidad,
                     h.UsuarioAccion,
-                    h.Fecha
+                    h.Fecha,
+                    h.UsuarioAsignadoNombre,
+                    h.UsuarioAsignadoEmail
                 FROM AsignacionesCorporativasHistorial h
                 LEFT JOIN Oficinas o ON o.OficinaId = h.OficinaId
                 WHERE h.ProductoId = ?

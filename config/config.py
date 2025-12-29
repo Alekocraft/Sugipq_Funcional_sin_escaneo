@@ -16,6 +16,7 @@ class Config:
     SESSION_COOKIE_SAMESITE = 'Lax'
     PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
     
+    
     # Uploads
     UPLOAD_FOLDER = 'static/uploads'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
@@ -41,6 +42,8 @@ class Config:
     LDAP_SERVER = '10.60.0.30'
     LDAP_DOMAIN = 'qualitascolombia.com.co'
     LDAP_SEARCH_BASE = 'DC=qualitascolombia,DC=com,DC=co'
+    LDAP_SERVICE_USER = 'userauge'
+    LDAP_SERVICE_PASSWORD = 'QC4ug3*24'
     
     # Fallback a autenticación local si LDAP falla
     LDAP_FALLBACK_LOCAL = True

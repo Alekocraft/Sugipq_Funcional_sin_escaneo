@@ -1,4 +1,14 @@
-﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file, after_this_request, jsonify, current_app
+﻿"""
+Blueprint de Préstamos con Sistema de Notificaciones
+====================================================
+Este archivo debe reemplazar: blueprints/prestamos.py
+
+Cambios principales:
+- Integración con NotificationService
+- Notificaciones en: crear, aprobar, rechazar, devolver
+"""
+
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file, after_this_request, jsonify, current_app
 from utils.permissions import can_access
 from io import BytesIO
 from datetime import datetime
@@ -22,8 +32,21 @@ except ImportError:
     pd = None
     HAS_PANDAS = False
 
-# Importar funciones de tu base de datos existente
 from database import get_database_connection
+
+# ============================================================================
+# IMPORTAR SERVICIO DE NOTIFICACIONES
+# ============================================================================
+try:
+    from services.notification_service import NotificationService
+    NOTIFICACIONES_ACTIVAS = True
+    print("✅ Servicio de notificaciones cargado para préstamos")
+except ImportError:
+    NOTIFICACIONES_ACTIVAS = False
+    print("⚠️ Servicio de notificaciones no disponible para préstamos")
+
+import logging
+logger = logging.getLogger(__name__)
 
 prestamos_bp = Blueprint('prestamos', __name__)
 
@@ -68,6 +91,53 @@ def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# =========================
+# Funciones para notificaciones
+# =========================
+def _obtener_info_prestamo_completa(prestamo_id):
+    """Obtiene información completa del préstamo para notificaciones"""
+    conn = cur = None
+    try:
+        conn = get_database_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT 
+                pe.PrestamoId,
+                el.NombreElemento,
+                pe.CantidadPrestada,
+                u.NombreUsuario,
+                u.CorreoElectronico,
+                o.NombreOficina,
+                pe.Evento,
+                pe.FechaDevolucionPrevista,
+                pe.Estado
+            FROM dbo.PrestamosElementos pe
+            INNER JOIN dbo.ElementosPublicitarios el ON pe.ElementoId = el.ElementoId
+            INNER JOIN dbo.Usuarios u ON pe.UsuarioSolicitanteId = u.UsuarioId
+            INNER JOIN dbo.Oficinas o ON pe.OficinaId = o.OficinaId
+            WHERE pe.PrestamoId = ? AND pe.Activo = 1
+        """, (prestamo_id,))
+        row = cur.fetchone()
+        if row:
+            return {
+                'id': row[0],
+                'material': row[1],
+                'cantidad': row[2],
+                'solicitante_nombre': row[3],
+                'email_solicitante': row[4],
+                'oficina_nombre': row[5],
+                'evento': row[6],
+                'fecha_prevista': str(row[7]) if row[7] else 'N/A',
+                'estado': row[8]
+            }
+        return None
+    except Exception as e:
+        logger.error(f"Error obteniendo info préstamo: {e}")
+        return None
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
 
 # =========================
 # Consultas de base de datos
@@ -256,7 +326,7 @@ def _fetch_detalle(prestamo_id: int):
 # =========================
 # Filtros para exportaciones
 # =========================
-def filtrar_por_oficina_usuario(prestamos, campo_oficina='oficina_id'):
+def filtrar_por_oficina_usuario_prestamos(prestamos, campo_oficina='oficina_id'):
     """Filtra préstamos por oficina del usuario actual"""
     from utils.permissions import user_can_view_all
     
@@ -274,13 +344,12 @@ def filtrar_por_oficina_usuario(prestamos, campo_oficina='oficina_id'):
 # =========================
 @prestamos_bp.route('/')
 def listar_prestamos():
-    """Listar todos los préstamos (accesible)"""
+    """Listar todos los préstamos"""
     if not _require_login():
         return redirect('/login')
 
     estado = request.args.get('estado', '').strip() or None
     
-    # Filtro de oficina según permisos
     from utils.permissions import user_can_view_all
     oficina_id = None if user_can_view_all() else session.get('oficina_id')
     
@@ -307,7 +376,6 @@ def crear_prestamo():
         return redirect('/prestamos')
 
     if request.method == 'POST':
-        # Tomar IDs desde sesión
         solicitante_id = int(session.get('usuario_id', 0))
         oficina_id = int(session.get('oficina_id', 0))
 
@@ -354,7 +422,7 @@ def crear_prestamo():
             conn = get_database_connection()
             cur = conn.cursor()
             
-            # Valida stock con bloqueo para evitar race conditions
+            # Valida stock
             cur.execute("""
                 SELECT CantidadDisponible, NombreElemento
                 FROM dbo.ElementosPublicitarios WITH (UPDLOCK, ROWLOCK)
@@ -377,7 +445,6 @@ def crear_prestamo():
                 flash(f'Stock insuficiente. Disponible: {disponible}', 'danger')
                 return redirect('/prestamos/crear')
 
-            # Obtener usuario prestador de la sesión
             usuario_prestador = session.get('usuario_nombre', 'Sistema')
 
             # Crea préstamo
@@ -393,7 +460,6 @@ def crear_prestamo():
                 fecha_prevista, evento, observaciones, usuario_prestador
             ))
 
-            # Obtener el ID del préstamo creado
             prestamo_id = cur.fetchone()[0]
             print(f"✅ Préstamo creado con ID: {prestamo_id}")
 
@@ -406,17 +472,17 @@ def crear_prestamo():
 
             conn.commit()
             
-            # Verificar que realmente se insertó
-            cur.execute("""
-                SELECT COUNT(*) FROM dbo.PrestamosElementos 
-                WHERE PrestamoId = ? AND Activo = 1
-            """, (prestamo_id,))
-            if cur.fetchone()[0] > 0:
-                print(f"✅ Verificación exitosa: Préstamo {prestamo_id} existe en BD")
-            else:
-                print(f"⚠️ Advertencia: Préstamo {prestamo_id} no encontrado después de commit")
+            # ====== NOTIFICACIÓN: Préstamo creado ======
+            if NOTIFICACIONES_ACTIVAS:
+                try:
+                    prestamo_info = _obtener_info_prestamo_completa(prestamo_id)
+                    if prestamo_info:
+                        NotificationService.notificar_prestamo_creado(prestamo_info)
+                        logger.info(f"📧 Notificación enviada: Nuevo préstamo #{prestamo_id}")
+                except Exception as e:
+                    logger.error(f"Error enviando notificación de préstamo creado: {e}")
+            # =============================================
             
-            # Respuesta para AJAX
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({
                     'success': True,
@@ -427,7 +493,6 @@ def crear_prestamo():
                     'redirect': '/prestamos'
                 })
                 
-            # Respuesta normal (no AJAX)
             flash(f'✅ Préstamo de "{nombre_elemento}" registrado correctamente para el evento: {evento}', 'success')
             return redirect('/prestamos')
             
@@ -458,7 +523,6 @@ def crear_prestamo():
 
     fecha_minima = datetime.now().strftime('%Y-%m-%d')
 
-    # Cargar elementos activos
     elementos = []
     conn = cur = None
     try:
@@ -517,6 +581,452 @@ def crear_prestamo():
         oficina_nombre=oficina_nombre,
         fecha_minima=fecha_minima
     )
+
+# =========================
+# Rutas de Aprobación/Rechazo/Devolución con Notificaciones
+# =========================
+
+@prestamos_bp.route('/<int:prestamo_id>/aprobar', methods=['POST'])
+def aprobar_prestamo(prestamo_id):
+    """Aprobar un préstamo pendiente"""
+    if not _require_login():
+        return jsonify({'success': False, 'message': 'No autorizado'}), 401
+    
+    if not can_access('prestamos', 'approve'):
+        return jsonify({'success': False, 'message': 'No tienes permisos para aprobar préstamos'}), 403
+    
+    conn = cur = None
+    try:
+        conn = get_database_connection()
+        cur = conn.cursor()
+        
+        # Obtener info del préstamo ANTES de aprobar
+        prestamo_info = _obtener_info_prestamo_completa(prestamo_id)
+        
+        cur.execute("""
+            SELECT pe.Estado, pe.ElementoId, pe.CantidadPrestada
+            FROM dbo.PrestamosElementos pe
+            WHERE pe.PrestamoId = ? AND pe.Activo = 1
+        """, (prestamo_id,))
+        
+        row = cur.fetchone()
+        if not row:
+            return jsonify({'success': False, 'message': 'Préstamo no encontrado'}), 404
+        
+        estado_actual = row[0]
+        elemento_id = row[1]
+        cantidad_prestada = row[2]
+        
+        if estado_actual != 'PRESTADO':
+            return jsonify({'success': False, 'message': f'El préstamo ya está en estado: {estado_actual}'}), 400
+        
+        usuario_aprobador = session.get('usuario_nombre', 'Sistema')
+        
+        cur.execute("""
+            UPDATE dbo.PrestamosElementos
+            SET Estado = 'APROBADO',
+                UsuarioAprobador = ?,
+                FechaAprobacion = GETDATE(),
+                ObservacionesAprobacion = ISNULL(ObservacionesAprobacion, '') + ' - Aprobado por: ' + ? + ' (' + CONVERT(VARCHAR, GETDATE(), 120) + ')'
+            WHERE PrestamoId = ? AND Activo = 1
+        """, (usuario_aprobador, usuario_aprobador, prestamo_id))
+        
+        conn.commit()
+        
+        # ====== NOTIFICACIÓN: Préstamo aprobado ======
+        if NOTIFICACIONES_ACTIVAS and prestamo_info and prestamo_info.get('email_solicitante'):
+            try:
+                NotificationService.notificar_cambio_estado_prestamo(
+                    prestamo_info,
+                    'APROBADO',
+                    usuario_aprobador
+                )
+                logger.info(f"📧 Notificación enviada: Préstamo #{prestamo_id} aprobado")
+            except Exception as e:
+                logger.error(f"Error enviando notificación de aprobación préstamo: {e}")
+        # =============================================
+        
+        return jsonify({
+            'success': True,
+            'message': 'Préstamo aprobado exitosamente',
+            'prestamo_id': prestamo_id,
+            'estado': 'APROBADO',
+            'usuario_aprobador': usuario_aprobador,
+            'fecha_aprobacion': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        try:
+            if conn: conn.rollback()
+        except:
+            pass
+        
+        print(f"❌ Error aprobando préstamo {prestamo_id}: {e}")
+        return jsonify({'success': False, 'message': f'Error al aprobar préstamo: {str(e)}'}), 500
+    finally:
+        try:
+            if cur: cur.close()
+            if conn: conn.close()
+        except:
+            pass
+
+@prestamos_bp.route('/<int:prestamo_id>/aprobar_parcial', methods=['POST'])
+def aprobar_parcial_prestamo(prestamo_id):
+    """Aprobar parcialmente un préstamo pendiente"""
+    if not _require_login():
+        return jsonify({'success': False, 'message': 'No autorizado'}), 401
+    
+    if not can_access('prestamos', 'approve'):
+        return jsonify({'success': False, 'message': 'No tienes permisos para aprobar préstamos'}), 403
+    
+    data = request.get_json()
+    if not data or 'cantidad_aprobada' not in data:
+        return jsonify({'success': False, 'message': 'Cantidad aprobada requerida'}), 400
+    
+    try:
+        cantidad_aprobada = int(data['cantidad_aprobada'])
+        if cantidad_aprobada <= 0:
+            return jsonify({'success': False, 'message': 'La cantidad aprobada debe ser mayor a 0'}), 400
+    except:
+        return jsonify({'success': False, 'message': 'Cantidad inválida'}), 400
+    
+    conn = cur = None
+    try:
+        conn = get_database_connection()
+        cur = conn.cursor()
+        
+        # Obtener info del préstamo ANTES de aprobar
+        prestamo_info = _obtener_info_prestamo_completa(prestamo_id)
+        
+        cur.execute("""
+            SELECT pe.Estado, pe.ElementoId, pe.CantidadPrestada, el.NombreElemento
+            FROM dbo.PrestamosElementos pe
+            INNER JOIN dbo.ElementosPublicitarios el ON pe.ElementoId = el.ElementoId
+            WHERE pe.PrestamoId = ? AND pe.Activo = 1
+        """, (prestamo_id,))
+        
+        row = cur.fetchone()
+        if not row:
+            return jsonify({'success': False, 'message': 'Préstamo no encontrado'}), 404
+        
+        estado_actual = row[0]
+        elemento_id = row[1]
+        cantidad_total = row[2]
+        nombre_elemento = row[3]
+        
+        if estado_actual != 'PRESTADO':
+            return jsonify({'success': False, 'message': f'El préstamo ya está en estado: {estado_actual}'}), 400
+        
+        if cantidad_aprobada > cantidad_total:
+            return jsonify({
+                'success': False, 
+                'message': f'La cantidad aprobada ({cantidad_aprobada}) no puede exceder la cantidad solicitada ({cantidad_total})'
+            }), 400
+        
+        usuario_aprobador = session.get('usuario_nombre', 'Sistema')
+        
+        cur.execute("""
+            SELECT CantidadDisponible 
+            FROM dbo.ElementosPublicitarios 
+            WHERE ElementoId = ? AND Activo = 1
+        """, (elemento_id,))
+        
+        stock_row = cur.fetchone()
+        if not stock_row:
+            return jsonify({'success': False, 'message': 'Elemento no encontrado'}), 404
+        
+        stock_disponible = stock_row[0] or 0
+        
+        if cantidad_aprobada > stock_disponible:
+            return jsonify({
+                'success': False, 
+                'message': f'Stock insuficiente. Disponible: {stock_disponible}, Solicitado: {cantidad_aprobada}'
+            }), 400
+        
+        cur.execute("""
+            UPDATE dbo.PrestamosElementos
+            SET Estado = 'APROBADO_PARCIAL',
+                CantidadPrestada = ?,
+                UsuarioAprobador = ?,
+                FechaAprobacion = GETDATE(),
+                ObservacionesAprobacion = ISNULL(ObservacionesAprobacion, '') + ' - Aprobado parcialmente por: ' + ? + ' (' + CONVERT(VARCHAR, GETDATE(), 120) + ') Cantidad: ' + CAST(? AS NVARCHAR) + ' de ' + CAST(? AS NVARCHAR),
+                Observaciones = ISNULL(Observaciones, '') + ' - Aprobado parcialmente: ' + CAST(? AS NVARCHAR) + ' de ' + CAST(? AS NVARCHAR)
+            WHERE PrestamoId = ? AND Activo = 1
+        """, (cantidad_aprobada, usuario_aprobador, usuario_aprobador, 
+              cantidad_aprobada, cantidad_total, cantidad_aprobada, cantidad_total, prestamo_id))
+        
+        cur.execute("""
+            UPDATE dbo.ElementosPublicitarios
+            SET CantidadDisponible = CantidadDisponible - ?
+            WHERE ElementoId = ? AND Activo = 1
+        """, (cantidad_aprobada, elemento_id))
+        
+        if cantidad_aprobada < cantidad_total:
+            diferencia = cantidad_total - cantidad_aprobada
+            cur.execute("""
+                UPDATE dbo.ElementosPublicitarios
+                SET CantidadDisponible = CantidadDisponible + ?
+                WHERE ElementoId = ? AND Activo = 1
+            """, (diferencia, elemento_id))
+        
+        conn.commit()
+        
+        # ====== NOTIFICACIÓN: Préstamo aprobado parcialmente ======
+        if NOTIFICACIONES_ACTIVAS and prestamo_info and prestamo_info.get('email_solicitante'):
+            try:
+                NotificationService.notificar_cambio_estado_prestamo(
+                    prestamo_info,
+                    'APROBADO_PARCIAL',
+                    usuario_aprobador,
+                    f'Cantidad aprobada: {cantidad_aprobada} de {cantidad_total}'
+                )
+                logger.info(f"📧 Notificación enviada: Préstamo #{prestamo_id} aprobado parcialmente")
+            except Exception as e:
+                logger.error(f"Error enviando notificación de aprobación parcial préstamo: {e}")
+        # =============================================
+        
+        return jsonify({
+            'success': True,
+            'message': f'Préstamo aprobado parcialmente ({cantidad_aprobada} de {cantidad_total})',
+            'prestamo_id': prestamo_id,
+            'estado': 'APROBADO_PARCIAL',
+            'cantidad_aprobada': cantidad_aprobada,
+            'cantidad_original': cantidad_total,
+            'usuario_aprobador': usuario_aprobador,
+            'fecha_aprobacion': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        try:
+            if conn: conn.rollback()
+        except:
+            pass
+        
+        print(f"❌ Error aprobando parcialmente préstamo {prestamo_id}: {e}")
+        return jsonify({'success': False, 'message': f'Error al aprobar parcialmente: {str(e)}'}), 500
+    finally:
+        try:
+            if cur: cur.close()
+            if conn: conn.close()
+        except:
+            pass
+
+@prestamos_bp.route('/<int:prestamo_id>/rechazar', methods=['POST'])
+def rechazar_prestamo(prestamo_id):
+    """Rechazar un préstamo pendiente"""
+    if not _require_login():
+        return jsonify({'success': False, 'message': 'No autorizado'}), 401
+    
+    if not can_access('prestamos', 'reject'):
+        return jsonify({'success': False, 'message': 'No tienes permisos para rechazar préstamos'}), 403
+    
+    data = request.get_json()
+    if not data or 'observacion' not in data:
+        return jsonify({'success': False, 'message': 'Observación requerida'}), 400
+    
+    observacion = (data['observacion'] or '').strip()
+    if not observacion:
+        return jsonify({'success': False, 'message': 'La observación es obligatoria'}), 400
+    
+    conn = cur = None
+    try:
+        conn = get_database_connection()
+        cur = conn.cursor()
+        
+        # Obtener info del préstamo ANTES de rechazar
+        prestamo_info = _obtener_info_prestamo_completa(prestamo_id)
+        
+        cur.execute("""
+            SELECT pe.Estado, pe.ElementoId, pe.CantidadPrestada
+            FROM dbo.PrestamosElementos pe
+            WHERE pe.PrestamoId = ? AND pe.Activo = 1
+        """, (prestamo_id,))
+        
+        row = cur.fetchone()
+        if not row:
+            return jsonify({'success': False, 'message': 'Préstamo no encontrado'}), 404
+        
+        estado_actual = row[0]
+        elemento_id = row[1]
+        cantidad_prestada = row[2]
+        
+        if estado_actual != 'PRESTADO':
+            return jsonify({'success': False, 'message': f'El préstamo ya está en estado: {estado_actual}'}), 400
+        
+        usuario_rechazador = session.get('usuario_nombre', 'Sistema')
+        
+        cur.execute("""
+            UPDATE dbo.PrestamosElementos
+            SET Estado = 'RECHAZADO',
+                UsuarioRechazador = ?,
+                FechaRechazo = GETDATE(),
+                MotivoRechazo = ?,
+                Observaciones = ISNULL(Observaciones, '') + ' - RECHAZADO por: ' + ? + ' (' + CONVERT(VARCHAR, GETDATE(), 120) + ') Motivo: ' + ?
+            WHERE PrestamoId = ? AND Activo = 1
+        """, (usuario_rechazador, observacion, usuario_rechazador, observacion, prestamo_id))
+        
+        # Devolver al inventario
+        cur.execute("""
+            UPDATE dbo.ElementosPublicitarios
+            SET CantidadDisponible = CantidadDisponible + ?
+            WHERE ElementoId = ? AND Activo = 1
+        """, (cantidad_prestada, elemento_id))
+        
+        conn.commit()
+        
+        # ====== NOTIFICACIÓN: Préstamo rechazado ======
+        if NOTIFICACIONES_ACTIVAS and prestamo_info and prestamo_info.get('email_solicitante'):
+            try:
+                NotificationService.notificar_cambio_estado_prestamo(
+                    prestamo_info,
+                    'RECHAZADO',
+                    usuario_rechazador,
+                    observacion
+                )
+                logger.info(f"📧 Notificación enviada: Préstamo #{prestamo_id} rechazado")
+            except Exception as e:
+                logger.error(f"Error enviando notificación de rechazo préstamo: {e}")
+        # =============================================
+        
+        return jsonify({
+            'success': True,
+            'message': 'Préstamo rechazado exitosamente',
+            'prestamo_id': prestamo_id,
+            'estado': 'RECHAZADO',
+            'usuario_rechazador': usuario_rechazador,
+            'fecha_rechazo': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'motivo_rechazo': observacion
+        })
+        
+    except Exception as e:
+        try:
+            if conn: conn.rollback()
+        except:
+            pass
+        
+        print(f"❌ Error rechazando préstamo {prestamo_id}: {e}")
+        return jsonify({'success': False, 'message': f'Error al rechazar préstamo: {str(e)}'}), 500
+    finally:
+        try:
+            if cur: cur.close()
+            if conn: conn.close()
+        except:
+            pass
+
+@prestamos_bp.route('/<int:prestamo_id>/devolucion', methods=['POST'])
+def registrar_devolucion_prestamo(prestamo_id):
+    """Registrar devolución de un préstamo aprobado"""
+    if not _require_login():
+        return jsonify({'success': False, 'message': 'No autorizado'}), 401
+    
+    if not can_access('prestamos', 'return'):
+        return jsonify({'success': False, 'message': 'No tienes permisos para registrar devoluciones'}), 403
+    
+    data = request.get_json()
+    observacion = (data.get('observacion') or '').strip() if data else ''
+    
+    conn = cur = None
+    try:
+        conn = get_database_connection()
+        cur = conn.cursor()
+        
+        # Obtener info del préstamo ANTES de devolver
+        prestamo_info = _obtener_info_prestamo_completa(prestamo_id)
+        
+        cur.execute("""
+            SELECT pe.Estado, pe.ElementoId, pe.CantidadPrestada
+            FROM dbo.PrestamosElementos pe
+            WHERE pe.PrestamoId = ? AND pe.Activo = 1
+        """, (prestamo_id,))
+        
+        row = cur.fetchone()
+        if not row:
+            return jsonify({'success': False, 'message': 'Préstamo no encontrado'}), 404
+        
+        estado_actual = row[0]
+        elemento_id = row[1]
+        cantidad_prestada = row[2]
+        
+        if estado_actual not in ['APROBADO', 'APROBADO_PARCIAL']:
+            return jsonify({
+                'success': False, 
+                'message': f'No se puede registrar devolución para préstamo en estado: {estado_actual}. Solo se puede devolver préstamos aprobados.'
+            }), 400
+        
+        usuario_devolucion = session.get('usuario_nombre', 'Sistema')
+        
+        cur.execute("""
+            UPDATE dbo.PrestamosElementos
+            SET Estado = 'DEVUELTO',
+                UsuarioDevolucion = ?,
+                FechaDevolucionReal = GETDATE(),
+                Observaciones = ISNULL(Observaciones, '') + CASE WHEN ? != '' THEN ' - DEVUELTO por: ' + ? + ' (' + CONVERT(VARCHAR, GETDATE(), 120) + ') Observación: ' + ? ELSE ' - DEVUELTO por: ' + ? + ' (' + CONVERT(VARCHAR, GETDATE(), 120) + ')' END
+            WHERE PrestamoId = ? AND Activo = 1
+        """, (usuario_devolucion, observacion, usuario_devolucion, observacion, usuario_devolucion, prestamo_id))
+        
+        # Devolver al inventario
+        cur.execute("""
+            UPDATE dbo.ElementosPublicitarios
+            SET CantidadDisponible = CantidadDisponible + ?
+            WHERE ElementoId = ? AND Activo = 1
+        """, (cantidad_prestada, elemento_id))
+        
+        conn.commit()
+        
+        # ====== NOTIFICACIÓN: Devolución registrada ======
+        if NOTIFICACIONES_ACTIVAS and prestamo_info and prestamo_info.get('email_solicitante'):
+            try:
+                NotificationService.notificar_cambio_estado_prestamo(
+                    prestamo_info,
+                    'DEVUELTO',
+                    usuario_devolucion,
+                    observacion if observacion else 'Devolución completada'
+                )
+                logger.info(f"📧 Notificación enviada: Devolución préstamo #{prestamo_id}")
+            except Exception as e:
+                logger.error(f"Error enviando notificación de devolución préstamo: {e}")
+        # =============================================
+        
+        return jsonify({
+            'success': True,
+            'message': 'Devolución registrada exitosamente',
+            'prestamo_id': prestamo_id,
+            'estado': 'DEVUELTO',
+            'usuario_devolucion': usuario_devolucion,
+            'fecha_devolucion': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'observacion': observacion if observacion else 'Sin observación'
+        })
+        
+    except Exception as e:
+        try:
+            if conn: conn.rollback()
+        except:
+            pass
+        
+        print(f"❌ Error registrando devolución préstamo {prestamo_id}: {e}")
+        return jsonify({'success': False, 'message': f'Error al registrar devolución: {str(e)}'}), 500
+    finally:
+        try:
+            if cur: cur.close()
+            if conn: conn.close()
+        except:
+            pass
+
+# =========================
+# Ruta: Ver detalles de préstamo
+# =========================
+@prestamos_bp.route('/<int:prestamo_id>', methods=['GET'])
+def ver_prestamo(prestamo_id):
+    """Ver detalles de un préstamo específico"""
+    if not _require_login():
+        return redirect('/login')
+    
+    detalle = _fetch_detalle(prestamo_id)
+    if not detalle:
+        flash('Préstamo no encontrado', 'danger')
+        return redirect('/prestamos')
+    
+    return render_template('prestamos/detalle.html', prestamo=detalle)
 
 # =========================
 # Ruta: Crear Material (AJAX + Tradicional)
@@ -716,7 +1226,7 @@ def exportar_prestamos_excel():
 
         # Obtener y filtrar préstamos usando la función existente
         prestamos_todos = _fetch_prestamos()
-        prestamos = filtrar_por_oficina_usuario(prestamos_todos)
+        prestamos = filtrar_por_oficina_usuario_prestamos(prestamos_todos)
 
         if filtro_estado:
             prestamos = [p for p in prestamos if p.get('estado', '') == filtro_estado]
@@ -808,7 +1318,7 @@ def exportar_prestamos_pdf():
 
         # Obtener y filtrar préstamos
         prestamos_todos = _fetch_prestamos()
-        prestamos = filtrar_por_oficina_usuario(prestamos_todos)
+        prestamos = filtrar_por_oficina_usuario_prestamos(prestamos_todos)
 
         if filtro_estado:
             prestamos = [p for p in prestamos if p.get('estado', '') == filtro_estado]
@@ -964,399 +1474,3 @@ def crear_material():
         return redirect('/prestamos')
 
     return render_template('prestamos/elemento_crear.html')
-
-# =========================
-# Acciones sobre préstamos existentes (CON TRAZABILIDAD MEJORADA)
-# =========================
-
-@prestamos_bp.route('/<int:prestamo_id>/aprobar', methods=['POST'])
-def aprobar_prestamo(prestamo_id):
-    """Aprobar un préstamo pendiente"""
-    if not _require_login():
-        return jsonify({'success': False, 'message': 'No autorizado'}), 401
-    
-    if not can_access('prestamos', 'approve'):
-        return jsonify({'success': False, 'message': 'No tienes permisos para aprobar préstamos'}), 403
-    
-    conn = cur = None
-    try:
-        conn = get_database_connection()
-        cur = conn.cursor()
-        
-        # Verificar que el préstamo existe y está en estado PRESTADO
-        cur.execute("""
-            SELECT pe.Estado, pe.ElementoId, pe.CantidadPrestada
-            FROM dbo.PrestamosElementos pe
-            WHERE pe.PrestamoId = ? AND pe.Activo = 1
-        """, (prestamo_id,))
-        
-        row = cur.fetchone()
-        if not row:
-            return jsonify({'success': False, 'message': 'Préstamo no encontrado'}), 404
-        
-        estado_actual = row[0]
-        elemento_id = row[1]
-        cantidad_prestada = row[2]
-        
-        if estado_actual != 'PRESTADO':
-            return jsonify({'success': False, 'message': f'El préstamo ya está en estado: {estado_actual}'}), 400
-        
-        # Obtener usuario que aprueba
-        usuario_aprobador = session.get('usuario_nombre', 'Sistema')
-        
-        # Actualizar estado del préstamo con trazabilidad
-        cur.execute("""
-            UPDATE dbo.PrestamosElementos
-            SET Estado = 'APROBADO',
-                UsuarioAprobador = ?,
-                FechaAprobacion = GETDATE(),
-                ObservacionesAprobacion = ISNULL(ObservacionesAprobacion, '') + ' - Aprobado por: ' + ? + ' (' + CONVERT(VARCHAR, GETDATE(), 120) + ')'
-            WHERE PrestamoId = ? AND Activo = 1
-        """, (usuario_aprobador, usuario_aprobador, prestamo_id))
-        
-        conn.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Préstamo aprobado exitosamente',
-            'prestamo_id': prestamo_id,
-            'estado': 'APROBADO',
-            'usuario_aprobador': usuario_aprobador,
-            'fecha_aprobacion': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        })
-        
-    except Exception as e:
-        try:
-            if conn: conn.rollback()
-        except:
-            pass
-        
-        print(f"❌ Error aprobando préstamo {prestamo_id}: {e}")
-        return jsonify({'success': False, 'message': f'Error al aprobar préstamo: {str(e)}'}), 500
-    finally:
-        try:
-            if cur: cur.close()
-            if conn: conn.close()
-        except:
-            pass
-
-@prestamos_bp.route('/<int:prestamo_id>/aprobar_parcial', methods=['POST'])
-def aprobar_parcial_prestamo(prestamo_id):
-    """Aprobar parcialmente un préstamo pendiente"""
-    if not _require_login():
-        return jsonify({'success': False, 'message': 'No autorizado'}), 401
-    
-    if not can_access('prestamos', 'approve'):
-        return jsonify({'success': False, 'message': 'No tienes permisos para aprobar préstamos'}), 403
-    
-    # Obtener datos del request
-    data = request.get_json()
-    if not data or 'cantidad_aprobada' not in data:
-        return jsonify({'success': False, 'message': 'Cantidad aprobada requerida'}), 400
-    
-    try:
-        cantidad_aprobada = int(data['cantidad_aprobada'])
-        if cantidad_aprobada <= 0:
-            return jsonify({'success': False, 'message': 'La cantidad aprobada debe ser mayor a 0'}), 400
-    except:
-        return jsonify({'success': False, 'message': 'Cantidad inválida'}), 400
-    
-    conn = cur = None
-    try:
-        conn = get_database_connection()
-        cur = conn.cursor()
-        
-        # Verificar que el préstamo existe y está en estado PRESTADO
-        cur.execute("""
-            SELECT pe.Estado, pe.ElementoId, pe.CantidadPrestada, el.NombreElemento
-            FROM dbo.PrestamosElementos pe
-            INNER JOIN dbo.ElementosPublicitarios el ON pe.ElementoId = el.ElementoId
-            WHERE pe.PrestamoId = ? AND pe.Activo = 1
-        """, (prestamo_id,))
-        
-        row = cur.fetchone()
-        if not row:
-            return jsonify({'success': False, 'message': 'Préstamo no encontrado'}), 404
-        
-        estado_actual = row[0]
-        elemento_id = row[1]
-        cantidad_total = row[2]
-        nombre_elemento = row[3]
-        
-        if estado_actual != 'PRESTADO':
-            return jsonify({'success': False, 'message': f'El préstamo ya está en estado: {estado_actual}'}), 400
-        
-        if cantidad_aprobada > cantidad_total:
-            return jsonify({
-                'success': False, 
-                'message': f'La cantidad aprobada ({cantidad_aprobada}) no puede exceder la cantidad solicitada ({cantidad_total})'
-            }), 400
-        
-        # Obtener usuario que aprueba
-        usuario_aprobador = session.get('usuario_nombre', 'Sistema')
-        
-        # Verificar stock disponible
-        cur.execute("""
-            SELECT CantidadDisponible 
-            FROM dbo.ElementosPublicitarios 
-            WHERE ElementoId = ? AND Activo = 1
-        """, (elemento_id,))
-        
-        stock_row = cur.fetchone()
-        if not stock_row:
-            return jsonify({'success': False, 'message': 'Elemento no encontrado'}), 404
-        
-        stock_disponible = stock_row[0] or 0
-        
-        # Para aprobación parcial, necesitamos verificar si hay suficiente stock
-        if cantidad_aprobada > stock_disponible:
-            return jsonify({
-                'success': False, 
-                'message': f'Stock insuficiente. Disponible: {stock_disponible}, Solicitado: {cantidad_aprobada}'
-            }), 400
-        
-        # Actualizar estado del préstamo a APROBADO_PARCIAL
-        cur.execute("""
-            UPDATE dbo.PrestamosElementos
-            SET Estado = 'APROBADO_PARCIAL',
-                CantidadPrestada = ?,
-                UsuarioAprobador = ?,
-                FechaAprobacion = GETDATE(),
-                ObservacionesAprobacion = ISNULL(ObservacionesAprobacion, '') + ' - Aprobado parcialmente por: ' + ? + ' (' + CONVERT(VARCHAR, GETDATE(), 120) + ') Cantidad: ' + CAST(? AS NVARCHAR) + ' de ' + CAST(? AS NVARCHAR),
-                Observaciones = ISNULL(Observaciones, '') + ' - Aprobado parcialmente: ' + CAST(? AS NVARCHAR) + ' de ' + CAST(? AS NVARCHAR)
-            WHERE PrestamoId = ? AND Activo = 1
-        """, (cantidad_aprobada, usuario_aprobador, usuario_aprobador, 
-              cantidad_aprobada, cantidad_total, cantidad_aprobada, cantidad_total, prestamo_id))
-        
-        # Descontar del inventario solo la cantidad aprobada
-        cur.execute("""
-            UPDATE dbo.ElementosPublicitarios
-            SET CantidadDisponible = CantidadDisponible - ?
-            WHERE ElementoId = ? AND Activo = 1
-        """, (cantidad_aprobada, elemento_id))
-        
-        # Si la cantidad aprobada es menor a la solicitada, 
-        # incrementar el stock con la diferencia (devolver lo no aprobado)
-        if cantidad_aprobada < cantidad_total:
-            diferencia = cantidad_total - cantidad_aprobada
-            cur.execute("""
-                UPDATE dbo.ElementosPublicitarios
-                SET CantidadDisponible = CantidadDisponible + ?
-                WHERE ElementoId = ? AND Activo = 1
-            """, (diferencia, elemento_id))
-        
-        conn.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': f'Préstamo aprobado parcialmente ({cantidad_aprobada} de {cantidad_total})',
-            'prestamo_id': prestamo_id,
-            'estado': 'APROBADO_PARCIAL',
-            'cantidad_aprobada': cantidad_aprobada,
-            'cantidad_original': cantidad_total,
-            'usuario_aprobador': usuario_aprobador,
-            'fecha_aprobacion': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        })
-        
-    except Exception as e:
-        try:
-            if conn: conn.rollback()
-        except:
-            pass
-        
-        print(f"❌ Error aprobando parcialmente préstamo {prestamo_id}: {e}")
-        return jsonify({'success': False, 'message': f'Error al aprobar parcialmente: {str(e)}'}), 500
-    finally:
-        try:
-            if cur: cur.close()
-            if conn: conn.close()
-        except:
-            pass
-
-@prestamos_bp.route('/<int:prestamo_id>/rechazar', methods=['POST'])
-def rechazar_prestamo(prestamo_id):
-    """Rechazar un préstamo pendiente"""
-    if not _require_login():
-        return jsonify({'success': False, 'message': 'No autorizado'}), 401
-    
-    if not can_access('prestamos', 'reject'):
-        return jsonify({'success': False, 'message': 'No tienes permisos para rechazar préstamos'}), 403
-    
-    # Obtener datos del request
-    data = request.get_json()
-    if not data or 'observacion' not in data:
-        return jsonify({'success': False, 'message': 'Observación requerida'}), 400
-    
-    observacion = (data['observacion'] or '').strip()
-    if not observacion:
-        return jsonify({'success': False, 'message': 'La observación es obligatoria'}), 400
-    
-    conn = cur = None
-    try:
-        conn = get_database_connection()
-        cur = conn.cursor()
-        
-        # Verificar que el préstamo existe y está en estado PRESTADO
-        cur.execute("""
-            SELECT pe.Estado, pe.ElementoId, pe.CantidadPrestada
-            FROM dbo.PrestamosElementos pe
-            WHERE pe.PrestamoId = ? AND pe.Activo = 1
-        """, (prestamo_id,))
-        
-        row = cur.fetchone()
-        if not row:
-            return jsonify({'success': False, 'message': 'Préstamo no encontrado'}), 404
-        
-        estado_actual = row[0]
-        elemento_id = row[1]
-        cantidad_prestada = row[2]
-        
-        if estado_actual != 'PRESTADO':
-            return jsonify({'success': False, 'message': f'El préstamo ya está en estado: {estado_actual}'}), 400
-        
-        # Obtener usuario que rechaza
-        usuario_rechazador = session.get('usuario_nombre', 'Sistema')
-        
-        # Actualizar estado del préstamo a RECHAZADO
-        cur.execute("""
-            UPDATE dbo.PrestamosElementos
-            SET Estado = 'RECHAZADO',
-                UsuarioRechazador = ?,
-                FechaRechazo = GETDATE(),
-                MotivoRechazo = ?,
-                Observaciones = ISNULL(Observaciones, '') + ' - RECHAZADO por: ' + ? + ' (' + CONVERT(VARCHAR, GETDATE(), 120) + ') Motivo: ' + ?
-            WHERE PrestamoId = ? AND Activo = 1
-        """, (usuario_rechazador, observacion, usuario_rechazador, observacion, prestamo_id))
-        
-        # Devolver al inventario lo que se había descontado
-        cur.execute("""
-            UPDATE dbo.ElementosPublicitarios
-            SET CantidadDisponible = CantidadDisponible + ?
-            WHERE ElementoId = ? AND Activo = 1
-        """, (cantidad_prestada, elemento_id))
-        
-        conn.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Préstamo rechazado exitosamente',
-            'prestamo_id': prestamo_id,
-            'estado': 'RECHAZADO',
-            'usuario_rechazador': usuario_rechazador,
-            'fecha_rechazo': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'motivo_rechazo': observacion
-        })
-        
-    except Exception as e:
-        try:
-            if conn: conn.rollback()
-        except:
-            pass
-        
-        print(f"❌ Error rechazando préstamo {prestamo_id}: {e}")
-        return jsonify({'success': False, 'message': f'Error al rechazar préstamo: {str(e)}'}), 500
-    finally:
-        try:
-            if cur: cur.close()
-            if conn: conn.close()
-        except:
-            pass
-
-@prestamos_bp.route('/<int:prestamo_id>/devolucion', methods=['POST'])
-def registrar_devolucion_prestamo(prestamo_id):
-    """Registrar devolución de un préstamo aprobado"""
-    if not _require_login():
-        return jsonify({'success': False, 'message': 'No autorizado'}), 401
-    
-    if not can_access('prestamos', 'return'):
-        return jsonify({'success': False, 'message': 'No tienes permisos para registrar devoluciones'}), 403
-    
-    # Obtener datos del request
-    data = request.get_json()
-    observacion = (data.get('observacion') or '').strip() if data else ''
-    
-    conn = cur = None
-    try:
-        conn = get_database_connection()
-        cur = conn.cursor()
-        
-        # Verificar que el préstamo existe y está en estado APROBADO o APROBADO_PARCIAL
-        cur.execute("""
-            SELECT pe.Estado, pe.ElementoId, pe.CantidadPrestada
-            FROM dbo.PrestamosElementos pe
-            WHERE pe.PrestamoId = ? AND pe.Activo = 1
-        """, (prestamo_id,))
-        
-        row = cur.fetchone()
-        if not row:
-            return jsonify({'success': False, 'message': 'Préstamo no encontrado'}), 404
-        
-        estado_actual = row[0]
-        elemento_id = row[1]
-        cantidad_prestada = row[2]
-        
-        if estado_actual not in ['APROBADO', 'APROBADO_PARCIAL']:
-            return jsonify({
-                'success': False, 
-                'message': f'No se puede registrar devolución para préstamo en estado: {estado_actual}. Solo se puede devolver préstamos aprobados.'
-            }), 400
-        
-        # Obtener usuario que registra la devolución
-        usuario_devolucion = session.get('usuario_nombre', 'Sistema')
-        
-        # Actualizar estado del préstamo a DEVUELTO
-        cur.execute("""
-            UPDATE dbo.PrestamosElementos
-            SET Estado = 'DEVUELTO',
-                UsuarioDevolucion = ?,
-                FechaDevolucionReal = GETDATE(),
-                Observaciones = ISNULL(Observaciones, '') + CASE WHEN ? != '' THEN ' - DEVUELTO por: ' + ? + ' (' + CONVERT(VARCHAR, GETDATE(), 120) + ') Observación: ' + ? ELSE ' - DEVUELTO por: ' + ? + ' (' + CONVERT(VARCHAR, GETDATE(), 120) + ')' END
-            WHERE PrestamoId = ? AND Activo = 1
-        """, (usuario_devolucion, observacion, usuario_devolucion, observacion, usuario_devolucion, prestamo_id))
-        
-        # Devolver al inventario
-        cur.execute("""
-            UPDATE dbo.ElementosPublicitarios
-            SET CantidadDisponible = CantidadDisponible + ?
-            WHERE ElementoId = ? AND Activo = 1
-        """, (cantidad_prestada, elemento_id))
-        
-        conn.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Devolución registrada exitosamente',
-            'prestamo_id': prestamo_id,
-            'estado': 'DEVUELTO',
-            'usuario_devolucion': usuario_devolucion,
-            'fecha_devolucion': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'observacion': observacion if observacion else 'Sin observación'
-        })
-        
-    except Exception as e:
-        try:
-            if conn: conn.rollback()
-        except:
-            pass
-        
-        print(f"❌ Error registrando devolución préstamo {prestamo_id}: {e}")
-        return jsonify({'success': False, 'message': f'Error al registrar devolución: {str(e)}'}), 500
-    finally:
-        try:
-            if cur: cur.close()
-            if conn: conn.close()
-        except:
-            pass
-
-@prestamos_bp.route('/<int:prestamo_id>', methods=['GET'])
-def ver_prestamo(prestamo_id):
-    """Ver detalles de un préstamo específico"""
-    if not _require_login():
-        return redirect('/login')
-    
-    detalle = _fetch_detalle(prestamo_id)
-    if not detalle:
-        flash('Préstamo no encontrado', 'danger')
-        return redirect('/prestamos')
-    
-    return render_template('prestamos/detalle.html', prestamo=detalle)

@@ -21,6 +21,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="requirements.txt" />
+    <Content Include="scripts\agregar_columnas_usuario_ad.sql" />
     <Content Include="static\css\base.css" />
     <Content Include="static\css\custom.css" />
     <Content Include="static\css\dashboard.css" />
@@ -78,12 +79,14 @@
     <Compile Include="config\__init__.py" />
     <Compile Include="database.py" />
     <Compile Include="models\generar_hash.py" />
+    <Compile Include="models\inventario_corporativo_model_extended.py" />
     <Compile Include="models\materiales_model.py" />
     <Compile Include="models\novedades_model.py" />
     <Compile Include="models\oficinas_model.py" />
     <Compile Include="models\solicitudes_model.py" />
     <Compile Include="models\usuarios_model.py" />
     <Compile Include="models\__init__.py" />
+    <Compile Include="services\notification_service.py" />
     <Compile Include="services\auth_service.py" />
     <Compile Include="templates\materials\__init__.py" />
     <Compile Include="templates\reportes\__init__.py" />
@@ -103,6 +106,7 @@
     <Folder Include="models\" />
     <Folder Include="blueprints\" />
     <Folder Include="config\" />
+    <Folder Include="scripts\" />
     <Folder Include="services\" />
     <Folder Include="templates\usuarios\" />
     <Folder Include="utils\" />

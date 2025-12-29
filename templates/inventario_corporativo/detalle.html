@@ -122,6 +122,7 @@
                                     <th>Acción</th>
                                     <th>Oficina</th>
                                     <th>Cantidad</th>
+                                    <th>Asignado a</th>
                                     <th>Usuario</th>
                                 </tr>
                             </thead>
@@ -171,6 +172,18 @@
                                         <span class="badge bg-primary">{{ h.Cantidad }}</span>
                                     </td>
                                     <td>
+                                        {% if h.UsuarioAsignadoNombre %}
+                                        <small>
+                                            <i class="fas fa-user me-1"></i>{{ h.UsuarioAsignadoNombre }}
+                                            {% if h.UsuarioAsignadoEmail %}
+                                            <br><span class="text-muted">{{ h.UsuarioAsignadoEmail }}</span>
+                                            {% endif %}
+                                        </small>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
                                         <small class="text-muted">{{ h.UsuarioAccion or 'Sistema' }}</small>
                                     </td>
                                 </tr>
@@ -206,7 +219,7 @@
                         {% endif %}
                         
                         <form action="/inventario-corporativo/eliminar/{{ producto.id }}" method="POST" 
-                              onsubmit="return confirm('¿Está seguro que desea eliminar el producto \"{{ producto.nombre }}\"? Esta acción no se puede deshacer.')"
+                              onsubmit="return confirm('¿Está seguro que desea eliminar el producto \'{{ producto.nombre }}\'? Esta acción no se puede deshacer.')"
                               class="d-inline">
                             <button type="submit" class="btn btn-danger btn-modulo">
                                 <i class="fas fa-trash me-2"></i>Eliminar
