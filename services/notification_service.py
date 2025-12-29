@@ -18,12 +18,12 @@ logger = logging.getLogger(__name__)
 # CONFIGURACIÓN DE EMAIL
 # ============================================================================
 EMAIL_CONFIG = {
-    'smtp_server': '10.60.0.30',   
+    'smtp_server': '10.60.0.31',   
     'smtp_port': 25,   
     'use_tls': False,
-    'smtp_user': 'lramirez@qualitascolombia.com.co',   
-    'smtp_password': 'Metallica1022963*',
-    'from_email': 'lramirez@qualitascolombia.com.co',
+    'smtp_user': '',   
+    'smtp_password': '',
+    'from_email': 'GestiondeInventarios@qualitascolombia.com.co',
     'from_name': 'Sistema de Gestión de Inventarios'
 }
 

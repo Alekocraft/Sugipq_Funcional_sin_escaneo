@@ -1,6 +1,6 @@
 ESTRUCTURA DEL PROYECTO FLASK 
 ============================= 
-Fecha: Sun 12/28/2025 18:44:52.59 
+Fecha: Mon 12/29/2025 16:00:24.32 
 Directorio actual: C:\Users\sinventarios\source\repos\sugipqt 
  
 [ARCHIVOS PRINCIPALES .PY] 
@@ -23,7 +23,7 @@ blueprints\usuarios.py
 config\config.py 
 config\ldap_config.py 
 config\permissions.py 
-config\__init__.py  
+config\__init__.py 
 models\generar_hash.py 
 models\inventario_corporativo_model.py 
 models\inventario_corporativo_model_extended.py 

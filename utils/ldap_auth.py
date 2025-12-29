@@ -1,4 +1,4 @@
-﻿# utils/ldap_auth.py - REEMPLAZAR contenido completo
+﻿# utils/ldap_auth.py
 """
 Autenticación con Active Directory Qualitas
 """

@@ -11,15 +11,13 @@ LDAP_SEARCH_BASE = 'DC=qualitascolombia,DC=com,DC=co'
 
 # Credenciales de servicio para búsquedas
 LDAP_SERVICE_USER = 'userauge'
-LDAP_SERVICE_PASSWORD = 'QC4ug3*24Met'
+LDAP_SERVICE_PASSWORD = 'QC4ug3*24'
 
 # Configuración de mapeo de roles AD -> Sistema
 AD_ROLE_MAPPING = {
     'administrador': ['gerencia', 'admin', 'administrador'],
     'lider_inventario': ['almacen', 'logistica', 'inventario'],
-    'finanzas': ['finanzas', 'contabilidad', 'tesoreria'],
-    'rrhh': ['recursoshumanos', 'rrhh', 'personal'],
-    'usuario': []  # Rol por defecto
+    'tesoreria': ['contabilidad', 'tesoreria'],
 }
 
 # Timeout en segundos
