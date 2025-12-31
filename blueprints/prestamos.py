@@ -447,14 +447,14 @@ def crear_prestamo():
 
             usuario_prestador = session.get('usuario_nombre', 'Sistema')
 
-            # Crea préstamo
+            # Crea préstamo CON ESTADO 'PENDIENTE' (cambiado de 'PRESTADO')
             cur.execute("""
                 INSERT INTO dbo.PrestamosElementos
                     (ElementoId, UsuarioSolicitanteId, OficinaId, CantidadPrestada, 
                      FechaPrestamo, FechaDevolucionPrevista, Estado, Evento, Observaciones, 
                      UsuarioPrestador, Activo)
                 OUTPUT INSERTED.PrestamoId
-                VALUES (?, ?, ?, ?, GETDATE(), ?, 'PRESTADO', ?, ?, ?, 1)
+                VALUES (?, ?, ?, ?, GETDATE(), ?, 'PENDIENTE', ?, ?, ?, 1)
             """, (
                 int(elemento_id), solicitante_id, oficina_id, cantidad_int,
                 fecha_prevista, evento, observaciones, usuario_prestador
@@ -617,7 +617,8 @@ def aprobar_prestamo(prestamo_id):
         elemento_id = row[1]
         cantidad_prestada = row[2]
         
-        if estado_actual != 'PRESTADO':
+        # Cambiado de 'PRESTADO' a 'PENDIENTE'
+        if estado_actual != 'PENDIENTE':
             return jsonify({'success': False, 'message': f'El préstamo ya está en estado: {estado_actual}'}), 400
         
         usuario_aprobador = session.get('usuario_nombre', 'Sistema')
@@ -714,7 +715,8 @@ def aprobar_parcial_prestamo(prestamo_id):
         cantidad_total = row[2]
         nombre_elemento = row[3]
         
-        if estado_actual != 'PRESTADO':
+        # Cambiado de 'PRESTADO' a 'PENDIENTE'
+        if estado_actual != 'PENDIENTE':
             return jsonify({'success': False, 'message': f'El préstamo ya está en estado: {estado_actual}'}), 400
         
         if cantidad_aprobada > cantidad_total:
@@ -850,7 +852,8 @@ def rechazar_prestamo(prestamo_id):
         elemento_id = row[1]
         cantidad_prestada = row[2]
         
-        if estado_actual != 'PRESTADO':
+        # Cambiado de 'PRESTADO' a 'PENDIENTE'
+        if estado_actual != 'PENDIENTE':
             return jsonify({'success': False, 'message': f'El préstamo ya está en estado: {estado_actual}'}), 400
         
         usuario_rechazador = session.get('usuario_nombre', 'Sistema')
@@ -1242,8 +1245,7 @@ def exportar_prestamos_excel():
             'Usuario Aprobador', 'Fecha Aprobación', 'Usuario Rechazador', 'Fecha Rechazo',
             'Usuario Devolución', 'Fecha Devolución Real'
         ]
-        data = [{
-            'ID': p.get('id', ''),
+        data = [{'ID': p.get('id', ''),
             'Material': p.get('material', ''),
             'Cantidad': p.get('cantidad', 0),
             'Valor Unitario': float(p.get('valor_unitario', 0)),

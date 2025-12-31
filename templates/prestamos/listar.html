@@ -57,7 +57,8 @@
                             <small class="text-muted">Total Préstamos</small>
                         </div>
                         <div class="col-md-3 border-end">
-                            <h4 class="fw-bold mb-0 text-warning" id="pendientes">{{ prestamos|selectattr('estado', 'equalto', 'PRESTADO')|list|length }}</h4>
+                            <!-- Cambiado de 'PRESTADO' a 'PENDIENTE' -->
+                            <h4 class="fw-bold mb-0 text-warning" id="pendientes">{{ prestamos|selectattr('estado', 'equalto', 'PENDIENTE')|list|length }}</h4>
                             <small class="text-muted">Pendientes</small>
                         </div>
                         <div class="col-md-3 border-end">
@@ -226,7 +227,7 @@
                                         <span class="badge rounded-pill fw-normal py-2 px-3 estado-badge estado-{{ r.estado|lower|replace(' ', '-') }}">
                                             <i class="fas {{
                                                 'fa-check-circle' if r.estado == 'APROBADO'
-                                                else 'fa-clock' if r.estado == 'PRESTADO'
+                                                else 'fa-clock' if r.estado == 'PENDIENTE'
                                                 else 'fa-times-circle' if r.estado == 'RECHAZADO'
                                                 else 'fa-check-double' if r.estado == 'APROBADO_PARCIAL'
                                                 else 'fa-undo' if r.estado == 'DEVUELTO'
@@ -239,7 +240,8 @@
                                     {% if can_view_actions() %}
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm" role="group">
-                                            {% if r.estado == 'PRESTADO' %}
+                                            <!-- Cambiado de 'PRESTADO' a 'PENDIENTE' -->
+                                            {% if r.estado == 'PENDIENTE' %}
                                             <button type="button" class="btn btn-outline-success" onclick="aprobarPrestamo({{ r.id }})"
                                                     title="Aprobar Préstamo">
                                                 <i class="fas fa-check"></i>
@@ -449,7 +451,8 @@
         font-size: 0.75rem;
     }
     
-    .estado-prestado {
+    /* Cambiado de 'estado-prestado' a 'estado-pendiente' */
+    .estado-pendiente {
         background-color: #fff3cd;
         color: #856404;
     }
@@ -658,8 +661,9 @@
         
         estadoBadge.className = `badge rounded-pill fw-normal py-2 px-3 estado-badge estado-${nuevoEstado.toLowerCase().replace(' ', '-')}`;
         
+        // Cambiado de 'PRESTADO' a 'PENDIENTE' en el mapa de iconos
         const iconosMap = {
-            'PRESTADO': 'fa-clock',
+            'PENDIENTE': 'fa-clock',
             'APROBADO': 'fa-check-circle',
             'RECHAZADO': 'fa-times-circle',
             'APROBADO_PARCIAL': 'fa-check-double',
@@ -674,7 +678,8 @@
         if (accionesTd) {
             let nuevosBotones = '';
             
-            if (nuevoEstado === 'PRESTADO') {
+            // Cambiado de 'PRESTADO' a 'PENDIENTE'
+            if (nuevoEstado === 'PENDIENTE') {
                 nuevosBotones = `
                     <div class="btn-group btn-group-sm" role="group">
                         <button type="button" class="btn btn-outline-success" onclick="aprobarPrestamo(${prestamoId})"
@@ -727,7 +732,8 @@
             total++;
             
             switch(estado) {
-                case 'PRESTADO':
+                // Cambiado de 'PRESTADO' a 'PENDIENTE'
+                case 'PENDIENTE':
                     pendientes++;
                     break;
                 case 'APROBADO':

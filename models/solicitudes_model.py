@@ -29,13 +29,35 @@ class SolicitudModel:
             conn.close()
 
     @staticmethod
+    def crear_solicitud(material_id, cantidad_solicitada, usuario_solicitante, oficina_solicitante, porcentaje_oficina=100, observacion=""):
+        """
+        Método wrapper para crear una solicitud con la firma esperada por el blueprint.
+        Llama internamente al método crear() con los parámetros correctos.
+        """
+        from models.usuarios_model import UsuarioModel
+        
+        # Obtener el nombre del usuario a partir del ID
+        usuario = UsuarioModel.obtener_por_id(usuario_solicitante)
+        usuario_nombre = usuario.get('nombre') if usuario else f"Usuario_{usuario_solicitante}"
+        
+        # Llamar al método crear original con los parámetros correctos
+        return SolicitudModel.crear(
+            oficina_id=oficina_solicitante,
+            material_id=material_id,
+            cantidad_solicitada=cantidad_solicitada,
+            porcentaje_oficina=porcentaje_oficina,
+            usuario_nombre=usuario_nombre,
+            observacion=observacion
+        )
+
+    @staticmethod
     def aprobar(solicitud_id, usuario_aprobador_id):
         conn = get_database_connection()
         if conn is None:
-            return False, "❌ Error de conexión a la base de datos"
+            return False, "âŒ Error de conexiÃ³n a la base de datos"
         cursor = conn.cursor()
         try:
-            # PRIMERO: Obtener información de la solicitud
+            # PRIMERO: Obtener informaciÃ³n de la solicitud
             cursor.execute("""
                 SELECT sm.MaterialId, sm.CantidadSolicitada, sm.EstadoId,
                        m.ValorUnitario, m.CantidadDisponible, sm.PorcentajeOficina
@@ -47,13 +69,13 @@ class SolicitudModel:
             solicitud_info = cursor.fetchone()
             
             if not solicitud_info:
-                return False, "❌ Solicitud no encontrada o no está pendiente"
+                return False, "âŒ Solicitud no encontrada o no estÃ¡ pendiente"
             
             material_id, cantidad_solicitada, estado_id, valor_unitario, stock_disponible, porcentaje_oficina = solicitud_info
             
             # VERIFICAR STOCK DISPONIBLE
             if cantidad_solicitada > stock_disponible:
-                return False, f"❌ Stock insuficiente. Disponible: {stock_disponible}, Solicitado: {cantidad_solicitada}"
+                return False, f"âŒ Stock insuficiente. Disponible: {stock_disponible}, Solicitado: {cantidad_solicitada}"
             
             # OBTENER APROBADOR ID
             aprobador_id = SolicitudModel._obtener_aprobador_id(usuario_aprobador_id)
@@ -63,7 +85,7 @@ class SolicitudModel:
             valor_oficina = valor_total_solicitado * (porcentaje_oficina / 100)
             valor_sede_principal = valor_total_solicitado - valor_oficina
             
-            # EJECUTAR APROBACIÓN COMPLETA
+            # EJECUTAR APROBACIÃ“N COMPLETA
             cursor.execute("""
                 BEGIN TRANSACTION;
                 
@@ -87,7 +109,7 @@ class SolicitudModel:
                 -- 3. REGISTRAR EN HISTORIAL DE ENTREGAS
                 INSERT INTO dbo.HistorialEntregas (
                     SolicitudId, CantidadEntregada, UsuarioEntrega, Observaciones
-                ) VALUES (?, ?, 'Sistema', 'Aprobación completa');
+                ) VALUES (?, ?, 'Sistema', 'AprobaciÃ³n completa');
                 
                 COMMIT TRANSACTION;
             """, (
@@ -98,18 +120,18 @@ class SolicitudModel:
             ))
             
             conn.commit()
-            return True, f"✅ Solicitud aprobada exitosamente. Stock actualizado: -{cantidad_solicitada} unidades"
+            return True, f"âœ… Solicitud aprobada exitosamente. Stock actualizado: -{cantidad_solicitada} unidades"
             
         except Exception as e:
             conn.rollback()
             err = str(e)
-            if "Límite mensual" in err:
-                return False, "❌ Límite mensual excedido"
+            if "LÃ­mite mensual" in err:
+                return False, "âŒ LÃ­mite mensual excedido"
             if "Stock insuficiente" in err or "excede el inventario" in err:
-                return False, "❌ Stock insuficiente"
+                return False, "âŒ Stock insuficiente"
             if "Solicitud no encontrada" in err:
-                return False, "❌ Solicitud no encontrada"
-            return False, f"❌ Error al aprobar: {err}"
+                return False, "âŒ Solicitud no encontrada"
+            return False, f"âŒ Error al aprobar: {err}"
         finally:
             cursor.close()
             conn.close()
@@ -118,7 +140,7 @@ class SolicitudModel:
     def aprobar_parcial(solicitud_id, usuario_aprobador_id, cantidad_aprobada):
         conn = get_database_connection()
         if conn is None:
-            return False, "Error de conexión"
+            return False, "Error de conexiÃ³n"
         cursor = conn.cursor()
         try:
             aprobador_id = SolicitudModel._obtener_aprobador_id(usuario_aprobador_id)
@@ -127,17 +149,17 @@ class SolicitudModel:
                 (solicitud_id, aprobador_id, cantidad_aprobada)
             )
             conn.commit()
-            return True, f"✅ {cantidad_aprobada} unidades aprobadas y entregadas"
+            return True, f"âœ… {cantidad_aprobada} unidades aprobadas y entregadas"
         except Exception as e:
             conn.rollback()
             err = str(e)
-            if "Cantidad aprobada inválida" in err:
-                return False, "❌ Cantidad aprobada inválida"
+            if "Cantidad aprobada invÃ¡lida" in err:
+                return False, "âŒ Cantidad aprobada invÃ¡lida"
             if "solicitudes pendientes" in err:
-                return False, "❌ Solo solicitudes pendientes"
+                return False, "âŒ Solo solicitudes pendientes"
             if "Solicitud no encontrada" in err:
-                return False, "❌ Solicitud no encontrada"
-            return False, f"❌ Error al aprobar parcialmente: {err}"
+                return False, "âŒ Solicitud no encontrada"
+            return False, f"âŒ Error al aprobar parcialmente: {err}"
         finally:
             cursor.close()
             conn.close()
@@ -146,7 +168,7 @@ class SolicitudModel:
     def rechazar(solicitud_id, usuario_aprobador_id, observacion=""):
         conn = get_database_connection()
         if conn is None:
-            return False
+            return False, "❌ Error de conexión a la base de datos"
         cursor = conn.cursor()
         try:
             aprobador_id = SolicitudModel._obtener_aprobador_id(usuario_aprobador_id)
@@ -155,10 +177,10 @@ class SolicitudModel:
                 (solicitud_id, aprobador_id, observacion)
             )
             conn.commit()
-            return True
-        except Exception:
+            return True, "✓ Solicitud rechazada exitosamente"
+        except Exception as e:
             conn.rollback()
-            return False
+            return False, f"❌ Error al rechazar: {str(e)}"
         finally:
             cursor.close()
             conn.close()
@@ -260,7 +282,7 @@ class SolicitudModel:
                 "material_imagen": material_imagen,
             }
         except Exception as e:
-            print("❌ ERROR en obtener_info_devolucion:", str(e))
+            print("âŒ ERROR en obtener_info_devolucion:", str(e))
             return None
         finally:
             cursor.close()
@@ -270,7 +292,7 @@ class SolicitudModel:
     def registrar_devolucion(solicitud_id, cantidad_devuelta, usuario_nombre, observacion=""):
         conn = get_database_connection()
         if conn is None:
-            return False, "❌ Error de conexión"
+            return False, "âŒ Error de conexiÃ³n"
         cursor = conn.cursor()
         try:
             cursor.execute("""
@@ -286,20 +308,20 @@ class SolicitudModel:
             """, (solicitud_id,))
             row = cursor.fetchone()
             if not row:
-                return False, "❌ Solicitud no encontrada"
+                return False, "âŒ Solicitud no encontrada"
 
             material_id = row[0]
             estado_id = row[3]
             cantidad_puede_devolver = row[4] or 0
 
             if estado_id not in (2, 4):
-                return False, "❌ Solo se pueden devolver solicitudes aprobadas o entregadas"
+                return False, "âŒ Solo se pueden devolver solicitudes aprobadas o entregadas"
 
             if cantidad_devuelta <= 0:
-                return False, "❌ La cantidad a devolver debe ser mayor a 0"
+                return False, "âŒ La cantidad a devolver debe ser mayor a 0"
 
             if cantidad_devuelta > cantidad_puede_devolver:
-                return False, f"❌ No puede devolver más de {cantidad_puede_devolver} unidades"
+                return False, f"âŒ No puede devolver mÃ¡s de {cantidad_puede_devolver} unidades"
 
             nueva_pendiente = cantidad_puede_devolver - cantidad_devuelta
 
@@ -332,10 +354,10 @@ class SolicitudModel:
                 """, (solicitud_id,))
 
             conn.commit()
-            return True, "✅ Devolución registrada exitosamente"
+            return True, "âœ… DevoluciÃ³n registrada exitosamente"
         except Exception as e:
             conn.rollback()
-            return False, f"❌ Error en devolución: {str(e)}"
+            return False, f"âŒ Error en devoluciÃ³n: {str(e)}"
         finally:
             cursor.close()
             conn.close()
@@ -347,7 +369,7 @@ class SolicitudModel:
     @staticmethod
     def obtener_todas(estado=None, oficina=None, material=None, solicitante=None):
         """
-        Obtiene todas las solicitudes con información de novedades
+        Obtiene todas las solicitudes con informaciÃ³n de novedades
         """
         conn = get_database_connection()
         if conn is None:
@@ -379,7 +401,7 @@ class SolicitudModel:
                     m.NombreElemento as MaterialNombre,
                     es.NombreEstado as EstadoNombre,
                     a.NombreAprobador as AprobadorNombre,
-                    -- Obtener información de novedad si existe
+                    -- Obtener informaciÃ³n de novedad si existe
                     ns.EstadoNovedad,
                     ns.TipoNovedad,
                     ns.Descripcion as NovedadDescripcion,
@@ -388,7 +410,7 @@ class SolicitudModel:
                     ISNULL((SELECT SUM(d.CantidadDevuelta) 
                            FROM Devoluciones d 
                            WHERE d.SolicitudId = sm.SolicitudId), 0) as CantidadDevuelta,
-                    -- ✅ Agregar imagen del material y de la novedad
+                    -- âœ… Agregar imagen del material y de la novedad
                     m.RutaImagen as MaterialImagen,
                     ns.RutaImagen as NovedadImagen
                 FROM SolicitudesMaterial sm
@@ -407,11 +429,11 @@ class SolicitudModel:
                 # Caso especial: filtrar todas las novedades (estados 7, 8 y 9)
                 if estado == 'todas_novedades':
                     where_clauses.append("sm.EstadoId IN (7, 8, 9)")
-                # Si el estado es un nombre (string no numérico), buscar por nombre de estado
+                # Si el estado es un nombre (string no numÃ©rico), buscar por nombre de estado
                 elif not str(estado).isdigit():
                     where_clauses.append("es.NombreEstado = ?")
                     params.append(estado)
-                # Si es un número, buscar por ID
+                # Si es un nÃºmero, buscar por ID
                 else:
                     where_clauses.append("sm.EstadoId = ?")
                     params.append(estado)
@@ -465,7 +487,7 @@ class SolicitudModel:
                     'novedad_descripcion': row[24],
                     'cantidad_afectada': row[25] or 0,
                     'cantidad_devuelta': row[26] or 0,
-                    # ✅ Agregar imágenes
+                    # âœ… Agregar imÃ¡genes
                     'material_imagen': row[27],
                     'novedad_imagen': row[28]
                 })
@@ -473,7 +495,7 @@ class SolicitudModel:
             return solicitudes
             
         except Exception as e:
-            print(f"❌ Error obteniendo solicitudes: {e}")
+            print(f"âŒ Error obteniendo solicitudes: {e}")
             import traceback
             traceback.print_exc()
             return []
@@ -563,7 +585,7 @@ class SolicitudModel:
             rows = cursor.fetchall()
             if rows:
                 resultado = SolicitudModel._mapear_solicitudes(rows)[0]
-                # ✅ Agregar imagen del material
+                # âœ… Agregar imagen del material
                 resultado['material_imagen'] = rows[0][18] if len(rows[0]) > 18 else None
                 return resultado
             return None
@@ -706,13 +728,13 @@ class SolicitudModel:
                         return usuario_db  # Fallback al ID del usuario
         
             # Si no encuentra al usuario, retornar un valor por defecto
-            print(f"⚠️ Usuario {usuario_id} no encontrado. Usando aprobador por defecto.")
+            print(f"âš ï¸ Usuario {usuario_id} no encontrado. Usando aprobador por defecto.")
             cursor.execute("SELECT TOP 1 AprobadorId FROM Aprobadores WHERE Activo = 1 ORDER BY AprobadorId")
             aprobador_default = cursor.fetchone()
             return aprobador_default[0] if aprobador_default else 1
         
         except Exception as e:
-            print(f"❌ Error obteniendo aprobador_id: {e}")
+            print(f"âŒ Error obteniendo aprobador_id: {e}")
             import traceback
             traceback.print_exc()
             return usuario_id or 1  # Fallback seguro
@@ -749,12 +771,12 @@ class SolicitudModel:
         return solicitudes
 
     # ==========================
-    # MÉTODOS ADICIONALES
+    # MÃ‰TODOS ADICIONALES
     # ==========================
 
     @staticmethod
     def obtener_estadisticas_por_material(material_id):
-        """Obtiene estadísticas de solicitudes para un material específico"""
+        """Obtiene estadÃ­sticas de solicitudes para un material especÃ­fico"""
         conn = get_database_connection()
         if conn is None:
             return [0, 0, 0, 0, 0, 0, 0]
@@ -788,7 +810,7 @@ class SolicitudModel:
             return [0, 0, 0, 0, 0, 0, 0]
             
         except Exception as e:
-            print(f"Error obteniendo estadísticas para material {material_id}: {e}")
+            print(f"Error obteniendo estadÃ­sticas para material {material_id}: {e}")
             return [0, 0, 0, 0, 0, 0, 0]
         finally:
             cursor.close()
@@ -901,18 +923,18 @@ class SolicitudModel:
                 conn.close()
 
     # ==========================
-    # DEVOLUCIONES CON APROBACIÓN
+    # DEVOLUCIONES CON APROBACIÃ“N
     # ==========================
 
     @staticmethod
     def solicitar_devolucion(solicitud_id, cantidad_devuelta, usuario_solicita, motivo="", ruta_imagen=None):
         """
-        Registra una SOLICITUD de devolución (pendiente de aprobación).
+        Registra una SOLICITUD de devoluciÃ³n (pendiente de aprobaciÃ³n).
         No modifica el stock hasta que sea aprobada.
         """
         conn = get_database_connection()
         if conn is None:
-            return False, "❌ Error de conexión a la base de datos"
+            return False, "âŒ Error de conexiÃ³n a la base de datos"
         
         cursor = conn.cursor()
         try:
@@ -931,7 +953,7 @@ class SolicitudModel:
             row = cursor.fetchone()
             
             if not row:
-                return False, "❌ Solicitud no encontrada"
+                return False, "âŒ Solicitud no encontrada"
             
             material_id = row[0]
             estado_id = row[2]
@@ -939,15 +961,15 @@ class SolicitudModel:
             
             # Validar estado (solo aprobadas o entregadas parciales)
             if estado_id not in (2, 4, 5):  # Aprobada, Entregada Parcial, Completada
-                return False, "❌ Solo se pueden devolver solicitudes aprobadas o entregadas"
+                return False, "âŒ Solo se pueden devolver solicitudes aprobadas o entregadas"
             
             if cantidad_devuelta <= 0:
-                return False, "❌ La cantidad a devolver debe ser mayor a 0"
+                return False, "âŒ La cantidad a devolver debe ser mayor a 0"
             
             if cantidad_devuelta > cantidad_puede_devolver:
-                return False, f"❌ No puede devolver más de {cantidad_puede_devolver} unidades"
+                return False, f"âŒ No puede devolver mÃ¡s de {cantidad_puede_devolver} unidades"
             
-            # Verificar que no haya otra devolución pendiente
+            # Verificar que no haya otra devoluciÃ³n pendiente
             cursor.execute("""
                 SELECT COUNT(*) FROM Devoluciones 
                 WHERE SolicitudId = ? AND EstadoDevolucion = 'PENDIENTE'
@@ -955,9 +977,9 @@ class SolicitudModel:
             pendientes = cursor.fetchone()[0]
             
             if pendientes > 0:
-                return False, "❌ Ya existe una solicitud de devolución pendiente para esta solicitud"
+                return False, "âŒ Ya existe una solicitud de devoluciÃ³n pendiente para esta solicitud"
             
-            # Insertar solicitud de devolución con estado PENDIENTE
+            # Insertar solicitud de devoluciÃ³n con estado PENDIENTE
             cursor.execute("""
                 INSERT INTO Devoluciones (
                     SolicitudId, MaterialId, CantidadDevuelta, FechaDevolucion,
@@ -967,14 +989,14 @@ class SolicitudModel:
             """, (solicitud_id, material_id, cantidad_devuelta, usuario_solicita, motivo, ruta_imagen))
             
             conn.commit()
-            return True, "✅ Solicitud de devolución registrada. Pendiente de aprobación."
+            return True, "âœ… Solicitud de devoluciÃ³n registrada. Pendiente de aprobaciÃ³n."
             
         except Exception as e:
             conn.rollback()
-            print(f"❌ Error en solicitud de devolución: {e}")
+            print(f"âŒ Error en solicitud de devoluciÃ³n: {e}")
             import traceback
             traceback.print_exc()
-            return False, f"❌ Error: {str(e)}"
+            return False, f"âŒ Error: {str(e)}"
         finally:
             cursor.close()
             conn.close()
@@ -982,15 +1004,15 @@ class SolicitudModel:
     @staticmethod
     def aprobar_devolucion(devolucion_id, usuario_aprueba, observaciones=""):
         """
-        Aprueba una devolución y actualiza el stock.
+        Aprueba una devoluciÃ³n y actualiza el stock.
         """
         conn = get_database_connection()
         if conn is None:
-            return False, "❌ Error de conexión a la base de datos"
+            return False, "âŒ Error de conexiÃ³n a la base de datos"
         
         cursor = conn.cursor()
         try:
-            # Obtener información de la devolución
+            # Obtener informaciÃ³n de la devoluciÃ³n
             cursor.execute("""
                 SELECT d.SolicitudId, d.MaterialId, d.CantidadDevuelta, d.EstadoDevolucion
                 FROM Devoluciones d
@@ -999,14 +1021,14 @@ class SolicitudModel:
             row = cursor.fetchone()
             
             if not row:
-                return False, "❌ Devolución no encontrada"
+                return False, "âŒ DevoluciÃ³n no encontrada"
             
             solicitud_id, material_id, cantidad_devuelta, estado = row
             
             if estado != 'PENDIENTE':
-                return False, f"❌ Esta devolución ya fue procesada (estado: {estado})"
+                return False, f"âŒ Esta devoluciÃ³n ya fue procesada (estado: {estado})"
             
-            # Actualizar estado de la devolución a COMPLETADA
+            # Actualizar estado de la devoluciÃ³n a COMPLETADA
             cursor.execute("""
                 UPDATE Devoluciones 
                 SET EstadoDevolucion = 'COMPLETADA',
@@ -1023,7 +1045,7 @@ class SolicitudModel:
                 WHERE MaterialId = ?
             """, (cantidad_devuelta, material_id))
             
-            # Verificar si se devolvió todo lo entregado
+            # Verificar si se devolviÃ³ todo lo entregado
             cursor.execute("""
                 SELECT 
                     sm.CantidadEntregada,
@@ -1038,7 +1060,7 @@ class SolicitudModel:
                 cantidad_entregada = row[0] or 0
                 total_devuelto = row[1] or 0
                 
-                # Si se devolvió todo, cambiar estado a "Devuelta"
+                # Si se devolviÃ³ todo, cambiar estado a "Devuelta"
                 if total_devuelto >= cantidad_entregada:
                     cursor.execute("""
                         UPDATE SolicitudesMaterial
@@ -1047,14 +1069,14 @@ class SolicitudModel:
                     """, (solicitud_id,))
             
             conn.commit()
-            return True, f"✅ Devolución aprobada. Se reintegraron {cantidad_devuelta} unidades al inventario."
+            return True, f"âœ… DevoluciÃ³n aprobada. Se reintegraron {cantidad_devuelta} unidades al inventario."
             
         except Exception as e:
             conn.rollback()
-            print(f"❌ Error aprobando devolución: {e}")
+            print(f"âŒ Error aprobando devoluciÃ³n: {e}")
             import traceback
             traceback.print_exc()
-            return False, f"❌ Error: {str(e)}"
+            return False, f"âŒ Error: {str(e)}"
         finally:
             cursor.close()
             conn.close()
@@ -1062,11 +1084,11 @@ class SolicitudModel:
     @staticmethod
     def rechazar_devolucion(devolucion_id, usuario_rechaza, observaciones=""):
         """
-        Rechaza una solicitud de devolución.
+        Rechaza una solicitud de devoluciÃ³n.
         """
         conn = get_database_connection()
         if conn is None:
-            return False, "❌ Error de conexión a la base de datos"
+            return False, "âŒ Error de conexiÃ³n a la base de datos"
         
         cursor = conn.cursor()
         try:
@@ -1077,10 +1099,10 @@ class SolicitudModel:
             row = cursor.fetchone()
             
             if not row:
-                return False, "❌ Devolución no encontrada"
+                return False, "âŒ DevoluciÃ³n no encontrada"
             
             if row[0] != 'PENDIENTE':
-                return False, f"❌ Esta devolución ya fue procesada (estado: {row[0]})"
+                return False, f"âŒ Esta devoluciÃ³n ya fue procesada (estado: {row[0]})"
             
             # Actualizar estado a RECHAZADA
             cursor.execute("""
@@ -1093,12 +1115,12 @@ class SolicitudModel:
             """, (usuario_rechaza, observaciones, devolucion_id))
             
             conn.commit()
-            return True, "✅ Devolución rechazada"
+            return True, "âœ… DevoluciÃ³n rechazada"
             
         except Exception as e:
             conn.rollback()
-            print(f"❌ Error rechazando devolución: {e}")
-            return False, f"❌ Error: {str(e)}"
+            print(f"âŒ Error rechazando devoluciÃ³n: {e}")
+            return False, f"âŒ Error: {str(e)}"
         finally:
             cursor.close()
             conn.close()
@@ -1106,7 +1128,7 @@ class SolicitudModel:
     @staticmethod
     def obtener_devolucion_pendiente(solicitud_id):
         """
-        Obtiene la devolución pendiente de aprobación para una solicitud.
+        Obtiene la devoluciÃ³n pendiente de aprobaciÃ³n para una solicitud.
         """
         conn = get_database_connection()
         if conn is None:
@@ -1151,7 +1173,7 @@ class SolicitudModel:
             return None
             
         except Exception as e:
-            print(f"❌ Error obteniendo devolución pendiente: {e}")
+            print(f"âŒ Error obteniendo devoluciÃ³n pendiente: {e}")
             return None
         finally:
             cursor.close()
@@ -1159,7 +1181,7 @@ class SolicitudModel:
 
     @staticmethod
     def tiene_devolucion_pendiente(solicitud_id):
-        """Verifica si una solicitud tiene devolución pendiente de aprobación"""
+        """Verifica si una solicitud tiene devoluciÃ³n pendiente de aprobaciÃ³n"""
         conn = get_database_connection()
         if conn is None:
             return False
