@@ -26,7 +26,7 @@ def admin_required(f):
         rol_actual = session.get('rol', '').lower()
         if rol_actual not in ['administrador', 'admin']:
             flash('No tiene permisos de administrador para acceder a esta página', 'danger')
-            return redirect(url_for('auth_bp.dashboard'))
+            return redirect(url_for('dashboard'))
         
         return f(*args, **kwargs)
     return decorated_function
@@ -41,6 +41,19 @@ def listar_usuarios():
     """
     Lista todos los usuarios del sistema con gestión completa
     """
+    # 🔧 SOLUCIÓN: Definir contexto con valores por defecto SIEMPRE
+    context = {
+        'usuarios': [],
+        'oficinas': [],
+        'aprobadores': [],
+        'roles': [],
+        'total_activos': 0,
+        'total_inactivos': 0,
+        'total_ldap': 0,
+        'total_locales': 0,
+        'total_usuarios': 0
+    }
+    
     try:
         conn = get_database_connection()
         cursor = conn.cursor()
@@ -124,26 +137,30 @@ def listar_usuarios():
         cursor.execute("SELECT COUNT(*) FROM Usuarios WHERE ContraseñaHash = 'LDAP_USER'")
         total_ldap = cursor.fetchone()[0]
         
+        # Calcular total de usuarios locales (no LDAP)
+        total_locales = len(usuarios) - total_ldap
+        
         conn.close()
         
-        return render_template('usuarios/listar.html',
-                             usuarios=usuarios,
-                             oficinas=oficinas,
-                             aprobadores=aprobadores,
-                             roles=roles_disponibles,
-                             total_activos=total_activos,
-                             total_inactivos=total_inactivos,
-                             total_ldap=total_ldap,
-                             total_usuarios=len(usuarios))
+        # ✅ Actualizar contexto con valores reales
+        context.update({
+            'usuarios': usuarios,
+            'oficinas': oficinas,
+            'aprobadores': aprobadores,
+            'roles': roles_disponibles,
+            'total_activos': total_activos,
+            'total_inactivos': total_inactivos,
+            'total_ldap': total_ldap,
+            'total_locales': total_locales,
+            'total_usuarios': len(usuarios)
+        })
         
     except Exception as e:
-        logger.error(f"❌ Error listando usuarios: {e}")
-        flash(f'Error al listar usuarios: {str(e)}', 'danger')
-        return render_template('usuarios/listar.html', 
-                             usuarios=[], 
-                             oficinas=[], 
-                             aprobadores=[], 
-                             roles=[])
+        logger.error(f"❌ Error listando usuarios: {e}", exc_info=True)
+        flash(f'Error al listar usuarios. Por favor, intente nuevamente.', 'danger')
+    
+    # 🎯 SIEMPRE renderizar con el contexto completo (con valores por defecto si hubo error)
+    return render_template('usuarios/listar.html', **context)
 
 @usuarios_bp.route('/crear', methods=['GET', 'POST'])
 @admin_required
@@ -290,7 +307,7 @@ def crear_usuario():
                 return redirect(url_for('usuarios.crear_usuario'))
                 
     except Exception as e:
-        logger.error(f"❌ Error creando usuario: {e}")
+        logger.error(f"❌ Error creando usuario: {e}", exc_info=True)
         flash(f'Error al crear usuario: {str(e)}', 'danger')
         return redirect(url_for('usuarios.crear_usuario'))
 
@@ -414,7 +431,7 @@ def editar_usuario(usuario_id):
             return redirect(url_for('usuarios.listar_usuarios'))
             
     except Exception as e:
-        logger.error(f"❌ Error editando usuario: {e}")
+        logger.error(f"❌ Error editando usuario: {e}", exc_info=True)
         flash(f'Error al editar usuario: {str(e)}', 'danger')
         return redirect(url_for('usuarios.listar_usuarios'))
 
@@ -467,7 +484,7 @@ def cambiar_contrasena(usuario_id):
         return redirect(url_for('usuarios.listar_usuarios'))
         
     except Exception as e:
-        logger.error(f"❌ Error cambiando contraseña: {e}")
+        logger.error(f"❌ Error cambiando contraseña: {e}", exc_info=True)
         flash(f'Error al cambiar contraseña: {str(e)}', 'danger')
         return redirect(url_for('usuarios.editar_usuario', usuario_id=usuario_id))
 
@@ -511,7 +528,7 @@ def desactivar_usuario(usuario_id):
         return redirect(url_for('usuarios.listar_usuarios'))
         
     except Exception as e:
-        logger.error(f"❌ Error desactivando usuario: {e}")
+        logger.error(f"❌ Error desactivando usuario: {e}", exc_info=True)
         flash(f'Error al desactivar usuario: {str(e)}', 'danger')
         return redirect(url_for('usuarios.listar_usuarios'))
 
@@ -538,7 +555,7 @@ def reactivar_usuario(usuario_id):
         return redirect(url_for('usuarios.listar_usuarios'))
         
     except Exception as e:
-        logger.error(f"❌ Error reactivando usuario: {e}")
+        logger.error(f"❌ Error reactivando usuario: {e}", exc_info=True)
         flash(f'Error al reactivar usuario: {str(e)}', 'danger')
         return redirect(url_for('usuarios.listar_usuarios'))
 
@@ -587,7 +604,7 @@ def eliminar_usuario(usuario_id):
         return redirect(url_for('usuarios.listar_usuarios'))
         
     except Exception as e:
-        logger.error(f"❌ Error eliminando usuario: {e}")
+        logger.error(f"❌ Error eliminando usuario: {e}", exc_info=True)
         flash(f'Error al eliminar usuario: {str(e)}', 'danger')
         return redirect(url_for('usuarios.listar_usuarios'))
 
@@ -629,7 +646,7 @@ def buscar_usuario_ldap():
         })
         
     except Exception as e:
-        logger.error(f"❌ Error buscando usuario LDAP: {e}")
+        logger.error(f"❌ Error buscando usuario LDAP: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)})
 
 @usuarios_bp.route('/sync-ldap/<string:username>', methods=['POST'])
@@ -645,7 +662,7 @@ def sincronizar_usuario_ldap(username):
         return redirect(url_for('usuarios.listar_usuarios'))
         
     except Exception as e:
-        logger.error(f"❌ Error sincronizando usuario LDAP: {e}")
+        logger.error(f"❌ Error sincronizando usuario LDAP: {e}", exc_info=True)
         flash(f'Error sincronizando usuario: {str(e)}', 'danger')
         return redirect(url_for('usuarios.listar_usuarios'))
 
@@ -703,5 +720,5 @@ def api_estadisticas():
         })
         
     except Exception as e:
-        logger.error(f"❌ Error obteniendo estadísticas: {e}")
+        logger.error(f"❌ Error obteniendo estadísticas: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)})
