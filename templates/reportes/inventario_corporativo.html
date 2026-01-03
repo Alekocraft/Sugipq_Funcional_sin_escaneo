@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% block title %}Inventario Corporativo{% endblock %}
+
+{% block content %}
+<div class="container-fluid fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1 text-primary">
+                <i class="fas fa-laptop me-2"></i>Inventario Corporativo
+            </h1>
+            <p class="text-muted small">Productos y asignaciones corporativas</p>
+        </div>
+        <a href="/reportes" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Volver a Reportes
+        </a>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <strong><i class="fas fa-info-circle me-1"></i>Inventario Corporativo:</strong>
+        {% if session.rol in ['administrador', 'lider_inventario'] %}
+        Mostrando datos de TODAS las oficinas (acceso total)
+        {% else %}
+        Mostrando datos únicamente de su oficina: <strong>{{ session.oficina_nombre }}</strong>
+        {% endif %}
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-chart-bar me-1"></i>Resumen General
+                        </h6>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 border-end">
+                            <h4 class="fw-bold mb-0 text-primary">{{ total_productos }}</h4>
+                            <small class="text-muted">Total Productos</small>
+                        </div>
+                        <div class="col-md-2 border-end">
+                            <h4 class="fw-bold mb-0 text-info">{{ total_asignados }}</h4>
+                            <small class="text-muted">Asignados</small>
+                        </div>
+                        <div class="col-md-2 border-end">
+                            <h4 class="fw-bold mb-0 text-success">{{ total_confirmados }}</h4>
+                            <small class="text-muted">Confirmados</small>
+                        </div>
+                        <div class="col-md-2 border-end">
+                            <h4 class="fw-bold mb-0 text-warning">{{ total_pendientes }}</h4>
+                            <small class="text-muted">Pendientes</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="fw-bold mb-0 text-success">${{ "{:,.2f}".format(valor_total) }}</h4>
+                            <small class="text-muted">Valor Total</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-success text-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="fas fa-list me-1"></i>Productos Corporativos
+                    <span class="badge bg-light text-dark ms-2">{{ productos|length }}</span>
+                </h6>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 600px; overflow: auto;">
+                <table class="table table-hover table-sm align-middle mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th class="ps-3">ID</th>
+                            <th>Producto</th>
+                            <th>Código/Serie</th>
+                            <th>Categoría</th>
+                            <th class="text-end">Valor</th>
+                            <th>Oficina</th>
+                            <th>Asignado a</th>
+                            <th>Fecha Asignación</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center pe-3">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        <tr>
+                            <td class="ps-3 fw-semibold small">{{ producto.ProductoId }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-laptop me-2 text-muted small"></i>
+                                    <div>
+                                        <strong class="small">{{ producto.NombreProducto }}</strong>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="small">
+                                {% if producto.CodigoUnico %}
+                                <span class="badge bg-secondary small py-1 px-2">{{ producto.CodigoUnico }}</span>
+                                {% endif %}
+                                {% if producto.NumeroSerie %}
+                                <br><small class="text-muted">S/N: {{ producto.NumeroSerie }}</small>
+                                {% endif %}
+                            </td>
+                            <td class="small">{{ producto.NombreCategoria or 'Sin categoría' }}</td>
+                            <td class="text-end fw-semibold small">
+                                {% if producto.ValorCompra %}
+                                ${{ "{:,.2f}".format(producto.ValorCompra|float) }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td class="small">
+                                {% if producto.NombreOficina %}
+                                {{ producto.NombreOficina }}
+                                {% else %}
+                                <span class="text-muted">Sin asignar</span>
+                                {% endif %}
+                            </td>
+                            <td class="small">
+                                {% if producto.UsuarioADNombre %}
+                                <strong>{{ producto.UsuarioADNombre }}</strong>
+                                <br><small class="text-muted">{{ producto.UsuarioADEmail }}</small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="small">
+                                {% if producto.FechaAsignacion %}
+                                {{ producto.FechaAsignacion.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if producto.EstadoAsignacion == 'CONFIRMADO' %}
+                                <span class="badge bg-success small py-1 px-2">
+                                    <i class="fas fa-check-circle me-1"></i>Confirmado
+                                </span>
+                                {% elif producto.EstadoAsignacion == 'ASIGNADO' %}
+                                <span class="badge bg-warning small py-1 px-2">
+                                    <i class="fas fa-clock me-1"></i>Pendiente
+                                </span>
+                                {% elif producto.AsignacionId %}
+                                <span class="badge bg-info small py-1 px-2">{{ producto.EstadoAsignacion }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary small py-1 px-2">
+                                    <i class="fas fa-times-circle me-1"></i>Sin asignar
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center pe-3">
+                                {% if producto.EstadoAsignacion == 'CONFIRMADO' and producto.AsignacionId %}
+                                <a href="/reportes/certificado/{{ producto.AsignacionId }}" 
+                                   class="btn btn-success btn-sm" 
+                                   title="Generar Certificado PDF"
+                                   data-bs-toggle="tooltip"
+                                   target="_blank">
+                                    <i class="fas fa-file-pdf me-1"></i>Certificado
+                                </a>
+                                {% elif producto.EstadoAsignacion == 'ASIGNADO' %}
+                                <span class="text-muted small">
+                                    <i class="fas fa-hourglass-half me-1"></i>Esperando confirmación
+                                </span>
+                                {% elif producto.AsignacionId %}
+                                <span class="badge bg-info small py-1 px-2">{{ producto.EstadoAsignacion }}</span>
+                                {% else %}
+                                <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {% if not productos %}
+                        <tr>
+                            <td colspan="10" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">No hay productos corporativos</h6>
+                                    <p class="text-muted small">No se encontraron productos en el inventario corporativo</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sticky-top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .table th {
+        white-space: nowrap;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #dee2e6;
+        padding: 0.75rem 0.5rem;
+        background-color: #f8f9fa;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+        min-width: 70px;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.35em 0.65em;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s;
+    }
+    
+    .table tbody tr:hover .badge {
+        transform: scale(1.05);
+        transition: transform 0.2s;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

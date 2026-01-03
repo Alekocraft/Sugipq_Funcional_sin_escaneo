@@ -1,5 +1,5 @@
 """
-BLUEPRINT DE REPORTES - VersiÃƒÂ³n mejorada con filtros avanzados
+BLUEPRINT DE REPORTES - Versión mejorada con filtros avanzados
 Integra la funcionalidad original con la estructura actual del sistema
 """
 
@@ -14,18 +14,23 @@ from models.prestamos_model import PrestamosModel
 from models.novedades_model import NovedadModel
 from utils.permissions import can_access, get_office_filter
 from utils.filters import filtrar_por_oficina_usuario
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch
 
 # Crear blueprint de reportes
 reportes_bp = Blueprint('reportes', __name__, url_prefix='/reportes')
 
-# Helpers de autenticaciÃƒÂ³n locales
+# Helpers de autenticación locales
 def _require_login():
     return 'usuario_id' in session
 
-# Helper para aplicar filtros segÃƒÂºn permisos
+# Helper para aplicar filtros según permisos
 def aplicar_filtro_permisos(datos, campo_oficina='oficina_id'):
     """
-    Aplica filtro de oficina segÃƒÂºn permisos del usuario
+    Aplica filtro de oficina según permisos del usuario
     """
     if not datos:
         return []
@@ -57,10 +62,10 @@ def aplicar_filtro_permisos(datos, campo_oficina='oficina_id'):
 # RUTAS DE REPORTES
 # ============================================================================
 
-# PÃƒÂ¡gina principal de reportes
+# Página principal de reportes
 @reportes_bp.route('/')
 def reportes_index():
-    """PÃƒÂ¡gina principal de reportes"""
+    """Página principal de reportes"""
     if not _require_login():
         return redirect('/login')
     
@@ -72,7 +77,7 @@ def reportes_index():
 
 @reportes_bp.route('/solicitudes')
 def reporte_solicitudes():
-    """Reporte de solicitudes con filtros avanzados - VERSIÃƒâ€œN CORREGIDA"""
+    """Reporte de solicitudes con filtros avanzados - VERSIÓN CORREGIDA"""
     if not _require_login():
         return redirect('/login')
     
@@ -82,7 +87,7 @@ def reporte_solicitudes():
         return redirect('/reportes')
     
     try:
-        # Obtener parÃƒÂ¡metros de filtro
+        # Obtener parámetros de filtro
         filtro_estado = request.args.get('estado', 'todos')
         filtro_oficina = request.args.get('oficina', 'todas')
         filtro_material = request.args.get('material', '').strip()
@@ -93,7 +98,7 @@ def reporte_solicitudes():
         # Obtener todas las solicitudes con detalle
         solicitudes = SolicitudModel.obtener_todas_con_detalle() or []
         
-        # Aplicar filtro segÃƒÂºn permisos del usuario
+        # Aplicar filtro según permisos del usuario
         if not (session.get('rol') in ['administrador', 'lider_inventario']):
             solicitudes = filtrar_por_oficina_usuario(solicitudes, 'oficina_id')
         
@@ -104,7 +109,7 @@ def reporte_solicitudes():
             if filtro_estado != 'todos':
                 estado_solicitud = solicitud.get('estado', '').lower()
                 estado_filtro = filtro_estado.lower()
-                # CORRECCIÃƒâ€œN: Mejor comparaciÃƒÂ³n de estados
+                # CORRECCIÓN: Mejor comparación de estados
                 if estado_filtro == 'pendiente' and 'pendiente' not in estado_solicitud:
                     continue
                 elif estado_filtro == 'aprobada' and 'aprobada' not in estado_solicitud:
@@ -118,21 +123,21 @@ def reporte_solicitudes():
                 elif estado_filtro == 'devuelta' and 'devuelta' not in estado_solicitud:
                     continue
             
-            # Filtro por oficina - CORRECCIÃƒâ€œN: Usar ID en lugar de nombre
+            # Filtro por oficina - CORRECCIÓN: Usar ID en lugar de nombre
             if filtro_oficina != 'todas':
                 oficina_solicitud_id = solicitud.get('oficina_id')
-                # Intentar convertir ambos a string para comparaciÃƒÂ³n
+                # Intentar convertir ambos a string para comparación
                 if str(oficina_solicitud_id) != str(filtro_oficina):
                     continue
             
-            # Filtro por material (bÃƒÂºsqueda por parte del nombre) - CORRECCIÃƒâ€œN
+            # Filtro por material (búsqueda por parte del nombre) - CORRECCIÓN
             if filtro_material:
                 material_nombre = str(solicitud.get('material_nombre', '')).lower()
                 material_filtro = filtro_material.lower().strip()
                 if material_filtro not in material_nombre:
                     continue
             
-            # Filtro por solicitante (bÃƒÂºsqueda por parte del nombre) - CORRECCIÃƒâ€œN
+            # Filtro por solicitante (búsqueda por parte del nombre) - CORRECCIÓN
             if filtro_solicitante:
                 solicitante = str(solicitud.get('usuario_solicitante', '')).lower()
                 solicitante_filtro = filtro_solicitante.lower().strip()
@@ -174,7 +179,7 @@ def reporte_solicitudes():
             
             solicitudes_filtradas.append(solicitud)
         
-        # Calcular estadÃƒÂ­sticas
+        # Calcular estadísticas
         estados = {
             'pendiente': 0, 
             'aprobada': 0, 
@@ -210,7 +215,7 @@ def reporte_solicitudes():
         materiales = MaterialModel.obtener_todos() or []
         nombres_materiales = list(set([m.get('nombre', '') for m in materiales]))
         
-        # Calcular tasa de aprobaciÃƒÂ³n
+        # Calcular tasa de aprobación
         total_solicitudes = len(solicitudes_filtradas)
         tasa_aprobacion = 0
         if total_solicitudes > 0:
@@ -254,12 +259,12 @@ def reporte_solicitudes():
                              devueltas=0)
 
 # ----------------------------------
-# EXPORTACIÃƒâ€œN DE SOLICITUDES A EXCEL
+# EXPORTACIÓN DE SOLICITUDES A EXCEL
 # ----------------------------------
 
 @reportes_bp.route('/solicitudes/exportar/excel')
 def exportar_solicitudes_excel():
-    """Exporta las solicitudes filtradas a Excel - VERSIÃƒâ€œN CORREGIDA"""
+    """Exporta las solicitudes filtradas a Excel - VERSIÓN CORREGIDA"""
     if not _require_login():
         return redirect('/login')
     
@@ -280,18 +285,18 @@ def exportar_solicitudes_excel():
         # Obtener datos
         solicitudes = SolicitudModel.obtener_todas_con_detalle() or []
         
-        # Aplicar filtro segÃƒÂºn permisos
+        # Aplicar filtro según permisos
         if not (session.get('rol') in ['administrador', 'lider_inventario']):
             solicitudes = filtrar_por_oficina_usuario(solicitudes, 'oficina_id')
         
-        # Aplicar filtros adicionales (USANDO LA MISMA LÃƒâ€œGICA CORREGIDA)
+        # Aplicar filtros adicionales (USANDO LA MISMA LÓGICA CORREGIDA)
         solicitudes_filtradas = []
         for solicitud in solicitudes:
             # Filtro por estado
             if filtro_estado != 'todos':
                 estado_solicitud = solicitud.get('estado', '').lower()
                 estado_filtro = filtro_estado.lower()
-                # CORRECCIÃƒâ€œN: Mejor comparaciÃƒÂ³n de estados
+                # CORRECCIÓN: Mejor comparación de estados
                 if estado_filtro == 'pendiente' and 'pendiente' not in estado_solicitud:
                     continue
                 elif estado_filtro == 'aprobada' and 'aprobada' not in estado_solicitud:
@@ -305,20 +310,20 @@ def exportar_solicitudes_excel():
                 elif estado_filtro == 'devuelta' and 'devuelta' not in estado_solicitud:
                     continue
             
-            # Filtro por oficina - CORRECCIÃƒâ€œN
+            # Filtro por oficina - CORRECCIÓN
             if filtro_oficina != 'todas':
                 oficina_solicitud_id = solicitud.get('oficina_id')
                 if str(oficina_solicitud_id) != str(filtro_oficina):
                     continue
             
-            # Filtro por material - CORRECCIÃƒâ€œN
+            # Filtro por material - CORRECCIÓN
             if filtro_material:
                 material_nombre = str(solicitud.get('material_nombre', '')).lower()
                 material_filtro = filtro_material.lower().strip()
                 if material_filtro not in material_nombre:
                     continue
             
-            # Filtro por solicitante - CORRECCIÃƒâ€œN
+            # Filtro por solicitante - CORRECCIÓN
             if filtro_solicitante:
                 solicitante = str(solicitud.get('usuario_solicitante', '')).lower()
                 solicitante_filtro = filtro_solicitante.lower().strip()
@@ -370,7 +375,7 @@ def exportar_solicitudes_excel():
                 'Oficina': sol.get('oficina_nombre', ''),
                 'Estado': sol.get('estado', ''),
                 'Fecha Solicitud': sol.get('fecha_solicitud', ''),
-                'Fecha AprobaciÃƒÂ³n': sol.get('fecha_aprobacion', ''),
+                'Fecha Aprobación': sol.get('fecha_aprobacion', ''),
                 'Observaciones': sol.get('observacion', ''),
                 'Usuario Aprobador': sol.get('usuario_aprobador', ''),
                 'Stock Actual Material': sol.get('cantidad_disponible', '')
@@ -405,7 +410,7 @@ def exportar_solicitudes_excel():
                     f'Filtro Oficina: {filtro_oficina if filtro_oficina != "todas" else "Todas"}',
                     f'Filtro Material: {filtro_material if filtro_material else "Ninguno"}',
                     f'Filtro Solicitante: {filtro_solicitante if filtro_solicitante else "Ninguno"}',
-                    f'Fecha GeneraciÃƒÂ³n: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+                    f'Fecha Generación: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
                 ]
             }
             df_summary = pd.DataFrame(summary_data)
@@ -443,14 +448,14 @@ def reporte_materiales():
     try:
         materiales = MaterialModel.obtener_todos() or []
         
-        # Aplicar filtro segÃƒÂºn permisos
+        # Aplicar filtro según permisos
         if not (session.get('rol') in ['administrador', 'lider_inventario']):
             materiales = filtrar_por_oficina_usuario(materiales, 'oficina_id')
         
-        # Calcular estadÃƒÂ­sticas
+        # Calcular estadísticas
         valor_total_inventario = sum(m.get('valor_total', 0) or 0 for m in materiales)
         
-        # Obtener estadÃƒÂ­sticas de solicitudes
+        # Obtener estadísticas de solicitudes
         stats_dict = {}
         for mat in materiales:
             stats = SolicitudModel.obtener_estadisticas_por_material(mat['id'])
@@ -488,11 +493,11 @@ def reporte_inventario():
     try:
         materiales = MaterialModel.obtener_todos() or []
         
-        # Aplicar filtro segÃƒÂºn permisos
+        # Aplicar filtro según permisos
         if not (session.get('rol') in ['administrador', 'lider_inventario']):
             materiales = filtrar_por_oficina_usuario(materiales, 'oficina_id')
         
-        # Calcular estadÃƒÂ­sticas
+        # Calcular estadísticas
         valor_total = 0
         for material in materiales:
             valor_total_material = material.get('valor_total', 0)
@@ -556,14 +561,48 @@ def reporte_novedades():
         return redirect('/reportes')
     
     try:
-        novedades = NovedadModel.obtener_todas() or []
+        # Obtener todas las novedades con detalle completo
+        from database import get_database_connection
+        conn = get_database_connection()
+        cursor = conn.cursor()
         
-        # Aplicar filtro segÃƒÂºn permisos
+        cursor.execute("""
+            SELECT 
+                n.NovedadId as id,
+                n.Tipo as tipo,
+                n.Descripcion as descripcion,
+                n.FechaReporte as fecha_reporte,
+                n.Estado as estado,
+                n.Prioridad as prioridad,
+                n.Comentarios as comentarios,
+                n.OficinaId as oficina_id,
+                o.NombreOficina as oficina_nombre,
+                u.NombreUsuario as reportante_nombre,
+                n.UsuarioRegistra as usuario_registra,
+                n.ColorTipo as color_tipo
+            FROM Novedades n
+            LEFT JOIN Oficinas o ON n.OficinaId = o.OficinaId
+            LEFT JOIN Usuarios u ON n.UsuarioRegistra = u.UsuarioId
+            WHERE n.Activo = 1
+            ORDER BY n.FechaReporte DESC
+        """)
+        
+        columns = [column[0] for column in cursor.description]
+        novedades_raw = cursor.fetchall()
+        novedades = []
+        
+        for row in novedades_raw:
+            novedad = dict(zip(columns, row))
+            novedades.append(novedad)
+        
+        conn.close()
+        
+        # Aplicar filtro según permisos
         if not (session.get('rol') in ['administrador', 'lider_inventario']):
             oficina_usuario = session.get('oficina_id')
             novedades = [n for n in novedades if n.get('oficina_id') == oficina_usuario]
         
-        # Calcular estadÃƒÂ­sticas
+        # Calcular estadísticas
         total_novedades = len(novedades)
         
         # Contar por estado
@@ -588,11 +627,11 @@ def reporte_novedades():
             elif prioridad == 'baja':
                 prioridades['baja'] += 1
         
-        # Tipos de novedad ÃƒÂºnicos
-        tipos_novedad = list(set([n.get('tipo', 'General') for n in novedades]))
+        # Tipos de novedad únicos
+        tipos_novedad = list(set([n.get('tipo', 'General') for n in novedades if n.get('tipo')]))
         
-        # Reportantes ÃƒÂºnicos
-        reportantes = list(set([n.get('usuario_registra', 'Desconocido') for n in novedades]))
+        # Reportantes únicos
+        reportantes = list(set([n.get('reportante_nombre', 'Desconocido') for n in novedades if n.get('reportante_nombre')]))
         
         # Novedades recientes
         novedades_recientes = sorted(novedades, 
@@ -628,299 +667,164 @@ def reporte_novedades():
 
 @reportes_bp.route('/oficinas')
 def reporte_oficinas():
+    """Reporte de oficinas con inventario corporativo - VERSIÓN CORREGIDA COMPLETA"""
     if not _require_login():
         return redirect('/login')
     
-    # Verificar permisos
-    if not can_access('oficinas', 'view'):
-        flash('No tiene permisos para ver reportes de oficinas', 'warning')
+    if not can_access('inventario_corporativo', 'view'):
+        flash('No tiene permisos para ver el reporte de oficinas', 'warning')
         return redirect('/reportes')
     
     try:
-        # Obtener todas las oficinas
-        oficinas = OficinaModel.obtener_todas() or []
-        
-        
-        rol_usuario = session.get('rol', '').lower()
-        oficina_id_usuario = session.get('oficina_id')
-        
-        
-        # SOLO filtrar si es rol especÃƒÂ­fico de oficina
-        if rol_usuario.startswith('oficina_'):
-            oficinas_filtradas = []
-            for o in oficinas:
-                if o.get('id') == oficina_id_usuario:
-                    oficinas_filtradas.append(o)
-            oficinas = oficinas_filtradas
-        
-        
-        # Obtener informaciÃƒÂ³n de inventario corporativo para cada oficina
         from database import get_database_connection
+        conn = get_database_connection()
+        cursor = conn.cursor()
         
-        conn = None
-        try:
-            conn = get_database_connection()
-            cursor = conn.cursor()
+        # Obtener oficinas - COLUMNAS CORRECTAS
+        cursor.execute("""
+            SELECT 
+                OficinaId,
+                NombreOficina,
+                Ubicacion
+            FROM Oficinas
+            WHERE Activo = 1
+            ORDER BY NombreOficina
+        """)
+        
+        oficinas_data = []
+        for row in cursor.fetchall():
+            oficina = {
+                'id': row[0],
+                'nombre': row[1],
+                'ubicacion': row[2] or 'No especificada',
+                'region': 'Sin región'
+            }
             
-            for oficina in oficinas:
-                oficina_id = oficina.get('id')
-                oficina_nombre = oficina.get('nombre', '')
-                
-                
-                try:
-                    
-                    cursor.execute("""
-                        SELECT DISTINCT
-                            pc.ProductoId,
-                            pc.CodigoUnico,  -- NUEVO: CÃƒÂ³digo ÃƒÂºnico del producto
-                            pc.NombreProducto,
-                            pc.Descripcion,
-                            pc.ValorUnitario,
-                            pc.CantidadMinima,
-                            pc.Activo,
-                            pc.FechaCreacion,
-                            pc.UsuarioCreador,
-                            c.NombreCategoria,
-                            -- Obtener cantidad total asignada a esta oficina
-                            (
-                                SELECT SUM(ach.Cantidad) 
-                                FROM AsignacionesCorporativasHistorial ach 
-                                WHERE ach.ProductoId = pc.ProductoId 
-                                AND ach.OficinaId = ?
-                                AND ach.Accion LIKE '%ASIGNAR%'
-                            ) as CantidadAsignada
-                        FROM ProductosCorporativos pc
-                        LEFT JOIN CategoriasProductos c ON pc.CategoriaId = c.CategoriaId
-                        WHERE EXISTS (
-                            SELECT 1 
-                            FROM AsignacionesCorporativasHistorial ach 
-                            WHERE ach.ProductoId = pc.ProductoId 
-                            AND ach.OficinaId = ?
-                        )
-                        AND pc.Activo = 1
-                        ORDER BY pc.NombreProducto
-                    """, (oficina_id, oficina_id))
-                    
-                    productos_oficina = []
-                    for row in cursor.fetchall():
-                        producto_id = row[0]
-                        codigo_unico = row[1]  
-                        cantidad_asignada = row[10] or 0  
-                        valor_unitario = float(row[4] or 0)
-                        valor_total = cantidad_asignada * valor_unitario
-                        
-                        producto = {
-                            'id': producto_id,
-                            'codigo_unico': codigo_unico, 
-                            'nombre': row[2],
-                            'descripcion': row[3] or '',
-                            'cantidad': cantidad_asignada,
-                            'valor_unitario': valor_unitario,
-                            'valor_total': valor_total,
-                            'stock_minimo': row[5] or 0,
-                            'categoria': row[9] or 'General', 
-                            'activo': bool(row[6]),
-                            'usuario_creador': row[8] if row[8] else '',  
-                            'fecha_creacion': row[7] if row[7] else None, 
-                            'tipo': 'corporativo'
-                        }
-                        productos_oficina.append(producto)
-                    
-                    oficina['materiales'] = productos_oficina
-                    oficina['cantidad_materiales'] = len(productos_oficina)
-                    
-                    # Calcular valor total del inventario corporativo para esta oficina
-                    valor_total_oficina = sum(p.get('valor_total', 0) for p in productos_oficina)
-                    oficina['valor_total_inventario'] = valor_total_oficina
-                    
-                    
-                except Exception as mat_error:
-                    oficina['materiales'] = []
-                    oficina['cantidad_materiales'] = 0
-                    oficina['valor_total_inventario'] = 0
-                
-                try:
-                    cursor.execute("""
-                        SELECT TOP 5
-                            sm.SolicitudId,
-                            sm.CantidadSolicitada,
-                            sm.CantidadEntregada,
-                            sm.FechaSolicitud,
-                            es.NombreEstado as Estado,
-                            m.NombreElemento as MaterialNombre,
-                            sm.UsuarioSolicitante,
-                            sm.Observacion
-                        FROM SolicitudesMaterial sm
-                        INNER JOIN Materiales m ON sm.MaterialId = m.MaterialId
-                        INNER JOIN EstadosSolicitud es ON sm.EstadoId = es.EstadoId
-                        WHERE sm.OficinaSolicitanteId = ?
-                        ORDER BY sm.FechaSolicitud DESC
-                    """, (oficina_id,))
-                    
-                    solicitudes_oficina = []
-                    for row in cursor.fetchall():
-                        solicitud = {
-                            'id': row[0],
-                            'cantidad_solicitada': row[1],
-                            'cantidad_entregada': row[2],
-                            'fecha_solicitud': row[3],
-                            'estado': row[4],
-                            'material_nombre': row[5],
-                            'usuario_solicitante': row[6],
-                            'observacion': row[7] or ''
-                        }
-                        solicitudes_oficina.append(solicitud)
-                    
-                    oficina['solicitudes'] = solicitudes_oficina
-                    oficina['cantidad_solicitudes'] = len(solicitudes_oficina)
-                    
-                except Exception as sol_error:
-                    oficina['solicitudes'] = []
-                    oficina['cantidad_solicitudes'] = 0
-                
-                # --- PrÃƒÂ©stamos de esta oficina ---
-                try:
-                    cursor.execute("""
-                        SELECT COUNT(*) 
-                        FROM PrestamosMaterial 
-                        WHERE OficinaId = ? AND Activo = 1
-                    """, (oficina_id,))
-                    
-                    result = cursor.fetchone()
-                    oficina['cantidad_prestamos'] = result[0] if result else 0
-                    
-                except Exception as prestamo_error:
-                    oficina['cantidad_prestamos'] = 0
-                
-                # --- HISTORIAL DE ASIGNACIONES CORPORATIVAS - TABLA CORRECTA ---
-                try:
-                    # CONSULTA PRINCIPAL: Obtener historial de asignaciones corporativas
-                    cursor.execute("""
-                        SELECT TOP 15
-                            ach.HistorialId,
-                            ach.Fecha,
-                            ach.Accion,
-                            ach.Cantidad,
-                            ach.UsuarioAccion,
-                            ach.Observaciones,
-                            pc.NombreProducto as MaterialNombre,
-                            o2.NombreOficina as OficinaNombre
-                        FROM AsignacionesCorporativasHistorial ach
-                        LEFT JOIN ProductosCorporativos pc ON ach.ProductoId = pc.ProductoId
-                        LEFT JOIN Oficinas o2 ON ach.OficinaId = o2.OficinaId
-                        WHERE ach.OficinaId = ?
-                        ORDER BY ach.Fecha DESC
-                    """, (oficina_id,))
-                    
-                    historial_oficina = []
-                    for row in cursor.fetchall():
-                        movimiento = {
-                            'fecha': row[1],
-                            'accion': row[2] if row[2] else 'AsignaciÃƒÂ³n',
-                            'material_nombre': row[6] if row[6] else f"Producto ID: {row[0]}",
-                            'cantidad': row[3] if row[3] else 1,
-                            'oficina_destino_nombre': row[7] if row[7] else oficina_nombre,
-                            'usuario_nombre': row[4] if row[4] else 'Sistema',
-                            'observaciones': row[5] if row[5] else ''
-                        }
-                        historial_oficina.append(movimiento)
-                    
-                    # TambiÃƒÂ©n buscar asignaciones regulares
-                    cursor.execute("""
-                        SELECT TOP 5
-                            a.FechaAsignacion,
-                            'AsignaciÃƒÂ³n a Usuario' as Accion,
-                            a.UsuarioAsignador,
-                            a.Observaciones,
-                            pc.NombreProducto as MaterialNombre
-                        FROM Asignaciones a
-                        LEFT JOIN ProductosCorporativos pc ON a.ProductoId = pc.ProductoId
-                        WHERE a.OficinaId = ? AND a.Activo = 1
-                        ORDER BY a.FechaAsignacion DESC
-                    """, (oficina_id,))
-                    
-                    asignaciones_regulares = []
-                    for row in cursor.fetchall():
-                        movimiento = {
-                            'fecha': row[0],
-                            'accion': row[1],
-                            'material_nombre': row[4] if row[4] else 'Producto asignado',
-                            'cantidad': 1,
-                            'oficina_destino_nombre': oficina_nombre,
-                            'usuario_nombre': row[2] if row[2] else 'Sistema',
-                            'observaciones': row[3] if row[3] else ''
-                        }
-                        asignaciones_regulares.append(movimiento)
-                    
-                    # Combinar todos los movimientos
-                    todos_movimientos = historial_oficina + asignaciones_regulares
-                    
-                    # Ordenar por fecha (mÃƒÂ¡s reciente primero)
-                    todos_movimientos_ordenados = sorted(
-                        todos_movimientos, 
-                        key=lambda x: x['fecha'] if x['fecha'] else datetime.min, 
-                        reverse=True
-                    )[:15]  # Limitar a 15 movimientos
-                    
-                    oficina['movimientos'] = todos_movimientos_ordenados
-                    oficina['cantidad_movimientos'] = len(todos_movimientos_ordenados)
-                    
-                    
-                    # Debug: Mostrar los primeros 3 movimientos
-                    for i, mov in enumerate(todos_movimientos_ordenados[:3]):
-
-                        pass
-                    
-                except Exception as mov_error:
-                    oficina['movimientos'] = []
-                    oficina['cantidad_movimientos'] = 0
-        
-        except Exception as e:
-            pass
+            # Obtener productos corporativos asignados a esta oficina
+            cursor_prod = conn.cursor()
+            cursor_prod.execute("""
+                SELECT 
+                    p.ProductoId,
+                    p.CodigoUnico,
+                    p.NombreProducto,
+                    p.Descripcion,
+                    p.CantidadDisponible,
+                    p.ValorUnitario,
+                    p.CantidadMinima,
+                    CAST(NULL AS NVARCHAR(100)) as NombreCategoria
+                FROM ProductosCorporativos p
+                INNER JOIN Asignaciones a ON p.ProductoId = a.ProductoId
+                WHERE a.OficinaId = ? AND p.Activo = 1 AND a.Activo = 1
+                GROUP BY p.ProductoId, p.CodigoUnico, p.NombreProducto, p.Descripcion,
+                         p.CantidadDisponible, p.ValorUnitario, p.CantidadMinima
+            """, (oficina['id'],))
             
-            for oficina in oficinas:
-                oficina['materiales'] = []
-                oficina['solicitudes'] = []
-                oficina['movimientos'] = []
-                oficina['cantidad_materiales'] = 0
-                oficina['cantidad_solicitudes'] = 0
-                oficina['cantidad_prestamos'] = 0
-                oficina['cantidad_movimientos'] = 0
-                oficina['valor_total_inventario'] = 0
+            materiales = []
+            for prod_row in cursor_prod.fetchall():
+                material = {
+                    'id': prod_row[0],
+                    'codigo': prod_row[1],
+                    'nombre': prod_row[2],
+                    'descripcion': prod_row[3],
+                    'cantidad': prod_row[4] or 0,
+                    'valor_unitario': prod_row[5] or 0,
+                    'cantidad_minima': prod_row[6] or 0,
+                    'categoria': prod_row[7] or 'Corporativo',
+                    'estado': 'Activo',
+                    'unidad': 'Unidad',
+                    'valor_total': (prod_row[4] or 0) * (prod_row[5] or 0)
+                }
+                materiales.append(material)
+            cursor_prod.close()
+            
+            # Obtener movimientos/asignaciones CON AsignacionId (CRÍTICO para certificados)
+            cursor_mov = conn.cursor()
+            cursor_mov.execute("""
+                SELECT 
+                    a.FechaAsignacion,
+                    a.Estado,
+                    p.NombreProducto,
+                    1 as Cantidad,
+                    a.UsuarioAsignador,
+                    a.Observaciones,
+                    a.AsignacionId
+                FROM Asignaciones a
+                INNER JOIN ProductosCorporativos p ON a.ProductoId = p.ProductoId
+                WHERE a.OficinaId = ? AND a.Activo = 1
+                ORDER BY a.FechaAsignacion DESC
+            """, (oficina['id'],))
+            
+            movimientos = []
+            for mov_row in cursor_mov.fetchall():
+                estado_upper = (mov_row[1] or '').upper().strip()
+                
+                if estado_upper == 'CONFIRMADO':
+                    accion_display = 'CONFIRMACION'
+                elif estado_upper == 'ASIGNADO':
+                    accion_display = 'ASIGNAR'
+                elif estado_upper == 'DEVUELTO':
+                    accion_display = 'DEVOLUCION'
+                else:
+                    accion_display = 'Asignación a Usuario'
+                
+                movimiento = {
+                    'fecha': mov_row[0],
+                    'accion': accion_display,
+                    'material': mov_row[2],
+                    'cantidad': mov_row[3],
+                    'usuario': mov_row[4] or 'Sistema',
+                    'observaciones': mov_row[5] or '',
+                    'asignacion_id': mov_row[6]  # ✅ CRÍTICO para botones de certificado
+                }
+                movimientos.append(movimiento)
+            cursor_mov.close()
+            
+            # Calcular totales
+            oficina['materiales'] = materiales
+            oficina['movimientos'] = movimientos
+            oficina['total_materiales'] = len(materiales)
+            oficina['total_movimientos'] = len(movimientos)
+            oficina['valor_total'] = sum([m['valor_total'] for m in materiales])
+            
+            # Contar solicitudes (opcional, puede fallar si no existe la tabla)
+            try:
+                cursor_sol = conn.cursor()
+                cursor_sol.execute("""
+                    SELECT COUNT(*) 
+                    FROM Solicitudes 
+                    WHERE OficinaId = ? AND Activo = 1
+                """, (oficina['id'],))
+                oficina['total_solicitudes'] = cursor_sol.fetchone()[0] or 0
+                cursor_sol.close()
+            except:
+                oficina['total_solicitudes'] = 0
+            
+            oficinas_data.append(oficina)
         
-        finally:
-            if conn:
-                conn.close()
+        conn.close()
         
-        # Calcular totales generales
-        total_materiales_oficinas = sum(o.get('cantidad_materiales', 0) for o in oficinas)
-        total_solicitudes_oficinas = sum(o.get('cantidad_solicitudes', 0) for o in oficinas)
-        total_valor_inventario = sum(o.get('valor_total_inventario', 0) for o in oficinas)
-        total_movimientos_oficinas = sum(o.get('cantidad_movimientos', 0) for o in oficinas)
-        oficinas_activas_count = len([o for o in oficinas if o.get('estado') == 'activo'])
-        
+        # Totales generales
+        total_oficinas = len(oficinas_data)
+        total_materiales = sum([o['total_materiales'] for o in oficinas_data])
+        total_solicitudes = sum([o['total_solicitudes'] for o in oficinas_data])
+        total_movimientos = sum([o['total_movimientos'] for o in oficinas_data])
+        valor_total = sum([o['valor_total'] for o in oficinas_data])
         
         return render_template('reportes/oficinas.html',
-                             oficinas=oficinas,
-                             total_oficinas=len(oficinas),
-                             oficinas_activas=oficinas_activas_count,
-                             total_materiales_oficinas=total_materiales_oficinas,
-                             total_solicitudes_oficinas=total_solicitudes_oficinas,
-                             total_movimientos_oficinas=total_movimientos_oficinas,
-                             total_valor_inventario=total_valor_inventario)
-        
+                             oficinas=oficinas_data,
+                             total_oficinas=total_oficinas,
+                             total_materiales=total_materiales,
+                             total_solicitudes=total_solicitudes,
+                             total_movimientos=total_movimientos,
+                             valor_total=valor_total)  # ✅ VARIABLE CORRECTA
+    
     except Exception as e:
-        flash('Error al generar el reporte de oficinas', 'danger')
-        return render_template('reportes/oficinas.html',
-                             oficinas=[],
-                             total_oficinas=0,
-                             oficinas_activas=0,
-                             total_materiales_oficinas=0,
-                             total_solicitudes_oficinas=0,
-                             total_movimientos_oficinas=0,
-                             total_valor_inventario=0)
+        flash(f'Error al generar el reporte de oficinas: {str(e)}', 'danger')
+        print(f"❌ ERROR en reporte_oficinas: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return redirect('/reportes')
 
-@reportes_bp.route('/prestamos')
 def reporte_prestamos():
     """Reporte de préstamos"""
     if not _require_login():
@@ -1114,7 +1018,7 @@ def exportar_materiales_excel():
     try:
         materiales = MaterialModel.obtener_todos() or []
         
-        # Aplicar filtro segÃƒÂºn permisos
+        # Aplicar filtro según permisos
         if not (session.get('rol') in ['administrador', 'lider_inventario']):
             materiales = filtrar_por_oficina_usuario(materiales, 'oficina_id')
 
@@ -1125,11 +1029,11 @@ def exportar_materiales_excel():
                 'Nombre': mat.get('nombre', ''),
                 'Valor Unitario': mat.get('valor_unitario', 0),
                 'Stock Actual': mat.get('cantidad', 0),
-                'Stock MÃƒÂ­nimo': mat.get('stock_minimo', 0) if mat.get('stock_minimo') else 0,
+                'Stock Mínimo': mat.get('stock_minimo', 0) if mat.get('stock_minimo') else 0,
                 'Valor Total': mat.get('valor_total', 0),
                 'Oficina': mat.get('oficina_nombre', ''),
                 'Creado por': mat.get('usuario_creador', ''),
-                'Fecha CreaciÃƒÂ³n': mat.get('fecha_creacion', '')
+                'Fecha Creación': mat.get('fecha_creacion', '')
             })
 
         df = pd.DataFrame(data)
@@ -1150,7 +1054,7 @@ def exportar_materiales_excel():
         return redirect('/reportes')
 
 # ============================================================================
-# FUNCIONES DE EXPORTACIÃƒâ€œN A PDF - VERSIONES MEJORADAS
+# FUNCIONES DE EXPORTACIÓN A PDF - VERSIONES MEJORADAS
 # ============================================================================
 
 @reportes_bp.route('/exportar/inventario-corporativo/pdf')
@@ -1173,7 +1077,7 @@ def exportar_inventario_corporativo_pdf():
             from reportlab.lib import colors
             from reportlab.lib.units import inch, cm
         except ImportError:
-            flash('La librerÃƒÂ­a ReportLab no estÃƒÂ¡ instalada. InstÃƒÂ¡lela con: pip install reportlab', 'danger')
+            flash('La librería ReportLab no está instalada. Instálela con: pip install reportlab', 'danger')
             return redirect('/reportes')
         
         from database import get_database_connection
@@ -1215,7 +1119,7 @@ def exportar_inventario_corporativo_pdf():
         # Crear PDF en memoria
         buffer = io.BytesIO()
         
-        # Usar landscape y ajustar mÃƒÂ¡rgenes para mejor uso del espacio
+        # Usar landscape y ajustar márgenes para mejor uso del espacio
         doc = SimpleDocTemplate(
             buffer,
             pagesize=landscape(letter),
@@ -1246,9 +1150,9 @@ def exportar_inventario_corporativo_pdf():
         # Preparar datos para la tabla
         data = []
         
-        # TÃƒÂ­tulo
+        # Título
         data.append([Paragraph('<b>REPORTE DE INVENTARIO CORPORATIVO</b>', title_style)])
-        data.append([Paragraph(f'Fecha de generaciÃƒÂ³n: {datetime.now().strftime("%d/%m/%Y %H:%M")}', subtitle_style)])
+        data.append([Paragraph(f'Fecha de generación: {datetime.now().strftime("%d/%m/%Y %H:%M")}', subtitle_style)])
         data.append([''])  # Espacio
         
         # Encabezados de tabla
@@ -1281,11 +1185,11 @@ def exportar_inventario_corporativo_pdf():
         data.append(['Valor Total Inventario:', f"${total_valor:,.2f}", '', '', '', '', '', '', ''])
         
         # Crear tabla
-        table = Table(data, repeatRows=4)  # Repetir encabezados en cada pÃƒÂ¡gina
+        table = Table(data, repeatRows=4)  # Repetir encabezados en cada página
         
         # Estilo de la tabla
         table_style = TableStyle([
-            ('SPAN', (0, 0), (8, 0)),  # TÃƒÂ­tulo
+            ('SPAN', (0, 0), (8, 0)),  # Título
             ('SPAN', (0, 1), (8, 1)),  # Fecha
             
             # Encabezados
@@ -1325,7 +1229,7 @@ def exportar_inventario_corporativo_pdf():
             1.5*cm,  # Cantidad
             2.0*cm,  # Valor Unitario
             2.0*cm,  # Valor Total
-            1.5*cm,  # Stock MÃƒÂ­nimo
+            1.5*cm,  # Stock Mínimo
             1.5*cm,  # Estado
             2.0*cm,  # Responsable
             2.0*cm   # Fecha
@@ -1355,16 +1259,16 @@ def exportar_inventario_corporativo_pdf():
 
 @reportes_bp.route('/prestamos/exportar/pdf')
 def exportar_prestamos_pdf():
-    """Exporta el reporte de prÃƒÂ©stamos a PDF"""
+    """Exporta el reporte de préstamos a PDF"""
     if not _require_login():
         return redirect('/login')
     
     if not (can_access('prestamos', 'view') or can_access('prestamos', 'view_own')):
-        flash('No tiene permisos para exportar reportes de prÃƒÂ©stamos', 'warning')
+        flash('No tiene permisos para exportar reportes de préstamos', 'warning')
         return redirect('/reportes')
     
     try:
-        # Verificar si reportlab estÃƒÂ¡ instalado
+        # Verificar si reportlab está instalado
         try:
             from reportlab.lib.pagesizes import letter, landscape
             from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
@@ -1372,7 +1276,7 @@ def exportar_prestamos_pdf():
             from reportlab.lib import colors
             from reportlab.lib.units import inch, cm
         except ImportError:
-            flash('La librerÃƒÂ­a ReportLab no estÃƒÂ¡ instalada. InstÃƒÂ¡lela con: pip install reportlab', 'danger')
+            flash('La librería ReportLab no está instalada. Instálela con: pip install reportlab', 'danger')
             return redirect('/reportes')
         
         from database import get_database_connection
@@ -1381,7 +1285,7 @@ def exportar_prestamos_pdf():
         conn = get_database_connection()
         cursor = conn.cursor()
         
-        # Consulta para prÃƒÂ©stamos
+        # Consulta para préstamos
         query = """
         SELECT 
             pe.PrestamoId as ID,
@@ -1410,7 +1314,7 @@ def exportar_prestamos_pdf():
         
         # Verificar si hay datos
         if not resultados:
-            flash('No hay datos de prÃƒÂ©stamos para exportar', 'warning')
+            flash('No hay datos de préstamos para exportar', 'warning')
             return redirect('/reportes')
         
         # Crear PDF en memoria
@@ -1439,9 +1343,9 @@ def exportar_prestamos_pdf():
         # Preparar datos para la tabla
         data = []
         
-        # TÃƒÂ­tulo
-        data.append([Paragraph('<b>REPORTE DE PRÃƒâ€°STAMOS</b>', title_style)])
-        data.append([Paragraph(f'Fecha de generaciÃƒÂ³n: {datetime.now().strftime("%d/%m/%Y %H:%M")}', 
+        # Título
+        data.append([Paragraph('<b>REPORTE DE PRÉSTAMOS</b>', title_style)])
+        data.append([Paragraph(f'Fecha de generación: {datetime.now().strftime("%d/%m/%Y %H:%M")}', 
                                ParagraphStyle('Date', parent=styles['Normal'], fontSize=9, alignment=1))])
         data.append([''])  # Espacio
         
@@ -1452,21 +1356,21 @@ def exportar_prestamos_pdf():
         for row in resultados:
             data.append([str(value) if value is not None else '' for value in row])
         
-        # EstadÃƒÂ­sticas
+        # Estadísticas
         total_prestamos = len(resultados)
         prestamos_activos = len([r for r in resultados if r[7] == 'PRESTADO'])
         
         data.append([''])  # Espacio
-        data.append(['<b>ESTADÃƒÂSTICAS</b>', '', '', '', '', '', '', '', ''])
-        data.append(['Total PrÃƒÂ©stamos:', str(total_prestamos), '', '', '', '', '', '', ''])
-        data.append(['PrÃƒÂ©stamos Activos:', str(prestamos_activos), '', '', '', '', '', '', ''])
+        data.append(['<b>ESTADÍSTICAS</b>', '', '', '', '', '', '', '', ''])
+        data.append(['Total Préstamos:', str(total_prestamos), '', '', '', '', '', '', ''])
+        data.append(['Préstamos Activos:', str(prestamos_activos), '', '', '', '', '', '', ''])
         
         # Crear tabla
         table = Table(data, repeatRows=3)  # Repetir encabezados
         
-        # Estilo de la tabla - OPTIMIZADO PARA UNA PÃƒÂGINA
+        # Estilo de la tabla - OPTIMIZADO PARA UNA PÁGINA
         table_style = TableStyle([
-            ('SPAN', (0, 0), (-1, 0)),  # TÃƒÂ­tulo ocupa todas las columnas
+            ('SPAN', (0, 0), (-1, 0)),  # Título ocupa todas las columnas
             ('SPAN', (0, 1), (-1, 1)),  # Fecha ocupa todas las columnas
             
             ('BACKGROUND', (0, 2), (-1, 2), colors.HexColor('#4F81BD')),  # Encabezados
@@ -1476,11 +1380,11 @@ def exportar_prestamos_pdf():
             ('FONTSIZE', (0, 2), (-1, 2), 8),
             ('BOTTOMPADDING', (0, 2), (-1, 2), 6),
             
-            ('GRID', (0, 2), (-1, -5), 0.5, colors.gray),  # Hasta antes de estadÃƒÂ­sticas
+            ('GRID', (0, 2), (-1, -5), 0.5, colors.gray),  # Hasta antes de estadísticas
             ('FONTSIZE', (0, 3), (-1, -5), 7),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             
-            # EstadÃƒÂ­sticas
+            # Estadísticas
             ('FONTNAME', (0, -3), (1, -1), 'Helvetica-Bold'),
             ('ALIGN', (0, -3), (1, -1), 'LEFT'),
             ('BACKGROUND', (0, -3), (1, -1), colors.HexColor('#F2F2F2')),
@@ -1492,15 +1396,15 @@ def exportar_prestamos_pdf():
         
         table.setStyle(table_style)
         
-        # Ajustar ancho de columnas especÃƒÂ­ficamente para prÃƒÂ©stamos
+        # Ajustar ancho de columnas específicamente para préstamos
         col_widths = [
             1.0*cm,  # ID
             3.0*cm,  # Material
             2.5*cm,  # Solicitante
             2.0*cm,  # Oficina
             1.5*cm,  # Cantidad
-            2.0*cm,  # Fecha PrÃƒÂ©stamo
-            2.0*cm,  # DevoluciÃƒÂ³n Prevista
+            2.0*cm,  # Fecha Préstamo
+            2.0*cm,  # Devolución Prevista
             1.5*cm,  # Estado
             2.5*cm   # Evento
         ]
@@ -1523,7 +1427,7 @@ def exportar_prestamos_pdf():
         )
         
     except Exception as e:
-        flash(f'Error al generar el PDF de prÃƒÂ©stamos: {str(e)}', 'danger')
+        flash(f'Error al generar el PDF de préstamos: {str(e)}', 'danger')
         return redirect('/reportes')
 
 @reportes_bp.route('/materiales/exportar/pdf')
@@ -1537,7 +1441,7 @@ def exportar_materiales_pdf():
         return redirect('/reportes')
     
     try:
-        # Verificar si reportlab estÃƒÂ¡ instalado
+        # Verificar si reportlab está instalado
         try:
             from reportlab.lib.pagesizes import letter, landscape
             from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
@@ -1545,7 +1449,7 @@ def exportar_materiales_pdf():
             from reportlab.lib import colors
             from reportlab.lib.units import inch, cm
         except ImportError:
-            flash('La librerÃƒÂ­a ReportLab no estÃƒÂ¡ instalada. InstÃƒÂ¡lela con: pip install reportlab', 'danger')
+            flash('La librería ReportLab no está instalada. Instálela con: pip install reportlab', 'danger')
             return redirect('/reportes')
         
         from database import get_database_connection
@@ -1610,9 +1514,9 @@ def exportar_materiales_pdf():
         # Preparar datos para la tabla
         data = []
         
-        # TÃƒÂ­tulo
+        # Título
         data.append([Paragraph('<b>REPORTE DE MATERIALES</b>', title_style)])
-        data.append([Paragraph(f'Fecha de generaciÃƒÂ³n: {datetime.now().strftime("%d/%m/%Y %H:%M")}', 
+        data.append([Paragraph(f'Fecha de generación: {datetime.now().strftime("%d/%m/%Y %H:%M")}', 
                                ParagraphStyle('Date', parent=styles['Normal'], fontSize=9, alignment=1))])
         data.append([''])  # Espacio
         
@@ -1681,7 +1585,7 @@ def exportar_materiales_pdf():
             1.5*cm,  # Stock
             2.0*cm,  # Valor Unitario
             2.0*cm,  # Valor Total
-            1.5*cm,  # Stock MÃƒÂ­nimo
+            1.5*cm,  # Stock Mínimo
             1.5*cm,  # Estado
             2.5*cm,  # Responsable
             2.0*cm   # Fecha
@@ -1710,7 +1614,7 @@ def exportar_materiales_pdf():
 
 @reportes_bp.route('/material/<int:material_id>')
 def material_detalle(material_id):
-    """Detalle de material especÃƒÂ­fico"""
+    """Detalle de material específico"""
     if not _require_login():
         return redirect('/login')
     
@@ -1754,7 +1658,7 @@ def exportar_inventario_corporativo_excel():
         
         conn = get_database_connection()
         
-        # CONSULTA CORREGIDA segÃƒÂºn tu estructura de base de datos
+        # CONSULTA CORREGIDA según tu estructura de base de datos
         query = """
         SELECT 
             o.NombreOficina,
@@ -1789,19 +1693,19 @@ def exportar_inventario_corporativo_excel():
                 'Stock': 'sum',
                 'ValorTotal': 'sum'
             }).reset_index()
-            resumen_df.columns = ['Oficina', 'UbicaciÃƒÂ³n', 'Cantidad Materiales', 'Stock Total', 'Valor Total Inventario']
+            resumen_df.columns = ['Oficina', 'Ubicación', 'Cantidad Materiales', 'Stock Total', 'Valor Total Inventario']
             resumen_df['Valor Total Inventario'] = resumen_df['Valor Total Inventario'].round(2)
             resumen_df.to_excel(writer, sheet_name='Resumen por Oficina', index=False)
             
             # Hoja 3: Totales generales
             totales_data = {
-                'MÃƒÂ©trica': [
+                'Métrica': [
                     'Total Oficinas con Inventario',
                     'Total Materiales',
                     'Stock Total',
                     'Valor Total Inventario',
                     'Valor Promedio por Material',
-                    'Fecha de ExportaciÃƒÂ³n'
+                    'Fecha de Exportación'
                 ],
                 'Valor': [
                     resumen_df['Oficina'].nunique(),
@@ -1833,12 +1737,12 @@ def exportar_inventario_corporativo_excel():
         return redirect('/reportes')
 
 # ============================================================================
-# EXPORTACIÃƒâ€œN POR OFICINA
+# EXPORTACIÓN POR OFICINA
 # ============================================================================
 
 @reportes_bp.route('/exportar/oficina/<int:oficina_id>/<string:formato>')
 def exportar_oficina_inventario(oficina_id, formato):
-    """Exporta el inventario de una oficina especÃƒÂ­fica"""
+    """Exporta el inventario de una oficina específica"""
     if not _require_login():
         return redirect('/login')
     
@@ -1850,15 +1754,15 @@ def exportar_oficina_inventario(oficina_id, formato):
     try:
         from database import get_database_connection
         
-        # Obtener parÃƒÂ¡metros - CORREGIDO
+        # Obtener parámetros - CORREGIDO
         incluir_materiales = request.args.get('materiales', '1') == '1'
         incluir_movimientos = request.args.get('movimientos', '1') == '1'
         incluir_totales = request.args.get('totales', '1') == '1'
-        # incluir_solicitudes no se usa en la consulta SQL, se eliminÃƒÂ³
+        # incluir_solicitudes no se usa en la consulta SQL, se eliminó
         
         conn = get_database_connection()
         
-        # Obtener informaciÃƒÂ³n de la oficina - CORREGIDO
+        # Obtener información de la oficina - CORREGIDO
         cursor = conn.cursor()
         cursor.execute("""
             SELECT OficinaId, NombreOficina, Ubicacion, Region, Estado
@@ -1941,7 +1845,7 @@ def exportar_oficina_inventario(oficina_id, formato):
                     if row[0]:  # Solo si hay fecha
                         movimiento = {
                             'fecha': row[0],
-                            'accion': row[1] or 'AsignaciÃƒÂ³n',
+                            'accion': row[1] or 'Asignación',
                             'cantidad': row[2] or 1,
                             'usuario_nombre': row[3] or 'Sistema',
                             'observaciones': row[4] or '',
@@ -1952,7 +1856,7 @@ def exportar_oficina_inventario(oficina_id, formato):
             except Exception as mov_error:
                 pass
                 
-            # TambiÃƒÂ©n buscar en movimientos regulares
+            # También buscar en movimientos regulares
             try:
                 cursor.execute("""
                     SELECT TOP 10
@@ -1992,10 +1896,10 @@ def exportar_oficina_inventario(oficina_id, formato):
         valor_total_inventario = sum(m.get('valor_total', 0) for m in materiales)
         total_movimientos = len(movimientos)
         
-        # Ordenar movimientos por fecha (mÃƒÂ¡s reciente primero)
+        # Ordenar movimientos por fecha (más reciente primero)
         movimientos.sort(key=lambda x: x.get('fecha', datetime.min), reverse=True)
         
-        # Exportar segÃƒÂºn formato
+        # Exportar según formato
         if formato.lower() == 'excel':
             return _exportar_oficina_excel(oficina, materiales, movimientos,
                                           total_materiales, valor_total_inventario, 
@@ -2009,7 +1913,7 @@ def exportar_oficina_inventario(oficina_id, formato):
                                         total_materiales, valor_total_inventario,
                                         total_movimientos, incluir_totales)
         else:
-            flash('Formato de exportaciÃƒÂ³n no vÃƒÂ¡lido', 'danger')
+            flash('Formato de exportación no válido', 'danger')
             return redirect('/reportes')
             
     except Exception as e:
@@ -2027,11 +1931,11 @@ def _exportar_oficina_excel(oficina, materiales, movimientos, total_materiales,
         data_frames = []
         sheet_names = []
         
-        # Hoja 1: InformaciÃƒÂ³n de la oficina
+        # Hoja 1: Información de la oficina
         oficina_info = {
-            'Campo': ['Nombre Oficina', 'UbicaciÃƒÂ³n', 'RegiÃƒÂ³n', 'Estado', 'ID Oficina', 
+            'Campo': ['Nombre Oficina', 'Ubicación', 'Región', 'Estado', 'ID Oficina', 
                      'Total Materiales', 'Valor Total Inventario', 'Total Movimientos',
-                     'Fecha ExportaciÃƒÂ³n'],
+                     'Fecha Exportación'],
             'Valor': [oficina['nombre'], oficina['ubicacion'], oficina['region'], 
                      oficina['estado'], oficina['id'], total_materiales, 
                      f"${valor_total_inventario:,.2f}", total_movimientos,
@@ -2039,7 +1943,7 @@ def _exportar_oficina_excel(oficina, materiales, movimientos, total_materiales,
         }
         df_oficina = pd.DataFrame(oficina_info)
         data_frames.append(df_oficina)
-        sheet_names.append('InformaciÃƒÂ³n Oficina')
+        sheet_names.append('Información Oficina')
         
         # Hoja 2: Materiales del inventario
         if materiales:
@@ -2054,15 +1958,15 @@ def _exportar_oficina_excel(oficina, materiales, movimientos, total_materiales,
                 materiales_data.append({
                     'ID': mat['id'],
                     'Nombre': mat['nombre'],
-                    'DescripciÃƒÂ³n': mat['descripcion'],
-                    'CategorÃƒÂ­a': mat['categoria'],
+                    'Descripción': mat['descripcion'],
+                    'Categoría': mat['categoria'],
                     'Valor Unitario': f"${mat['valor_unitario']:,.2f}",
                     'Cantidad': mat['cantidad'],
                     'Valor Total': f"${mat['valor_total']:,.2f}",
-                    'Stock MÃƒÂ­nimo': mat['stock_minimo'],
+                    'Stock Mínimo': mat['stock_minimo'],
                     'Estado': 'Activo' if mat['activo'] else 'Inactivo',
                     'Responsable': mat['usuario_creador'],
-                    'Fecha CreaciÃƒÂ³n': fecha_str
+                    'Fecha Creación': fecha_str
                 })
             
             df_materiales = pd.DataFrame(materiales_data)
@@ -2081,7 +1985,7 @@ def _exportar_oficina_excel(oficina, materiales, movimientos, total_materiales,
                 
                 movimientos_data.append({
                     'Fecha': fecha_str,
-                    'AcciÃƒÂ³n': mov['accion'],
+                    'Acción': mov['accion'],
                     'Material': mov['material_nombre'],
                     'Cantidad': mov['cantidad'],
                     'Usuario': mov['usuario_nombre'],
@@ -2131,18 +2035,17 @@ def _exportar_oficina_excel(oficina, materiales, movimientos, total_materiales,
         flash('Error al generar el archivo Excel', 'danger')
         return redirect('/reportes')
 
-def _exportar_oficina_pdf(oficina, materiales, solicitudes, movimientos, total_materiales,
-                         valor_total_inventario, total_solicitudes, total_movimientos, incluir_totales):
+def _exportar_oficina_pdf(oficina, materiales, movimientos, total_materiales,
+                         valor_total_inventario, total_movimientos, incluir_totales):
     """Exporta a PDF el inventario de una oficina"""
     try:
         # Por ahora, redirigir a Excel hasta que implementemos PDF
-        flash('La exportaciÃƒÂ³n a PDF estarÃƒÂ¡ disponible prÃƒÂ³ximamente. Usando Excel por ahora.', 'info')
+        flash('La exportación a PDF estará disponible próximamente. Usando Excel por ahora.', 'info')
         
-        # Crear parÃƒÂ¡metros para redirecciÃƒÂ³n a Excel
+        # Crear parámetros para redirección a Excel
         from urllib.parse import urlencode
         params = {
             'materiales': '1' if materiales else '0',
-            'solicitudes': '1' if solicitudes else '0',
             'movimientos': '1' if movimientos else '0',
             'totales': '1' if incluir_totales else '0'
         }
@@ -2154,8 +2057,8 @@ def _exportar_oficina_pdf(oficina, materiales, solicitudes, movimientos, total_m
         flash('Error al generar el PDF', 'danger')
         return redirect('/reportes')
 
-def _exportar_oficina_csv(oficina, materiales, solicitudes, movimientos, total_materiales,
-                         valor_total_inventario, total_solicitudes, total_movimientos, incluir_totales):
+def _exportar_oficina_csv(oficina, materiales, movimientos, total_materiales,
+                         valor_total_inventario, total_movimientos, incluir_totales):
     """Exporta a CSV el inventario de una oficina"""
     try:
         import pandas as pd
@@ -2164,18 +2067,16 @@ def _exportar_oficina_csv(oficina, materiales, solicitudes, movimientos, total_m
         # Crear contenido CSV
         output = StringIO()
         
-        # Encabezado con informaciÃƒÂ³n de la oficina
+        # Encabezado con información de la oficina
         output.write(f"Inventario Corporativo - {oficina['nombre']}\n")
-        output.write(f"UbicaciÃƒÂ³n: {oficina['ubicacion']}\n")
-        output.write(f"Director: {oficina['director']}\n")
-        output.write(f"Fecha ExportaciÃƒÂ³n: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        output.write(f"Ubicación: {oficina['ubicacion']}\n")
+        output.write(f"Fecha Exportación: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         output.write(f"Total Materiales: {total_materiales}\n")
         output.write(f"Valor Total Inventario: ${valor_total_inventario:,.2f}\n")
-        output.write(f"Total Solicitudes: {total_solicitudes}\n")
         output.write(f"Total Movimientos: {total_movimientos}\n")
         output.write("\n")
         
-        # SecciÃƒÂ³n de materiales
+        # Sección de materiales
         if materiales:
             output.write("=== MATERIALES DEL INVENTARIO ===\n")
             df_materiales = pd.DataFrame(materiales)
@@ -2184,12 +2085,12 @@ def _exportar_oficina_csv(oficina, materiales, solicitudes, movimientos, total_m
             df_materiales.to_csv(output, index=False)
             output.write("\n")
         
-        # SecciÃƒÂ³n de movimientos
+        # Sección de movimientos
         if movimientos:
             output.write("=== HISTORIAL DE MOVIMIENTOS ===\n")
             df_movimientos = pd.DataFrame(movimientos)
             df_movimientos = df_movimientos[['fecha', 'accion', 'material_nombre', 'cantidad', 'usuario_nombre']]
-            df_movimientos.columns = ['Fecha', 'AcciÃƒÂ³n', 'Material', 'Cantidad', 'Usuario']
+            df_movimientos.columns = ['Fecha', 'Acción', 'Material', 'Cantidad', 'Usuario']
             df_movimientos.to_csv(output, index=False)
         
         # Convertir a bytes
@@ -2214,12 +2115,12 @@ def _exportar_oficina_csv(oficina, materiales, solicitudes, movimientos, total_m
         return redirect('/reportes')
 
 # ============================================================================
-# FUNCIÃƒâ€œN ADICIONAL PARA DEPURAR DATOS DE OFICINA
+# FUNCIÓN ADICIONAL PARA DEPURAR DATOS DE OFICINA
 # ============================================================================
 
 @reportes_bp.route('/debug/oficina/<int:oficina_id>')
 def debug_oficina_data(oficina_id):
-    """Endpoint para depurar datos de una oficina especÃƒÂ­fica"""
+    """Endpoint para depurar datos de una oficina específica"""
     if not _require_login():
         return redirect('/login')
     
@@ -2229,7 +2130,7 @@ def debug_oficina_data(oficina_id):
         conn = get_database_connection()
         cursor = conn.cursor()
         
-        # Obtener informaciÃƒÂ³n bÃƒÂ¡sica de la oficina
+        # Obtener información básica de la oficina
         cursor.execute("""
             SELECT OficinaId, NombreOficina, Ubicacion, Region, Estado 
             FROM Oficinas 
@@ -2260,7 +2161,7 @@ def debug_oficina_data(oficina_id):
         
         conn.close()
         
-        # Preparar respuesta JSON para depuraciÃƒÂ³n
+        # Preparar respuesta JSON para depuración
         debug_info = {
             'oficina': {
                 'id': oficina[0] if oficina else None,
@@ -2305,7 +2206,7 @@ def material_historial(material_id):
         conn = get_database_connection()
         cursor = conn.cursor()
         
-        # Primero obtener informaciÃƒÂ³n bÃƒÂ¡sica del material
+        # Primero obtener información básica del material
         cursor.execute("""
             SELECT m.MaterialId, m.NombreElemento, m.Descripcion, m.Categoria,
                    m.ValorUnitario, m.CantidadDisponible, m.StockMinimo,
@@ -2357,9 +2258,9 @@ def material_historial(material_id):
                 'observaciones': row[5]
             })
         
-        # Buscar en tabla de prÃƒÂ©stamos
+        # Buscar en tabla de préstamos
         cursor.execute("""
-            SELECT pe.FechaPrestamo as Fecha, 'PrÃƒÂ©stamo' as Accion,
+            SELECT pe.FechaPrestamo as Fecha, 'Préstamo' as Accion,
                    pe.CantidadPrestada as Cantidad,
                    o.NombreOficina as Oficina,
                    u.NombreUsuario as Usuario,
@@ -2395,12 +2296,12 @@ def material_historial(material_id):
         return jsonify({'error': str(e)})
 
 # ============================================================================
-# API PARA DETALLE DE PRÃƒâ€°STAMOS - FUNCIÃƒâ€œN CORREGIDA
+# API PARA DETALLE DE PRÉSTAMOS - FUNCIÓN CORREGIDA
 # ============================================================================
 
 @reportes_bp.route('/api/prestamos/<int:prestamo_id>/detalle')
 def api_prestamo_detalle(prestamo_id):
-    """API para obtener detalle de un prÃƒÂ©stamo especÃƒÂ­fico - VERSIÃƒâ€œN CORREGIDA"""
+    """API para obtener detalle de un préstamo específico - VERSIÓN CORREGIDA"""
     if not _require_login():
         return jsonify({'success': False, 'message': 'No autenticado'}), 401
     
@@ -2410,7 +2311,7 @@ def api_prestamo_detalle(prestamo_id):
         conn = get_database_connection()
         cursor = conn.cursor()
         
-        # Obtener informaciÃƒÂ³n detallada del prÃƒÂ©stamo - CONSULTA CORREGIDA
+        # Obtener información detallada del préstamo - CONSULTA CORREGIDA
         cursor.execute("""
             SELECT 
                 pe.PrestamoId,
@@ -2457,7 +2358,7 @@ def api_prestamo_detalle(prestamo_id):
         
         if not prestamo_data:
             conn.close()
-            return jsonify({'success': False, 'message': 'PrÃƒÂ©stamo no encontrado o inactivo'}), 404
+            return jsonify({'success': False, 'message': 'Préstamo no encontrado o inactivo'}), 404
         
         # Convertir a diccionario
         column_names = [column[0] for column in cursor.description]
@@ -2507,12 +2408,12 @@ def api_prestamo_detalle(prestamo_id):
         }), 500
 
 # ============================================================================
-# API PARA REGISTRAR DEVOLUCIÃƒâ€œN DE PRÃƒâ€°STAMO
+# API PARA REGISTRAR DEVOLUCIÓN DE PRÉSTAMO
 # ============================================================================
 
 @reportes_bp.route('/api/prestamos/<int:prestamo_id>/devolver', methods=['POST'])
 def api_prestamo_devolver(prestamo_id):
-    """API para registrar devoluciÃƒÂ³n de un prÃƒÂ©stamo"""
+    """API para registrar devolución de un préstamo"""
     if not _require_login():
         return jsonify({'success': False, 'message': 'No autenticado'}), 401
     
@@ -2526,7 +2427,7 @@ def api_prestamo_devolver(prestamo_id):
         conn = get_database_connection()
         cursor = conn.cursor()
         
-        # Verificar que el prÃƒÂ©stamo existe y estÃƒÂ¡ activo
+        # Verificar que el préstamo existe y está activo
         cursor.execute("""
             SELECT Estado, ElementoId, CantidadPrestada 
             FROM PrestamosElementos 
@@ -2536,18 +2437,18 @@ def api_prestamo_devolver(prestamo_id):
         prestamo = cursor.fetchone()
         if not prestamo:
             conn.close()
-            return jsonify({'success': False, 'message': 'PrÃƒÂ©stamo no encontrado o inactivo'}), 404
+            return jsonify({'success': False, 'message': 'Préstamo no encontrado o inactivo'}), 404
         
         estado, elemento_id, cantidad = prestamo
         
         if estado != 'PRESTADO':
             conn.close()
-            return jsonify({'success': False, 'message': 'El prÃƒÂ©stamo no estÃƒÂ¡ en estado PRESTADO'}), 400
+            return jsonify({'success': False, 'message': 'El préstamo no está en estado PRESTADO'}), 400
         
         # Obtener usuario actual
         usuario_nombre = session.get('nombre_usuario', 'Sistema')
         
-        # Registrar devoluciÃƒÂ³n
+        # Registrar devolución
         cursor.execute("""
             UPDATE PrestamosElementos 
             SET Estado = 'DEVUELTO',
@@ -2562,7 +2463,7 @@ def api_prestamo_devolver(prestamo_id):
         cursor.execute("""
             INSERT INTO PrestamosHistorialEstados 
             (PrestamoId, EstadoAnterior, EstadoNuevo, UsuarioCambio, FechaCambio, Observaciones, TipoAccion)
-            VALUES (?, ?, ?, ?, GETDATE(), 'DevoluciÃƒÂ³n registrada', 'DEVOLUCION')
+            VALUES (?, ?, ?, ?, GETDATE(), 'Devolución registrada', 'DEVOLUCION')
         """, (prestamo_id, 'PRESTADO', 'DEVUELTO', usuario_nombre))
         
         # Actualizar stock del elemento
@@ -2577,11 +2478,398 @@ def api_prestamo_devolver(prestamo_id):
         
         return jsonify({
             'success': True,
-            'message': 'DevoluciÃƒÂ³n registrada exitosamente'
+            'message': 'Devolución registrada exitosamente'
         })
         
     except Exception as e:
         return jsonify({
             'success': False,
-            'message': f'Error al registrar la devoluciÃƒÂ³n: {str(e)}'
+            'message': f'Error al registrar la devolución: {str(e)}'
         }), 500
+
+# ============================================================================
+# AGREGAR NUEVA RUTA PARA INVENTARIO CORPORATIVO CON ASIGNACIONES
+# ============================================================================
+
+@reportes_bp.route('/inventario-corporativo')
+def reporte_inventario_corporativo():
+    """Reporte de inventario corporativo con asignaciones - VERSIÓN SIMPLIFICADA"""
+    if not _require_login():
+        return redirect('/login')
+    
+    if not can_access('inventario_corporativo', 'view'):
+        flash('No tiene permisos para ver el inventario corporativo', 'warning')
+        return redirect('/reportes')
+    
+    try:
+        from database import get_database_connection
+        conn = get_database_connection()
+        cursor = conn.cursor()
+        
+        # CONSULTA SIMPLIFICADA - SOLO TABLAS ESENCIALES
+        cursor.execute("""
+            SELECT 
+                p.ProductoId,
+                p.NombreProducto,
+                p.CodigoUnico,
+                p.Descripcion as NumeroSerie,
+                p.CategoriaId,
+                CAST(NULL AS NVARCHAR(100)) as NombreCategoria,
+                p.FechaCreacion as FechaAdquisicion,
+                p.ValorUnitario as ValorCompra,
+                CAST(NULL AS VARCHAR(20)) as EstadoProducto,
+                p.Descripcion as Observaciones,
+                a.AsignacionId,
+                a.OficinaId,
+                o.NombreOficina,
+                a.UsuarioADNombre,
+                a.UsuarioADEmail,
+                a.FechaAsignacion,
+                UPPER(LTRIM(RTRIM(a.Estado))) as EstadoAsignacion,
+                a.FechaConfirmacion,
+                a.UsuarioConfirmacion,
+                a.Observaciones as ObservacionesAsignacion
+            FROM ProductosCorporativos p
+            LEFT JOIN Asignaciones a ON p.ProductoId = a.ProductoId AND a.Activo = 1
+            LEFT JOIN Oficinas o ON a.OficinaId = o.OficinaId
+            WHERE p.Activo = 1
+            ORDER BY p.FechaCreacion DESC, p.NombreProducto
+        """)
+        
+        columns = [column[0] for column in cursor.description]
+        productos_raw = cursor.fetchall()
+        productos = []
+        
+        for row in productos_raw:
+            producto = dict(zip(columns, row))
+            productos.append(producto)
+            if producto.get('AsignacionId'):
+                print(f"DEBUG - Producto {producto['ProductoId']}: Estado='{producto.get('EstadoAsignacion')}', AsignacionId={producto.get('AsignacionId')}")
+        
+        conn.close()
+        
+        # Aplicar filtro según permisos
+        if not (session.get('rol') in ['administrador', 'lider_inventario']):
+            oficina_usuario = session.get('oficina_id')
+            productos = [p for p in productos if p.get('OficinaId') == oficina_usuario]
+        
+        # Calcular estadísticas
+        total_productos = len(set([p['ProductoId'] for p in productos]))
+        total_asignados = len([p for p in productos if p.get('AsignacionId')])
+        total_confirmados = len([p for p in productos if p.get('EstadoAsignacion') == 'CONFIRMADO'])
+        total_pendientes = len([p for p in productos if p.get('EstadoAsignacion') == 'ASIGNADO'])
+        valor_total = sum([float(p.get('ValorCompra', 0) or 0) for p in productos if p.get('ProductoId')])
+        
+        print(f"DEBUG - Total confirmados: {total_confirmados}, Total asignados: {total_asignados}")
+        return render_template('reportes/inventario_corporativo.html',
+                             productos=productos,
+                             total_productos=total_productos,
+                             total_asignados=total_asignados,
+                             total_confirmados=total_confirmados,
+                             total_pendientes=total_pendientes,
+                             valor_total=valor_total)
+    except Exception as e:
+        flash(f'Error al generar el reporte de inventario corporativo: {str(e)}', 'danger')
+        print(f"ERROR en reporte_inventario_corporativo: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return render_template('reportes/inventario_corporativo.html',
+                             productos=[],
+                             total_productos=0,
+                             total_asignados=0,
+                             total_confirmados=0,
+                             total_pendientes=0,
+                             valor_total=0)
+
+
+# ============================================================================
+# AGREGAR RUTA PARA GENERAR CERTIFICADO PDF - VERSIÓN CORREGIDA FINAL
+# ============================================================================
+
+@reportes_bp.route('/certificado/<int:asignacion_id>')
+def generar_certificado(asignacion_id):
+    """Genera un certificado PDF para una asignación confirmada"""
+    if not _require_login():
+        return redirect('/login')
+    
+    try:
+        from database import get_database_connection
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib import colors
+        from reportlab.lib.units import inch
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+        from io import BytesIO
+        from datetime import datetime
+        
+        conn = get_database_connection()
+        cursor = conn.cursor()
+        
+        # Obtener información de la asignación CONFIRMADA con columnas REALES
+        cursor.execute("""
+            SELECT 
+                a.AsignacionId,
+                a.ProductoId,
+                p.NombreProducto,
+                p.CodigoUnico,
+                p.Descripcion as NumeroSerie,
+                CAST(NULL AS NVARCHAR(100)) as NombreCategoria,
+                p.FechaCreacion as FechaAdquisicion,
+                p.ValorUnitario as ValorCompra,
+                a.OficinaId,
+                o.NombreOficina,
+                o.Ubicacion,
+                a.UsuarioADNombre,
+                a.UsuarioADEmail,
+                a.FechaAsignacion,
+                a.Estado,
+                a.FechaConfirmacion,
+                a.UsuarioConfirmacion,
+                a.Observaciones,
+                a.UsuarioAsignador,
+                a.FechaAsignacion as FechaCreacion
+            FROM Asignaciones a
+            INNER JOIN ProductosCorporativos p ON a.ProductoId = p.ProductoId
+            INNER JOIN Oficinas o ON a.OficinaId = o.OficinaId
+            WHERE a.AsignacionId = ? AND UPPER(LTRIM(RTRIM(a.Estado))) = 'CONFIRMADO' AND a.Activo = 1
+        """, (asignacion_id,))
+        
+        row = cursor.fetchone()
+        
+        if not row:
+            conn.close()
+            flash('Asignación no encontrada o no confirmada', 'warning')
+            return redirect('/reportes/oficinas')
+        
+        # Convertir a diccionario
+        asignacion = {
+            'AsignacionId': row[0],
+            'ProductoId': row[1],
+            'NombreProducto': row[2],
+            'CodigoUnico': row[3],
+            'NumeroSerie': row[4],
+            'NombreCategoria': row[5] or 'Sin categoría',
+            'FechaAdquisicion': row[6],
+            'ValorCompra': row[7],
+            'OficinaId': row[8],
+            'NombreOficina': row[9],
+            'Ubicacion': row[10],
+            'UsuarioNombre': row[11],
+            'UsuarioEmail': row[12],
+            'FechaAsignacion': row[13],
+            'Estado': row[14],
+            'FechaConfirmacion': row[15],
+            'UsuarioConfirmacion': row[16],
+            'Observaciones': row[17],
+            'AsignadoPorNombre': row[18],
+            'FechaCreacion': row[19]
+        }
+        
+        conn.close()
+        
+        # Generar el PDF
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter,
+                              rightMargin=0.75*inch, leftMargin=0.75*inch,
+                              topMargin=0.75*inch, bottomMargin=0.75*inch)
+        
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Estilos personalizados
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=20,
+            textColor=colors.HexColor('#0d6efd'),
+            spaceAfter=30,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold'
+        )
+        
+        subtitle_style = ParagraphStyle(
+            'CustomSubtitle',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#198754'),
+            spaceAfter=12,
+            spaceBefore=20,
+            fontName='Helvetica-Bold'
+        )
+        
+        normal_style = ParagraphStyle(
+            'CustomNormal',
+            parent=styles['Normal'],
+            fontSize=10,
+            alignment=TA_JUSTIFY,
+            spaceAfter=12
+        )
+        
+        # ENCABEZADO
+        elements.append(Spacer(1, 0.5*inch))
+        
+        title = Paragraph("CERTIFICADO DE ASIGNACIÓN DE ACTIVO", title_style)
+        elements.append(title)
+        
+        cert_info = f"<b>Certificado No.:</b> {asignacion['AsignacionId']:06d} | <b>Fecha:</b> {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+        elements.append(Paragraph(cert_info, normal_style))
+        elements.append(Spacer(1, 0.3*inch))
+        
+        # INFORMACIÓN DEL COLABORADOR
+        elements.append(Paragraph("INFORMACIÓN DEL COLABORADOR", subtitle_style))
+        
+        colaborador_data = [
+            ['Nombre Completo:', asignacion['UsuarioNombre'] or 'N/A'],
+            ['Email:', asignacion['UsuarioEmail'] or 'N/A'],
+            ['Oficina:', f"{asignacion['NombreOficina']} - {asignacion['Ubicacion']}" if asignacion['NombreOficina'] else 'N/A']
+        ]
+        
+        colaborador_table = Table(colaborador_data, colWidths=[2*inch, 4.5*inch])
+        colaborador_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e9ecef')),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#212529')),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+        ]))
+        
+        elements.append(colaborador_table)
+        elements.append(Spacer(1, 0.3*inch))
+        
+        # INFORMACIÓN DEL ACTIVO
+        elements.append(Paragraph("INFORMACIÓN DEL ACTIVO", subtitle_style))
+        
+        activo_data = [
+            ['Producto:', asignacion['NombreProducto'] or 'N/A'],
+            ['Categoría:', asignacion['NombreCategoria']],
+            ['Código Único:', asignacion['CodigoUnico'] or 'N/A'],
+            ['Número de Serie:', asignacion['NumeroSerie'] or 'N/A'],
+            ['Valor:', f"${asignacion['ValorCompra']:,.2f}" if asignacion['ValorCompra'] else 'N/A'],
+        ]
+        
+        activo_table = Table(activo_data, colWidths=[2*inch, 4.5*inch])
+        activo_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e9ecef')),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#212529')),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+        ]))
+        
+        elements.append(activo_table)
+        elements.append(Spacer(1, 0.3*inch))
+        
+        # INFORMACIÓN DE LA ASIGNACIÓN
+        elements.append(Paragraph("INFORMACIÓN DE LA ASIGNACIÓN", subtitle_style))
+        
+        fecha_asignacion = asignacion['FechaAsignacion'].strftime('%d/%m/%Y %H:%M') if asignacion['FechaAsignacion'] else 'N/A'
+        fecha_confirmacion = asignacion['FechaConfirmacion'].strftime('%d/%m/%Y %H:%M') if asignacion['FechaConfirmacion'] else 'N/A'
+        
+        asignacion_data = [
+            ['Estado:', 'CONFIRMADO'],
+            ['Fecha de Asignación:', fecha_asignacion],
+            ['Asignado por:', asignacion['AsignadoPorNombre'] or 'Sistema'],
+            ['Fecha de Confirmación:', fecha_confirmacion],
+            ['Confirmado por:', asignacion['UsuarioConfirmacion'] or asignacion['UsuarioNombre'] or 'N/A'],
+        ]
+        
+        asignacion_table = Table(asignacion_data, colWidths=[2*inch, 4.5*inch])
+        asignacion_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e9ecef')),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#212529')),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+        ]))
+        
+        elements.append(asignacion_table)
+        
+        # OBSERVACIONES
+        if asignacion['Observaciones']:
+            elements.append(Spacer(1, 0.3*inch))
+            elements.append(Paragraph("OBSERVACIONES", subtitle_style))
+            
+            obs_data = [['Observaciones:', asignacion['Observaciones']]]
+            
+            obs_table = Table(obs_data, colWidths=[2*inch, 4.5*inch])
+            obs_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e9ecef')),
+                ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#212529')),
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            
+            elements.append(obs_table)
+        
+        # TÉRMINOS Y CONDICIONES
+        elements.append(Spacer(1, 0.4*inch))
+        elements.append(Paragraph("TÉRMINOS Y CONDICIONES", subtitle_style))
+        
+        terminos_text = """
+        El colaborador se compromete a:
+        <br/>• Hacer uso responsable del activo asignado.
+        <br/>• Reportar inmediatamente cualquier daño, pérdida o mal funcionamiento.
+        <br/>• Devolver el activo cuando sea requerido por la empresa o al finalizar la relación laboral.
+        <br/>• No realizar modificaciones no autorizadas al equipo.
+        <br/>• Mantener el activo en buenas condiciones de uso y funcionamiento.
+        <br/><br/>
+        La empresa se reserva el derecho de solicitar la devolución del activo en cualquier momento.
+        El activo sigue siendo propiedad de la empresa y debe ser usado exclusivamente para fines laborales.
+        """
+        
+        elements.append(Paragraph(terminos_text, normal_style))
+        
+        # PIE DE PÁGINA
+        elements.append(Spacer(1, 0.5*inch))
+        
+        footer_text = f"""
+        <br/><br/>
+        _________________________________<br/>
+        <b>{asignacion['UsuarioNombre']}</b><br/>
+        Firma del Colaborador
+        """
+        
+        footer_style = ParagraphStyle(
+            'Footer',
+            parent=styles['Normal'],
+            fontSize=9,
+            alignment=TA_CENTER
+        )
+        
+        elements.append(Paragraph(footer_text, footer_style))
+        
+        # Generar el PDF
+        doc.build(elements)
+        
+        buffer.seek(0)
+        
+        filename = f"Certificado_Asignacion_{asignacion['AsignacionId']:06d}.pdf"
+        
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        print(f"Error al generar certificado: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Error al generar el certificado: {str(e)}', 'danger')
+        return redirect('/reportes/oficinas')

@@ -52,7 +52,6 @@
     <Content Include="templates\materials\listar.html" />
     <Content Include="templates\oficinas\listar.html" />
     <Content Include="templates\reportes\index.html" />
-    <Content Include="templates\reportes\inventario.html" />
     <Content Include="templates\reportes\materiales.html" />
     <Content Include="templates\reportes\material_detalle.html" />
     <Content Include="templates\reportes\novedades.html" />
@@ -81,6 +80,7 @@
     <Compile Include="blueprints\reportes.py" />
     <Compile Include="blueprints\solicitudes.py" />
     <Compile Include="blueprints\usuarios.py" />
+    <Compile Include="certificado_route.py" />
     <Compile Include="config\config.py" />
     <Compile Include="config\ldap_config.py" />
     <Compile Include="config\permissions.py" />
