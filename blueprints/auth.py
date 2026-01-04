@@ -189,8 +189,10 @@ def logout():
 @auth_bp.route('/test-ldap', methods=['GET', 'POST'])
 def test_ldap():
     """
-    Ruta para probar conexión LDAP.
+    Ruta para probar conexión LDAP REAL.
     Accesible desde: /test-ldap
+    
+    ✅ CORREGIDO: Ahora usa ADAuth real en lugar de datos simulados
     """
     try:
         result = None
@@ -204,103 +206,126 @@ def test_ldap():
                 return render_template('auth/test_ldap.html')
             
             try:
-                # Verificar si hay módulo LDAP configurado
-                try:
-                    from config.config import LDAP_CONFIG
-                    ldap_enabled = True
-                    ldap_server = LDAP_CONFIG.get('server', 'No configurado')
-                    ldap_domain = LDAP_CONFIG.get('domain', 'No configurado')
-                except:
-                    ldap_enabled = False
-                    ldap_server = 'No configurado'
-                    ldap_domain = 'No configurado'
+                # Importar la clase REAL de autenticación LDAP
+                from utils.ldap_auth import ADAuth
+                from config.config import Config
                 
-                # Intentar autenticar con LDAP si está disponible
-                try:
-                    from utils.auth import authenticate_ldap_user
+                # Obtener configuración
+                ldap_enabled = Config.LDAP_ENABLED
+                ldap_server = Config.LDAP_SERVER
+                ldap_domain = Config.LDAP_DOMAIN
+                
+                print(f"🔍 TEST LDAP: Probando autenticación para '{username}'")
+                print(f"📡 Servidor: {ldap_server}")
+                print(f"🌐 Dominio: {ldap_domain}")
+                
+                # Crear instancia de ADAuth y autenticar
+                ad_auth = ADAuth()
+                
+                # 1. Probar conexión al servidor
+                connection_ok = ad_auth.test_connection()
+                print(f"🔌 Conexión al servidor: {'✅ OK' if connection_ok else '❌ FALLO'}")
+                
+                # 2. Autenticar usuario
+                user_data = ad_auth.authenticate_user(username, password)
+                
+                if user_data:
+                    # ✅ AUTENTICACIÓN EXITOSA - Datos REALES del LDAP
+                    print(f"✅ TEST LDAP: Autenticación exitosa para '{username}'")
+                    print(f"📋 Datos del usuario: {user_data}")
                     
-                    ldap_result = authenticate_ldap_user(username, password)
+                    # Intentar sincronizar con la base de datos
+                    sync_info = None
+                    sync_error = None
                     
-                    if ldap_result.get('authenticated', False):
-                        # Información simulada para prueba
-                        user_info = {
-                            'username': username,
-                            'full_name': f"Usuario {username}",
-                            'email': f"{username}@qualitascolombia.com.co",
-                            'department': 'Departamento de prueba',
-                            'role_from_ad': 'Usuario',
-                            'groups_count': 1
-                        }
+                    try:
+                        # Buscar o crear usuario en la base de datos
+                        from models.usuarios_model import UsuarioModel
                         
-                        result = {
-                            'success': True,
-                            'message': '✅ Autenticación LDAP exitosa (modo prueba)',
-                            'ldap_enabled': ldap_enabled,
-                            'ldap_server': ldap_server,
-                            'ldap_domain': ldap_domain,
-                            'username': username,
-                            'user_info': user_info,
-                            'sync_info': None,
-                            'sync_error': None
-                        }
-                    else:
-                        result = {
-                            'success': False,
-                            'message': '❌ Autenticación LDAP fallida',
-                            'ldap_enabled': ldap_enabled,
-                            'ldap_server': ldap_server,
-                            'ldap_domain': ldap_domain,
-                            'username': username,
-                            'user_info': None,
-                            'sync_info': None,
-                            'sync_error': 'Credenciales inválidas o servidor LDAP no disponible',
-                            'traceback': None
-                        }
+                        db_user = UsuarioModel.get_by_username(username)
                         
-                except ImportError:
-                    # Si no hay módulo LDAP, mostrar modo simulación
+                        if db_user:
+                            print(f"👤 Usuario encontrado en BD: ID {db_user.get('id')}")
+                            sync_info = {
+                                'user_id': db_user.get('id'),
+                                'system_role': db_user.get('rol'),
+                                'office_id': db_user.get('oficina_id'),
+                                'sync_status': 'Usuario existente actualizado'
+                            }
+                        else:
+                            print(f"⚠️ Usuario NO encontrado en BD, debería crearse automáticamente en login")
+                            sync_info = {
+                                'user_id': None,
+                                'system_role': user_data.get('role', 'usuario'),
+                                'office_id': 1,
+                                'sync_status': 'Usuario nuevo - se creará en el primer login'
+                            }
+                    
+                    except Exception as sync_ex:
+                        print(f"⚠️ Error en sincronización BD: {sync_ex}")
+                        sync_error = f"Error sincronizando con BD: {str(sync_ex)}"
+                    
                     result = {
                         'success': True,
-                        'message': '✅ Prueba de formulario exitosa (LDAP no configurado)',
-                        'ldap_enabled': False,
-                        'ldap_server': 'Simulación',
-                        'ldap_domain': 'qualitascolombia.com.co',
+                        'message': '✅ Autenticación LDAP exitosa con datos REALES',
+                        'ldap_enabled': ldap_enabled,
+                        'ldap_server': ldap_server,
+                        'ldap_domain': ldap_domain,
                         'username': username,
                         'user_info': {
-                            'username': username,
-                            'full_name': f"Usuario {username} (simulado)",
-                            'email': f"{username}@qualitascolombia.com.co",
-                            'department': 'Departamento simulado',
-                            'role_from_ad': 'Usuario simulado',
-                            'groups_count': 3
+                            'username': user_data.get('username'),
+                            'full_name': user_data.get('full_name'),
+                            'email': user_data.get('email'),
+                            'department': user_data.get('department'),
+                            'role_from_ad': user_data.get('role'),
+                            'groups_count': len(user_data.get('groups', []))
                         },
-                        'sync_info': {
-                            'user_id': 999,
-                            'system_role': 'usuario',
-                            'office_id': 1
-                        },
-                        'sync_error': None
+                        'sync_info': sync_info,
+                        'sync_error': sync_error,
+                        'traceback': None
                     }
-                except Exception as e:
-                    import traceback
+                    
+                else:
+                    # ❌ AUTENTICACIÓN FALLIDA
+                    print(f"❌ TEST LDAP: Autenticación fallida para '{username}'")
                     result = {
                         'success': False,
-                        'message': f'❌ Error en conexión LDAP: {str(e)}',
-                        'ldap_enabled': False,
-                        'ldap_server': 'Error',
-                        'ldap_domain': 'Error',
+                        'message': '❌ Autenticación LDAP fallida - Credenciales inválidas o usuario no encontrado',
+                        'ldap_enabled': ldap_enabled,
+                        'ldap_server': ldap_server,
+                        'ldap_domain': ldap_domain,
                         'username': username,
                         'user_info': None,
                         'sync_info': None,
-                        'sync_error': str(e),
-                        'traceback': traceback.format_exc()
+                        'sync_error': 'Credenciales inválidas o servidor LDAP no disponible',
+                        'traceback': None
                     }
-                    
-            except Exception as e:
+                        
+            except ImportError as ie:
+                # Módulo LDAP no disponible
                 import traceback
+                print(f"⚠️ TEST LDAP: Módulo ldap3 no disponible: {ie}")
                 result = {
                     'success': False,
-                    'message': f'❌ Error general: {str(e)}',
+                    'message': '⚠️ Módulo LDAP no instalado - Instale python-ldap3',
+                    'ldap_enabled': False,
+                    'ldap_server': 'No disponible',
+                    'ldap_domain': 'No disponible',
+                    'username': username,
+                    'user_info': None,
+                    'sync_info': None,
+                    'sync_error': f'ImportError: {str(ie)}',
+                    'traceback': traceback.format_exc()
+                }
+                
+            except Exception as e:
+                # Error general
+                import traceback
+                print(f"❌ TEST LDAP: Error general: {e}")
+                print(traceback.format_exc())
+                result = {
+                    'success': False,
+                    'message': f'❌ Error en autenticación LDAP: {str(e)}',
                     'ldap_enabled': False,
                     'ldap_server': 'Error',
                     'ldap_domain': 'Error',
@@ -314,22 +339,22 @@ def test_ldap():
         else:  # GET request
             # Mostrar configuración actual
             try:
-                from config.config import LDAP_CONFIG
+                from config.config import Config
                 result = {
                     'success': None,
-                    'message': 'Configure los parámetros LDAP y haga clic en Probar',
-                    'ldap_enabled': True,
-                    'ldap_server': LDAP_CONFIG.get('server', 'No configurado'),
-                    'ldap_domain': LDAP_CONFIG.get('domain', 'No configurado'),
+                    'message': 'Ingrese sus credenciales de dominio para probar la conexión LDAP',
+                    'ldap_enabled': Config.LDAP_ENABLED,
+                    'ldap_server': Config.LDAP_SERVER,
+                    'ldap_domain': Config.LDAP_DOMAIN,
                     'username': None,
                     'user_info': None,
                     'sync_info': None,
                     'sync_error': None
                 }
-            except ImportError:
+            except Exception as e:
                 result = {
                     'success': None,
-                    'message': 'LDAP no está configurado en el sistema',
+                    'message': f'Error cargando configuración LDAP: {str(e)}',
                     'ldap_enabled': False,
                     'ldap_server': 'No configurado',
                     'ldap_domain': 'No configurado',
@@ -343,9 +368,11 @@ def test_ldap():
         
     except Exception as e:
         import traceback
+        print(f"❌ Error crítico en test_ldap: {e}")
+        print(traceback.format_exc())
         result = {
             'success': False,
-            'message': f'❌ Error en la página: {str(e)}',
+            'message': f'❌ Error crítico en la página: {str(e)}',
             'ldap_enabled': False,
             'ldap_server': 'Error',
             'ldap_domain': 'Error',
@@ -471,4 +498,3 @@ def extend_session():
         'message': 'Sesión extendida',
         'new_timeout_seconds': SESSION_TIMEOUT_MINUTES * 60
     })
-
