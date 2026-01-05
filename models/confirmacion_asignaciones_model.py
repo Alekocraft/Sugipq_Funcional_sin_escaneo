@@ -2,6 +2,7 @@
 """
 Modelo para gestionar confirmaciones de asignaciones con tokens temporales.
 Incluye generación de tokens, validación y registro de confirmaciones.
+MODIFICADO: Incluye campo de número de identificación (cédula)
 """
 from database import get_database_connection
 import logging
@@ -198,13 +199,14 @@ class ConfirmacionAsignacionesModel:
                 conn.close()
     
     @staticmethod
-    def confirmar_asignacion(token, usuario_ad_username, direccion_ip=None, user_agent=None):
+    def confirmar_asignacion(token, usuario_ad_username, numero_identificacion, direccion_ip=None, user_agent=None):
         """
         Confirma una asignación y marca el token como utilizado.
         
         Args:
             token: Token de confirmación
             usuario_ad_username: Username del usuario que confirma
+            numero_identificacion: Número de cédula o identificación del usuario
             direccion_ip: IP del usuario (opcional)
             user_agent: User agent del navegador (opcional)
             
@@ -228,16 +230,29 @@ class ConfirmacionAsignacionesModel:
             asignacion_id = validacion['asignacion_id']
             token_hash = hashlib.sha256(token.encode()).hexdigest()
             
-            # Marcar token como utilizado
+            # Validar número de identificación
+            if not numero_identificacion or not numero_identificacion.strip():
+                return {'success': False, 'message': 'El número de identificación es obligatorio'}
+            
+            # Limpiar y validar formato del número de identificación
+            numero_identificacion = numero_identificacion.strip()
+            if not numero_identificacion.isdigit():
+                return {'success': False, 'message': 'El número de identificación debe contener solo números'}
+            
+            if len(numero_identificacion) < 6 or len(numero_identificacion) > 20:
+                return {'success': False, 'message': 'El número de identificación debe tener entre 6 y 20 dígitos'}
+            
+            # Marcar token como utilizado e incluir número de identificación
             cursor.execute("""
                 UPDATE TokensConfirmacionAsignacion
                 SET Utilizado = 1,
                     FechaUtilizacion = GETDATE(),
                     UsuarioConfirmacion = ?,
+                    NumeroIdentificacion = ?,
                     DireccionIP = ?,
                     UserAgent = ?
                 WHERE TokenHash = ?
-            """, (usuario_ad_username, direccion_ip, user_agent, token_hash))
+            """, (usuario_ad_username, numero_identificacion, direccion_ip, user_agent, token_hash))
             
             # Actualizar estado de la asignación
             cursor.execute("""
@@ -260,12 +275,12 @@ class ConfirmacionAsignacionesModel:
                 usuario_ad_username,
                 validacion['usuario_nombre'],
                 validacion['usuario_email'],
-                f"Confirmación realizada desde IP: {direccion_ip or 'N/A'}"
+                f"Confirmación realizada desde IP: {direccion_ip or 'N/A'}. Cédula: {numero_identificacion}"
             ))
             
             conn.commit()
             
-            logger.info(f"Asignación {asignacion_id} confirmada por {usuario_ad_username}")
+            logger.info(f"Asignación {asignacion_id} confirmada por {usuario_ad_username} (CC: {numero_identificacion})")
             
             return {
                 'success': True,

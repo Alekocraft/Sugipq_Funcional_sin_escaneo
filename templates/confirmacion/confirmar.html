@@ -111,6 +111,23 @@
                                         </div>
                                         <small class="form-text text-muted">La misma que usa para iniciar sesion en Windows</small>
                                     </div>
+
+                                    <!-- NUEVO CAMPO: Número de Identificación (Cédula) -->
+                                    <div class="form-group mb-3">
+                                        <label for="numero_identificacion">
+                                            <i class="fas fa-id-card"></i> Número de Identificación (Cédula) <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" 
+                                               class="form-control {% if error %}is-invalid{% endif %}" 
+                                               id="numero_identificacion" 
+                                               name="numero_identificacion" 
+                                               placeholder="Ej: 1234567890"
+                                               pattern="[0-9]{6,20}"
+                                               maxlength="20"
+                                               required
+                                               autocomplete="off">
+                                        <small class="form-text text-muted">Ingrese su número de cédula o documento de identidad (solo números)</small>
+                                    </div>
                                 </div>
                                 {% else %}
                                 <!-- Sin autenticacion AD disponible -->
@@ -120,6 +137,23 @@
                                     <strong>Sistema de autenticacion no disponible.</strong><br>
                                     La confirmacion se registrara sin validacion de credenciales.
                                     Por favor contacte al administrador del sistema.
+                                </div>
+                                
+                                <!-- Campo de cédula también en modo sin autenticación -->
+                                <div class="form-group mb-3">
+                                    <label for="numero_identificacion">
+                                        <i class="fas fa-id-card"></i> Número de Identificación (Cédula) <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="numero_identificacion" 
+                                           name="numero_identificacion" 
+                                           placeholder="Ej: 1234567890"
+                                           pattern="[0-9]{6,20}"
+                                           maxlength="20"
+                                           required
+                                           autocomplete="off">
+                                    <small class="form-text text-muted">Ingrese su número de cédula o documento de identidad (solo números)</small>
                                 </div>
                                 {% endif %}
 
@@ -137,6 +171,35 @@
                                             <li>Acepto la responsabilidad sobre este elemento</li>
                                         </ul>
                                     </label>
+                                </div>
+
+                                <!-- NUEVO: Autorización de Tratamiento de Datos Personales -->
+                                <div class="card border-primary mb-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <strong><i class="fas fa-shield-alt"></i> Autorización de Tratamiento de Datos Personales</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   id="autorizoDatos" 
+                                                   required>
+                                            <label class="form-check-label text-justify" for="autorizoDatos">
+                                                <small>
+                                                    Autorizo de manera previa, expresa e informada el tratamiento de mis datos personales 
+                                                    (incluyendo mi número de identificación), para fines de manejo de activos de la compañía 
+                                                    <strong>Quálitas Compañía de Seguros Colombia S.A.</strong> 
+                                                    Declaro que conozco mi derecho a conocer, actualizar y rectificar mi información, 
+                                                    conforme a la Política de Tratamiento de Datos disponible en 
+                                                    <a href="https://www.qualitascolombia.com.co/politica-de-seguridad" 
+                                                       target="_blank" 
+                                                       class="text-primary">
+                                                        https://www.qualitascolombia.com.co/politica-de-seguridad
+                                                    </a>
+                                                </small>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Botones -->
@@ -163,6 +226,7 @@
                                 </p>
                                 <ul class="small mb-0 mt-2">
                                     <li><strong>Usuario AD:</strong> Su identidad verificada</li>
+                                    <li><strong>Número de Identificación:</strong> Su cédula o documento de identidad</li>
                                     <li><strong>Fecha y Hora:</strong> Timestamp de confirmacion</li>
                                     <li><strong>Direccion IP:</strong> Desde donde confirmo</li>
                                     <li><strong>Navegador:</strong> Informacion del dispositivo</li>
@@ -240,6 +304,15 @@
     .form-check-label ul {
         list-style-position: inside;
     }
+
+    .text-justify {
+        text-align: justify;
+    }
+    
+    .border-primary {
+        border-color: #667eea !important;
+        border-width: 2px !important;
+    }
 </style>
 
 <script>
@@ -259,9 +332,31 @@ document.getElementById('togglePassword').addEventListener('click', function() {
     }
 });
 
+// Validación del número de identificación (solo números)
+document.getElementById('numero_identificacion').addEventListener('input', function(e) {
+    // Eliminar caracteres no numéricos
+    this.value = this.value.replace(/[^0-9]/g, '');
+});
+
 // Form submission
 document.getElementById('formConfirmacion').addEventListener('submit', function(e) {
     const btnConfirmar = document.getElementById('btnConfirmar');
+    const numeroIdentificacion = document.getElementById('numero_identificacion').value.trim();
+    
+    // Validar longitud del número de identificación
+    if (numeroIdentificacion.length < 6 || numeroIdentificacion.length > 20) {
+        e.preventDefault();
+        alert('El número de identificación debe tener entre 6 y 20 dígitos');
+        return false;
+    }
+    
+    // Validar que solo contenga números
+    if (!/^[0-9]+$/.test(numeroIdentificacion)) {
+        e.preventDefault();
+        alert('El número de identificación debe contener solo números');
+        return false;
+    }
+    
     btnConfirmar.disabled = true;
     btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando credenciales y confirmando...';
 });

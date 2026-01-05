@@ -1,13 +1,14 @@
 ﻿# blueprints/confirmacion_asignaciones.py
 """
 Blueprint para gestionar confirmaciones de asignaciones mediante tokens temporales.
-VERSIÓN CORREGIDA: Usa ADAuth correctamente de utils.ldap_auth
+VERSION MODIFICADA: Incluye validación y almacenamiento de número de identificación (cédula)
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from models.confirmacion_asignaciones_model import ConfirmacionAsignacionesModel
 from utils.auth import login_required
 from datetime import datetime
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ confirmacion_bp = Blueprint(
 def validar_ldap(username, password):
     """
     Valida credenciales contra Active Directory usando ADAuth.
-    Retorna: (éxito: bool, email: str, nombre: str, mensaje_error: str)
+    Retorna: (exito: bool, email: str, nombre: str, mensaje_error: str)
     """
     try:
         # Importar la instancia global de ADAuth
@@ -32,51 +33,82 @@ def validar_ldap(username, password):
         resultado = ad_auth.authenticate_user(username, password)
         
         if resultado:
-            # Éxito - extraer datos del resultado
+            # Exito - extraer datos del resultado
             email = resultado.get('email', f"{username}@qualitascolombia.com.co")
             nombre = resultado.get('full_name', username)
             
-            logger.info(f"✅ LDAP: Autenticación exitosa para {username} ({email})")
+            logger.info(f"✅ LDAP: Autenticacion exitosa para {username} ({email})")
             return (True, email, nombre, None)
         else:
-            # Fallo de autenticación
-            logger.warning(f"❌ LDAP: Credenciales inválidas para {username}")
-            return (False, None, None, "Usuario o contraseña incorrectos")
+            # Fallo de autenticacion
+            logger.warning(f"❌ LDAP: Credenciales invalidas para {username}")
+            return (False, None, None, "Usuario o contrasena incorrectos")
             
     except ImportError as e:
-        logger.error(f"❌ Módulo LDAP no disponible: {e}")
-        return (False, None, None, "Sistema de autenticación no disponible")
+        logger.error(f"❌ Modulo LDAP no disponible: {e}")
+        return (False, None, None, "Sistema de autenticacion no disponible")
     except Exception as e:
-        logger.error(f"❌ Error en validación LDAP: {e}", exc_info=True)
-        return (False, None, None, f"Error de autenticación: {str(e)}")
+        logger.error(f"❌ Error en validacion LDAP: {e}", exc_info=True)
+        return (False, None, None, f"Error de autenticacion: {str(e)}")
+
+
+def validar_numero_identificacion(numero_identificacion):
+    """
+    Valida el formato del número de identificación (cédula).
+    
+    Args:
+        numero_identificacion: Número de identificación a validar
+        
+    Returns:
+        tuple: (es_valido: bool, numero_limpio: str, mensaje_error: str)
+    """
+    # Verificar que no esté vacío
+    if not numero_identificacion or not numero_identificacion.strip():
+        return (False, None, "El número de identificación es obligatorio")
+    
+    # Limpiar el número (eliminar espacios)
+    numero_limpio = numero_identificacion.strip()
+    
+    # Validar que solo contenga dígitos
+    if not numero_limpio.isdigit():
+        return (False, None, "El número de identificación debe contener solo números")
+    
+    # Validar longitud (entre 6 y 20 dígitos)
+    if len(numero_limpio) < 6:
+        return (False, None, "El número de identificación debe tener al menos 6 dígitos")
+    
+    if len(numero_limpio) > 20:
+        return (False, None, "El número de identificación no puede tener más de 20 dígitos")
+    
+    return (True, numero_limpio, None)
 
 
 @confirmacion_bp.route('/confirmar-asignacion/<token>', methods=['GET', 'POST'])
 def confirmar_asignacion(token):
     """
-    Procesa la confirmación de una asignación mediante token.
-    GET: Muestra el formulario de confirmación con login LDAP
-    POST: Valida LDAP y procesa la confirmación
+    Procesa la confirmacion de una asignacion mediante token.
+    GET: Muestra el formulario de confirmacion con login LDAP
+    POST: Valida LDAP, número de identificación y procesa la confirmacion
     """
     try:
         # Validar el token
         validacion = ConfirmacionAsignacionesModel.validar_token(token)
         
         if not validacion:
-            logger.warning(f"Token inválido o no encontrado: {token[:20]}...")
+            logger.warning(f"Token invalido o no encontrado: {token[:20]}...")
             return render_template(
                 'confirmacion/error.html',
-                mensaje='Token inválido o no encontrado',
-                titulo='Error de Validación'
+                mensaje='Token invalido o no encontrado',
+                titulo='Error de Validacion'
             ), 404
         
         if not validacion.get('es_valido'):
-            # Token no válido (expirado o ya usado)
+            # Token no valido (expirado o ya usado)
             if validacion.get('ya_confirmado'):
                 return render_template(
                     'confirmacion/ya_confirmado.html',
                     mensaje=validacion.get('mensaje_error'),
-                    titulo='Asignación Ya Confirmada',
+                    titulo='Asignacion Ya Confirmada',
                     asignacion=validacion
                 )
             elif validacion.get('expirado'):
@@ -89,22 +121,22 @@ def confirmar_asignacion(token):
                 return render_template(
                     'confirmacion/error.html',
                     mensaje=validacion.get('mensaje_error', 'Error desconocido'),
-                    titulo='Error de Validación'
+                    titulo='Error de Validacion'
                 )
         
-        # Si es GET, mostrar formulario de confirmación
+        # Si es GET, mostrar formulario de confirmacion
         if request.method == 'GET':
-            # Verificar si LDAP está disponible
+            # Verificar si LDAP esta disponible
             ldap_disponible = True
             try:
                 from utils.ldap_auth import ad_auth
-                # Probar que ADAuth esté instanciado correctamente
+                # Probar que ADAuth este instanciado correctamente
                 if ad_auth is None or not hasattr(ad_auth, 'authenticate_user'):
                     ldap_disponible = False
-                    logger.warning("ADAuth no está disponible o mal configurado")
+                    logger.warning("ADAuth no esta disponible o mal configurado")
             except ImportError:
                 ldap_disponible = False
-                logger.warning("Módulo ldap_auth no disponible")
+                logger.warning("Modulo ldap_auth no disponible")
             
             return render_template(
                 'confirmacion/confirmar.html',
@@ -113,9 +145,28 @@ def confirmar_asignacion(token):
                 ldap_disponible=ldap_disponible
             )
         
-        # Si es POST, procesar la confirmación
+        # Si es POST, procesar la confirmacion
         if request.method == 'POST':
-            # Verificar si se usa autenticación LDAP
+            # ============================================================
+            # NUEVA VALIDACIÓN: Número de Identificación (obligatorio)
+            # ============================================================
+            numero_identificacion = request.form.get('numero_identificacion', '').strip()
+            es_valido, numero_limpio, error_cedula = validar_numero_identificacion(numero_identificacion)
+            
+            if not es_valido:
+                logger.warning(f"❌ Número de identificación inválido: {error_cedula}")
+                flash(error_cedula, 'error')
+                return render_template(
+                    'confirmacion/confirmar.html',
+                    token=token,
+                    asignacion=validacion,
+                    ldap_disponible=True,
+                    error=error_cedula
+                )
+            
+            logger.info(f"✅ Número de identificación validado: {numero_limpio}")
+            
+            # Verificar si se usa autenticacion LDAP
             sin_autenticar = request.form.get('sin_autenticar') == 'true'
             
             if not sin_autenticar:
@@ -124,13 +175,13 @@ def confirmar_asignacion(token):
                 password = request.form.get('password', '')
                 
                 if not username or not password:
-                    flash('Debe ingresar usuario y contraseña', 'error')
+                    flash('Debe ingresar usuario y contrasena', 'error')
                     return render_template(
                         'confirmacion/confirmar.html',
                         token=token,
                         asignacion=validacion,
                         ldap_disponible=True,
-                        error='Debe ingresar usuario y contraseña'
+                        error='Debe ingresar usuario y contrasena'
                     )
                 
                 logger.info(f"🔐 Intentando validar LDAP para usuario: {username}")
@@ -139,8 +190,8 @@ def confirmar_asignacion(token):
                 exito, email_ldap, nombre_ldap, mensaje_error = validar_ldap(username, password)
                 
                 if not exito:
-                    logger.warning(f"❌ Falló autenticación LDAP para usuario: {username}")
-                    flash(f'Error de autenticación: {mensaje_error}', 'error')
+                    logger.warning(f"❌ Fallo autenticacion LDAP para usuario: {username}")
+                    flash(f'Error de autenticacion: {mensaje_error}', 'error')
                     return render_template(
                         'confirmacion/confirmar.html',
                         token=token,
@@ -156,9 +207,11 @@ def confirmar_asignacion(token):
                 email_asignado = validacion.get('usuario_email', '').lower()
                 email_ldap_lower = (email_ldap or '').lower()
                 
+                logger.info(f"📧 Comparando emails: LDAP={email_ldap_lower} vs Asignado={email_asignado}")
+                
                 if email_ldap_lower != email_asignado:
                     logger.warning(f"❌ Usuario LDAP ({email_ldap}) no coincide con asignado ({email_asignado})")
-                    flash('El usuario autenticado no coincide con el destinatario de la asignación', 'error')
+                    flash('El usuario autenticado no coincide con el destinatario de la asignacion', 'error')
                     return render_template(
                         'confirmacion/confirmar.html',
                         token=token,
@@ -172,50 +225,51 @@ def confirmar_asignacion(token):
                 nombre_confirmacion = nombre_ldap
                 logger.info(f"✅ Usuario validado y coincidente: {username} ({email_ldap})")
             else:
-                # Sin autenticación LDAP (fallback)
+                # Sin autenticacion LDAP (fallback)
                 usuario_confirmacion = validacion.get('usuario_email', 'Usuario')
                 nombre_confirmacion = validacion.get('usuario_nombre', 'Usuario')
-                logger.warning(f"⚠️ Confirmación sin autenticación LDAP para: {usuario_confirmacion}")
+                logger.warning(f"⚠️ Confirmacion sin autenticacion LDAP para: {usuario_confirmacion}")
             
             # Obtener datos adicionales
             direccion_ip = request.remote_addr
             user_agent = request.headers.get('User-Agent', '')
             
-            logger.info(f"📝 Confirmando asignación - Usuario: {usuario_confirmacion}, IP: {direccion_ip}")
+            logger.info(f"📝 Confirmando asignacion - Usuario: {usuario_confirmacion}, CC: {numero_limpio}, IP: {direccion_ip}")
             
-            # Confirmar la asignación
+            # Confirmar la asignacion (INCLUYENDO NÚMERO DE IDENTIFICACIÓN)
             resultado = ConfirmacionAsignacionesModel.confirmar_asignacion(
                 token=token,
                 usuario_ad_username=usuario_confirmacion,
+                numero_identificacion=numero_limpio,  # NUEVO PARÁMETRO
                 direccion_ip=direccion_ip,
                 user_agent=user_agent
             )
             
             if resultado.get('success'):
-                logger.info(f"✅ Asignación confirmada exitosamente: {resultado.get('asignacion_id')}")
+                logger.info(f"✅ Asignacion confirmada exitosamente: {resultado.get('asignacion_id')} - CC: {numero_limpio}")
                 return render_template(
                     'confirmacion/confirmado_exitoso.html',
                     resultado=resultado,
-                    titulo='Confirmación Exitosa',
-                    mensaje='Su asignación ha sido confirmada correctamente.',
+                    titulo='Confirmacion Exitosa',
+                    mensaje='Su asignacion ha sido confirmada correctamente.',
                     producto=resultado.get('producto_nombre'),
                     oficina=resultado.get('oficina_nombre'),
                     usuario=nombre_confirmacion,
                     fecha_confirmacion=datetime.now()
                 )
             else:
-                logger.error(f"❌ Error al confirmar asignación: {resultado.get('message')}")
+                logger.error(f"❌ Error al confirmar asignacion: {resultado.get('message')}")
                 return render_template(
                     'confirmacion/error.html',
-                    mensaje=resultado.get('message', 'Error al confirmar la asignación'),
+                    mensaje=resultado.get('message', 'Error al confirmar la asignacion'),
                     titulo='Error al Confirmar'
                 )
     
     except Exception as e:
-        logger.error(f"❌ Error procesando confirmación: {e}", exc_info=True)
+        logger.error(f"❌ Error procesando confirmacion: {e}", exc_info=True)
         return render_template(
             'confirmacion/error.html',
-            mensaje=f'Error inesperado al procesar la confirmación: {str(e)}',
+            mensaje=f'Error inesperado al procesar la confirmacion: {str(e)}',
             titulo='Error del Sistema'
         ), 500
 
@@ -228,10 +282,10 @@ def mis_pendientes():
     Requiere login.
     """
     try:
-        # Obtener email del usuario de la sesión
+        # Obtener email del usuario de la sesion
         usuario_email = session.get('email')
         if not usuario_email:
-            flash('No se pudo obtener tu información de usuario', 'error')
+            flash('No se pudo obtener tu informacion de usuario', 'error')
             return redirect(url_for('auth.login'))
         
         # Obtener confirmaciones pendientes
@@ -257,27 +311,27 @@ def mis_pendientes():
 @login_required
 def estadisticas():
     """
-    Muestra estadísticas generales de confirmaciones.
+    Muestra estadisticas generales de confirmaciones.
     Solo para administradores.
     """
     try:
         # Verificar si el usuario es administrador
         if not session.get('is_admin', False):
-            flash('No tienes permisos para ver esta página', 'error')
+            flash('No tienes permisos para ver esta pagina', 'error')
             return redirect(url_for('dashboard'))
         
-        # Obtener estadísticas
+        # Obtener estadisticas
         stats = ConfirmacionAsignacionesModel.obtener_estadisticas_confirmaciones()
         
         return render_template(
             'confirmacion/estadisticas.html',
             estadisticas=stats,
-            titulo='Estadísticas de Confirmaciones'
+            titulo='Estadisticas de Confirmaciones'
         )
     
     except Exception as e:
-        logger.error(f"Error obteniendo estadísticas: {e}", exc_info=True)
-        flash('Error al cargar las estadísticas', 'error')
+        logger.error(f"Error obteniendo estadisticas: {e}", exc_info=True)
+        flash('Error al cargar las estadisticas', 'error')
         return redirect(url_for('dashboard'))
 
 
@@ -291,7 +345,7 @@ def limpiar_tokens():
     try:
         # Verificar si el usuario es administrador
         if not session.get('is_admin', False):
-            flash('No tienes permisos para realizar esta acción', 'error')
+            flash('No tienes permisos para realizar esta accion', 'error')
             return redirect(url_for('dashboard'))
         
         # Limpiar tokens
@@ -308,24 +362,24 @@ def limpiar_tokens():
         return redirect(url_for('confirmacion.estadisticas'))
 
 
-# Manejador de errores específico para este blueprint
+# Manejador de errores especifico para este blueprint
 @confirmacion_bp.errorhandler(404)
 def not_found_error(error):
-    """Maneja errores 404 específicos del blueprint de confirmaciones."""
-    logger.warning(f"Página no encontrada en confirmación: {request.url}")
+    """Maneja errores 404 especificos del blueprint de confirmaciones."""
+    logger.warning(f"Pagina no encontrada en confirmacion: {request.url}")
     return render_template(
         'confirmacion/error.html',
-        mensaje='La página solicitada no existe',
-        titulo='Página No Encontrada'
+        mensaje='La pagina solicitada no existe',
+        titulo='Pagina No Encontrada'
     ), 404
 
 
 @confirmacion_bp.errorhandler(500)
 def internal_error(error):
-    """Maneja errores 500 específicos del blueprint de confirmaciones."""
-    logger.error(f"Error interno en confirmación: {error}", exc_info=True)
+    """Maneja errores 500 especificos del blueprint de confirmaciones."""
+    logger.error(f"Error interno en confirmacion: {error}", exc_info=True)
     return render_template(
         'confirmacion/error.html',
-        mensaje='Ocurrió un error interno en el servidor',
+        mensaje='Ocurrio un error interno en el servidor',
         titulo='Error del Servidor'
     ), 500

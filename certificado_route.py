@@ -1,6 +1,7 @@
 ﻿"""
 Blueprint para generar certificados PDF de asignación de inventario corporativo
 con diseño Quálitas
+MODIFICADO: Incluye número de identificación (cédula) en el certificado
 """
 
 from flask import Blueprint, send_file, session
@@ -82,6 +83,7 @@ def add_header_footer(canvas, doc):
 def generar_certificado(asignacion_id):
     """
     Genera un certificado PDF para una asignación confirmada con diseño Quálitas
+    MODIFICADO: Incluye número de identificación del usuario
     """
     
     # 🔍 PRINT DE DIAGNÓSTICO
@@ -94,7 +96,7 @@ def generar_certificado(asignacion_id):
         conn = get_database_connection()
         cursor = conn.cursor()
         
-        # Obtener información completa de la asignación INCLUYENDO TOKEN
+        # Obtener información completa de la asignación INCLUYENDO TOKEN Y NÚMERO DE IDENTIFICACIÓN
         query = """
         SELECT 
             a.AsignacionId,
@@ -122,7 +124,8 @@ def generar_certificado(asignacion_id):
             t.FechaUtilizacion AS TokenFechaUtilizacion,
             t.UsuarioConfirmacion AS TokenUsuarioConfirmacion,
             t.DireccionIP AS TokenDireccionIP,
-            t.UserAgent AS TokenUserAgent
+            t.UserAgent AS TokenUserAgent,
+            t.NumeroIdentificacion AS NumeroIdentificacion
         FROM Asignaciones a
         INNER JOIN ProductosCorporativos p ON a.ProductoId = p.ProductoId
         LEFT JOIN Oficinas o ON a.OficinaId = o.OficinaId
@@ -157,6 +160,7 @@ def generar_certificado(asignacion_id):
         conn.close()
         
         print(f"✅ Datos obtenidos para: {asignacion.get('UsuarioADNombre', 'N/A')}")
+        print(f"✅ Número de Identificación: {asignacion.get('NumeroIdentificacion', 'N/A')}")
         
         # Generar el PDF
         buffer = BytesIO()
@@ -172,81 +176,62 @@ def generar_certificado(asignacion_id):
         elements = []
         styles = getSampleStyleSheet()
         
-        # Estilo para el título principal - MÁS PEQUEÑO (igual a subtítulos)
+        # Estilo para el título principal
         title_style = ParagraphStyle(
-            'QualitasTitle',
+            'CustomTitle',
             parent=styles['Heading1'],
-            fontSize=14,  # REDUCIDO de 22 a 14 (igual que subtítulos)
+            fontSize=16,
             textColor=QUALITAS_PURPLE,
-            spaceAfter=15,
-            spaceBefore=15,
+            spaceAfter=8,
             alignment=TA_CENTER,
-            fontName='Helvetica-Bold',
-            leading=16
+            fontName='Helvetica-Bold'
         )
         
         # Estilo para subtítulos
         subtitle_style = ParagraphStyle(
-            'QualitasSubtitle',
+            'CustomSubtitle',
             parent=styles['Heading2'],
-            fontSize=14,  # Mantenido en 14
-            textColor=QUALITAS_CYAN,
-            spaceAfter=12,
-            spaceBefore=20,
+            fontSize=12,
+            textColor=QUALITAS_PURPLE,
+            spaceAfter=8,
+            spaceBefore=8,
             fontName='Helvetica-Bold',
-            leading=16
+            borderWidth=0,
+            borderColor=QUALITAS_PURPLE,
+            borderPadding=4,
+            backColor=colors.HexColor('#F8F9FA')
         )
         
         # Estilo para texto normal
         normal_style = ParagraphStyle(
-            'QualitasNormal',
+            'CustomNormal',
             parent=styles['Normal'],
             fontSize=10,
             alignment=TA_JUSTIFY,
-            spaceAfter=8,
             textColor=QUALITAS_GRAY,
-            leading=12
+            leading=14
         )
         
-        # Estilo para información destacada
-        info_style = ParagraphStyle(
-            'QualitasInfo',
-            parent=styles['Normal'],
-            fontSize=10,
-            alignment=TA_CENTER,
-            spaceAfter=8,
-            textColor=QUALITAS_GRAY,
-            leading=12
-        )
-        
-        # ========== CONTENIDO DEL DOCUMENTO ==========
-        
-        # Título del certificado - AHORA MÁS PEQUEÑO
-        title = Paragraph("CERTIFICADO DE ASIGNACIÓN<br/>DE ACTIVO CORPORATIVO", title_style)
-        elements.append(title)
-        elements.append(Spacer(1, 0.05*inch))
-        
-        # Número de certificado y fecha
-        cert_info = f"""
-        Certificado del elemento ID No.: {asignacion['AsignacionId']:06d} | 
-        Fecha de Emisión: {datetime.now().strftime('%d/%m/%Y %H:%M')}
-        """
-        elements.append(Paragraph(cert_info, info_style))
+        # ========== TÍTULO PRINCIPAL ==========
+        elements.append(Paragraph("CERTIFICADO DE ASIGNACIÓN DE ACTIVO CORPORATIVO", title_style))
         elements.append(Spacer(1, 0.2*inch))
         
-        # ========== INFORMACIÓN DEL COLABORADOR ==========
+        # ========== INFORMACIÓN DEL USUARIO ==========
         elements.append(Paragraph("INFORMACIÓN DEL COLABORADOR", subtitle_style))
         
-        colaborador_data = [
+        # INCLUIR NÚMERO DE IDENTIFICACIÓN EN LA INFORMACIÓN DEL USUARIO
+        numero_identificacion = asignacion.get('NumeroIdentificacion', 'N/A')
+        
+        usuario_data = [
             ['Nombre Completo:', asignacion.get('UsuarioADNombre', 'N/A')],
-            ['Documento de Identidad:', 'N/A'],
+            ['Número de Identificación:', numero_identificacion],  # NUEVO CAMPO
             ['Correo Electrónico:', asignacion.get('UsuarioADEmail', 'N/A')],
-            ['Cargo:', 'N/A'],
-            ['Oficina:', f"{asignacion.get('NombreOficina', '')} - {asignacion.get('Ubicacion', '')}" if asignacion.get('NombreOficina') else 'N/A']
+            ['Oficina:', asignacion.get('NombreOficina', 'N/A')],
+            ['Ubicación:', asignacion.get('Ubicacion', 'N/A')]
         ]
         
-        colaborador_table = Table(colaborador_data, colWidths=[2.2*inch, 4.3*inch])
-        colaborador_table.setStyle(TableStyle([
+        usuario_table = Table(usuario_data, colWidths=[2.2*inch, 4.3*inch])
+        usuario_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#F8F9FA')),
             ('TEXTCOLOR', (0, 0), (0, -1), QUALITAS_PURPLE),
             ('TEXTCOLOR', (1, 0), (1, -1), QUALITAS_GRAY),
@@ -260,18 +245,17 @@ def generar_certificado(asignacion_id):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         
-        elements.append(colaborador_table)
+        elements.append(usuario_table)
         elements.append(Spacer(1, 0.2*inch))
         
         # ========== INFORMACIÓN DEL ACTIVO ==========
         elements.append(Paragraph("INFORMACIÓN DEL ACTIVO ASIGNADO", subtitle_style))
         
         activo_data = [
-            ['Producto:', asignacion.get('NombreProducto', 'N/A')],
-            ['Categoría:', 'N/A'],
+            ['Nombre del Producto:', asignacion.get('NombreProducto', 'N/A')],
             ['Código Único:', asignacion.get('CodigoUnico', 'N/A')],
-            ['Descripción/Serie:', asignacion.get('Descripcion', 'N/A')],
-            ['Valor de Compra:', f"${asignacion.get('ValorUnitario', 0):,.2f} COP" if asignacion.get('ValorUnitario') else 'N/A'],
+            ['Descripción:', asignacion.get('Descripcion', 'N/A') or 'Sin descripción'],
+            ['Valor Estimado:', f"${asignacion.get('ValorUnitario', 0):,.2f} COP" if asignacion.get('ValorUnitario') else 'N/A']
         ]
         
         activo_table = Table(activo_data, colWidths=[2.2*inch, 4.3*inch])
@@ -305,6 +289,7 @@ def generar_certificado(asignacion_id):
             ['Asignado por:', asignacion.get('UsuarioAsignador', 'N/A')],
             ['Fecha de Confirmación:', fecha_confirmacion],
             ['Confirmado por:', asignacion.get('UsuarioConfirmacion') or asignacion.get('UsuarioADNombre', 'N/A')],
+            ['Cédula del Confirmador:', numero_identificacion],  # NUEVO CAMPO
             ['Token de Confirmación:', f"Hash: {asignacion.get('TokenHash', 'N/A')[:20]}..." if asignacion.get('TokenHash') else 'N/A'],
             ['Fecha Utilización Token:', fecha_utilizacion_token],
             ['IP de Confirmación:', asignacion.get('TokenDireccionIP', 'N/A')],
@@ -390,7 +375,7 @@ def generar_certificado(asignacion_id):
             ['Colaborador Receptor', 'Colaborador Confirmador'],
             [f"Fecha Recepción: {fecha_asignacion}", f"Fecha Confirmación: {fecha_utilizacion_token if fecha_utilizacion_token != 'N/A' else fecha_confirmacion}"],
             [f"Email: {asignacion.get('UsuarioADEmail', 'N/A')}", f"Email: {email_confirmacion}"],
-            ['', f"Token ID: {asignacion.get('TokenId', 'N/A')}"],
+            [f"CC: {numero_identificacion}", f"Token ID: {asignacion.get('TokenId', 'N/A')}"],
         ]
         
         firma_table = Table(firma_data, colWidths=[3.25*inch, 3.25*inch])
@@ -415,6 +400,7 @@ def generar_certificado(asignacion_id):
         Validación de Firma Electrónica:
         • Token de confirmación generado: {asignacion.get('TokenFechaCreacion').strftime('%d/%m/%Y %H:%M:%S') if asignacion.get('TokenFechaCreacion') else 'N/A'}
         • Hash del token: {asignacion.get('TokenHash', 'N/A')}
+        • Número de Identificación del confirmador: {numero_identificacion}
         • Este certificado ha sido firmado electrónicamente mediante el sistema de gestión de inventario de Quálitas.
         • La firma electrónica tiene validez legal conforme a la Ley 527 de 1999 de Colombia.
         • Documento generado automáticamente por el sistema el {fecha_hora_actual}
@@ -428,6 +414,34 @@ def generar_certificado(asignacion_id):
             spaceAfter=5,
             textColor=QUALITAS_GRAY,
             leading=10
+        )))
+        
+        # ========== AUTORIZACIÓN DE DATOS PERSONALES ==========
+        elements.append(Spacer(1, 0.15*inch))
+        
+        autorizacion_text = """
+        AUTORIZACIÓN DE TRATAMIENTO DE DATOS PERSONALES:
+        El colaborador autoriza de manera previa, expresa e informada el tratamiento de sus datos personales 
+        (incluyendo su número de identificación), para fines de manejo de activos de la compañía 
+        Quálitas Compañía de Seguros Colombia S.A. Declara que conoce su derecho a conocer, actualizar y 
+        rectificar su información, conforme a la Política de Tratamiento de Datos disponible en 
+        https://www.qualitascolombia.com.co/politica-de-seguridad
+        """
+        
+        elements.append(Paragraph(autorizacion_text, ParagraphStyle(
+            'AutorizacionStyle',
+            parent=styles['Normal'],
+            fontSize=7,
+            alignment=TA_JUSTIFY,
+            spaceAfter=5,
+            textColor=QUALITAS_GRAY,
+            leading=9,
+            leftIndent=20,
+            rightIndent=20,
+            backColor=colors.HexColor('#F8F9FA'),
+            borderWidth=1,
+            borderColor=QUALITAS_PURPLE,
+            borderPadding=10
         )))
         
         # Generar el PDF con encabezado y pie de página
