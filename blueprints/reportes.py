@@ -569,22 +569,21 @@ def reporte_novedades():
         cursor.execute("""
             SELECT 
                 n.NovedadId as id,
-                n.Tipo as tipo,
+                n.TipoNovedad as tipo,
                 n.Descripcion as descripcion,
-                n.FechaReporte as fecha_reporte,
-                n.Estado as estado,
-                n.Prioridad as prioridad,
-                n.Comentarios as comentarios,
-                n.OficinaId as oficina_id,
+                n.FechaRegistro as fecha_reporte,
+                n.EstadoNovedad as estado,
+                'media' as prioridad,
+                n.ObservacionesResolucion as comentarios,
+                s.OficinaSolicitanteId as oficina_id,
                 o.NombreOficina as oficina_nombre,
                 u.NombreUsuario as reportante_nombre,
-                n.UsuarioRegistra as usuario_registra,
-                n.ColorTipo as color_tipo
-            FROM Novedades n
-            LEFT JOIN Oficinas o ON n.OficinaId = o.OficinaId
-            LEFT JOIN Usuarios u ON n.UsuarioRegistra = u.UsuarioId
-            WHERE n.Activo = 1
-            ORDER BY n.FechaReporte DESC
+                n.UsuarioRegistra as usuario_registra
+            FROM NovedadesSolicitudes n
+            LEFT JOIN SolicitudesMaterial s ON n.SolicitudId = s.SolicitudId
+            LEFT JOIN Oficinas o ON s.OficinaSolicitanteId = o.OficinaId
+            LEFT JOIN Usuarios u ON n.UsuarioRegistra = u.CorreoElectronico
+            ORDER BY n.FechaRegistro DESC
         """)
         
         columns = [column[0] for column in cursor.description]
@@ -651,7 +650,10 @@ def reporte_novedades():
                              reportantes=reportantes,
                              novedades_recientes=novedades_recientes)
     except Exception as e:
-        flash('Error al generar el reporte de novedades', 'danger')
+        flash(f'Error al generar el reporte de novedades: {str(e)}', 'danger')
+        print(f"❌ ERROR en reporte_novedades: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return render_template('reportes/novedades.html',
                              novedades=[],
                              total_novedades=0,
@@ -825,6 +827,7 @@ def reporte_oficinas():
         traceback.print_exc()
         return redirect('/reportes')
 
+@reportes_bp.route('/prestamos')
 def reporte_prestamos():
     """Reporte de préstamos"""
     if not _require_login():

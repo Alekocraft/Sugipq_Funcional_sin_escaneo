@@ -118,14 +118,20 @@
                         <span class="badge bg-warning filtro-rapido active" data-estado="">
                             <i class="fas fa-list me-1"></i>Todas ({{ total_novedades|default(0) }})
                         </span>
-                        <span class="badge bg-warning filtro-rapido" data-estado="pendiente">
+                        <span class="badge bg-warning filtro-rapido" data-estado="registrada">
                             <i class="fas fa-clock me-1"></i>Pendientes ({{ pendientes|default(0) }})
                         </span>
                         <span class="badge bg-info filtro-rapido" data-estado="en_proceso">
                             <i class="fas fa-spinner me-1"></i>En Proceso ({{ en_proceso|default(0) }})
                         </span>
-                        <span class="badge bg-success filtro-rapido" data-estado="resuelto">
+                        <span class="badge bg-success filtro-rapido" data-estado="resuelta">
                             <i class="fas fa-check me-1"></i>Resueltas ({{ resueltas|default(0) }})
+                        </span>
+                        <span class="badge bg-success filtro-rapido" data-estado="aceptada">
+                            <i class="fas fa-check-circle me-1"></i>Aceptadas ({{ aceptadas|default(0) }})
+                        </span>
+                        <span class="badge bg-danger filtro-rapido" data-estado="rechazada">
+                            <i class="fas fa-times-circle me-1"></i>Rechazadas ({{ rechazadas|default(0) }})
                         </span>
                     </div>
                 </div>
@@ -222,14 +228,30 @@
                                 {% endif %}
                             </td>
                             <td class="text-center" data-estado="{{ novedad.estado }}">
-                                {% if novedad.estado == 'pendiente' %}
-                                <span class="badge bg-warning text-dark small py-1 px-2">Pendiente</span>
+                                {% if novedad.estado == 'registrada' %}
+                                <span class="badge bg-warning text-dark small py-1 px-2">
+                                    <i class="fas fa-clock me-1"></i>Pendiente
+                                </span>
                                 {% elif novedad.estado == 'en_proceso' %}
-                                <span class="badge bg-info small py-1 px-2">En Proceso</span>
-                                {% elif novedad.estado == 'resuelto' %}
-                                <span class="badge bg-success small py-1 px-2">Resuelto</span>
-                                {% elif novedad.estado == 'cancelado' %}
-                                <span class="badge bg-secondary small py-1 px-2">Cancelado</span>
+                                <span class="badge bg-info small py-1 px-2">
+                                    <i class="fas fa-spinner me-1"></i>En Proceso
+                                </span>
+                                {% elif novedad.estado == 'resuelta' %}
+                                <span class="badge bg-success small py-1 px-2">
+                                    <i class="fas fa-check me-1"></i>Resuelta
+                                </span>
+                                {% elif novedad.estado == 'aceptada' %}
+                                <span class="badge bg-success small py-1 px-2">
+                                    <i class="fas fa-check-circle me-1"></i>Aceptada
+                                </span>
+                                {% elif novedad.estado == 'rechazada' %}
+                                <span class="badge bg-danger small py-1 px-2">
+                                    <i class="fas fa-times-circle me-1"></i>Rechazada
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary small py-1 px-2">
+                                    <i class="fas fa-question me-1"></i>{{ novedad.estado|title }}
+                                </span>
                                 {% endif %}
                             </td>
                             <td class="small">{{ novedad.reportante_nombre }}</td>
@@ -257,8 +279,8 @@
                         <div class="card-body py-3">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <span class="badge" style="background-color: {{ novedad.color_tipo|default('#6c757d') }};">{{ novedad.tipo }}</span>
-                                <span class="badge {% if novedad.estado == 'pendiente' %}bg-warning text-dark{% elif novedad.estado == 'en_proceso' %}bg-info{% else %}bg-success{% endif %}">
-                                    {{ novedad.estado|replace('_', ' ')|title }}
+                                <span class="badge {% if novedad.estado == 'registrada' %}bg-warning text-dark{% elif novedad.estado == 'en_proceso' %}bg-info{% elif novedad.estado == 'resuelta' %}bg-success{% elif novedad.estado == 'aceptada' %}bg-success{% elif novedad.estado == 'rechazada' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    {% if novedad.estado == 'registrada' %}Pendiente{% elif novedad.estado == 'resuelta' %}Resuelta{% else %}{{ novedad.estado|replace('_', ' ')|title }}{% endif %}
                                 </span>
                             </div>
                             <p class="small mb-2 text-muted">{{ novedad.descripcion|truncate(80) }}</p>
