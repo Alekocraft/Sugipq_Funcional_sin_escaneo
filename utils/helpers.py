@@ -164,3 +164,84 @@ def obtener_mes_actual():
     mes_actual = meses[datetime.now().month - 1]
     logger.debug(f"Mes actual obtenido: {mes_actual}")
     return mes_actual
+
+# ==================== FUNCIONES DE SANITIZACIÓN PARA LOGS ====================
+# Agregadas para proteger información sensible en logs (Día 1 - Plan Vulnerabilidades)
+
+def sanitizar_email(email):
+    """
+    Enmascara emails para logs, protegiendo información sensible
+    
+    Args:
+        email: Dirección de email a sanitizar
+        
+    Returns:
+        str: Email enmascarado (ej: jo***@example.com)
+    """
+    if not email or '@' not in email:
+        return '[email-protegido]'
+    
+    try:
+        partes = email.split('@')
+        usuario = partes[0]
+        dominio = partes[1]
+        
+        # Mostrar solo los primeros 2 caracteres del usuario
+        if len(usuario) <= 2:
+            usuario_sanitizado = usuario[0] + '***'
+        else:
+            usuario_sanitizado = usuario[:2] + '***'
+        
+        return f"{usuario_sanitizado}@{dominio}"
+    except Exception as e:
+        logger.warning(f"Error sanitizando email: {e}")
+        return '[email-protegido]'
+
+def sanitizar_username(username):
+    """
+    Enmascara usernames para logs, protegiendo información sensible
+    
+    Args:
+        username: Nombre de usuario a sanitizar
+        
+    Returns:
+        str: Username enmascarado (ej: jo***)
+    """
+    if not username:
+        return '[usuario-protegido]'
+    
+    try:
+        # Mostrar solo los primeros 2 caracteres
+        if len(username) < 3:
+            return username[0] + '***'
+        else:
+            return username[:2] + '***'
+    except Exception as e:
+        logger.warning(f"Error sanitizando username: {e}")
+        return '[usuario-protegido]'
+
+def sanitizar_ip(ip):
+    """
+    Enmascara direcciones IP para logs, protegiendo información sensible
+    
+    Args:
+        ip: Dirección IP a sanitizar
+        
+    Returns:
+        str: IP enmascarada (ej: 192.168.***.***)
+    """
+    if not ip:
+        return '[ip-protegida]'
+    
+    try:
+        # Para IPv4
+        if '.' in ip:
+            partes = ip.split('.')
+            if len(partes) == 4:
+                return f"{partes[0]}.{partes[1]}.***.***"
+        
+        # Para IPv6 u otros formatos, enmascarar completamente
+        return '[ip-protegida]'
+    except Exception as e:
+        logger.warning(f"Error sanitizando IP: {e}")
+        return '[ip-protegida]'

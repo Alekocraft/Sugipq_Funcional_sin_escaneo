@@ -22,7 +22,6 @@
   <ItemGroup>
     <Content Include=".gitignore" />
     <Content Include="requirements.txt" />
-    <Content Include="scripts\agregar_columnas_usuario_ad.sql" />
     <Content Include="static\css\base.css" />
     <Content Include="static\css\custom.css" />
     <Content Include="static\css\dashboard.css" />
@@ -115,7 +114,6 @@
     <Folder Include="models\" />
     <Folder Include="blueprints\" />
     <Folder Include="config\" />
-    <Folder Include="scripts\" />
     <Folder Include="services\" />
     <Folder Include="templates\confirmacion\" />
     <Folder Include="templates\usuarios\" />
