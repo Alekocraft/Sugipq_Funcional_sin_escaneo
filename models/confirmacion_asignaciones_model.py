@@ -1,4 +1,3 @@
-# models/confirmacion_asignaciones_model.py
 """
 Modelo para gestionar confirmaciones de asignaciones con tokens temporales.
 Incluye generación de tokens, validación y registro de confirmaciones.
@@ -399,6 +398,78 @@ class ConfirmacionAsignacionesModel:
                 except:
                     pass
             return 0
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    
+    @staticmethod
+    def obtener_estadisticas_confirmaciones():
+        """
+        Obtiene estadísticas generales de confirmaciones.
+        
+        Returns:
+            dict: Diccionario con estadísticas
+        """
+        conn = get_database_connection()
+        if not conn:
+            return {}
+        
+        cursor = None
+        try:
+            cursor = conn.cursor()
+            
+            estadisticas = {}
+            
+            # Total de tokens generados
+            cursor.execute("""
+                SELECT COUNT(*) FROM TokensConfirmacionAsignacion
+            """)
+            estadisticas['total_tokens_generados'] = cursor.fetchone()[0] or 0
+            
+            # Tokens utilizados
+            cursor.execute("""
+                SELECT COUNT(*) FROM TokensConfirmacionAsignacion WHERE Utilizado = 1
+            """)
+            estadisticas['tokens_utilizados'] = cursor.fetchone()[0] or 0
+            
+            # Tokens pendientes (no expirados)
+            cursor.execute("""
+                SELECT COUNT(*) FROM TokensConfirmacionAsignacion 
+                WHERE Utilizado = 0 AND FechaExpiracion > GETDATE()
+            """)
+            estadisticas['tokens_pendientes'] = cursor.fetchone()[0] or 0
+            
+            # Tokens expirados
+            cursor.execute("""
+                SELECT COUNT(*) FROM TokensConfirmacionAsignacion 
+                WHERE Utilizado = 0 AND FechaExpiracion <= GETDATE()
+            """)
+            estadisticas['tokens_expirados'] = cursor.fetchone()[0] or 0
+            
+            # Confirmaciones por mes (últimos 6 meses)
+            cursor.execute("""
+                SELECT 
+                    FORMAT(FechaUtilizacion, 'yyyy-MM') AS Mes,
+                    COUNT(*) AS Confirmaciones
+                FROM TokensConfirmacionAsignacion 
+                WHERE Utilizado = 1 
+                    AND FechaUtilizacion >= DATEADD(month, -6, GETDATE())
+                GROUP BY FORMAT(FechaUtilizacion, 'yyyy-MM')
+                ORDER BY Mes DESC
+            """)
+            
+            estadisticas['confirmaciones_por_mes'] = [
+                {'mes': row[0], 'cantidad': row[1]} 
+                for row in cursor.fetchall()
+            ]
+            
+            return estadisticas
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo estadísticas: {e}")
+            return {}
         finally:
             if cursor:
                 cursor.close()

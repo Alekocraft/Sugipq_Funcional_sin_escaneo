@@ -189,7 +189,6 @@ except ImportError as e:
 # Importación condicional de blueprint de inventario corporativo
 try:
     from blueprints.inventario_corporativo import inventario_corporativo_bp
-    from blueprints.confirmacion_asignaciones import confirmacion_bp
     logger.info("Blueprint de inventario corporativo cargado desde blueprints")
 except ImportError as e:
     logger.warning(f"Blueprint de inventario corporativo no encontrado en blueprints: {e}")
@@ -205,6 +204,20 @@ except ImportError as e:
         def inventario_vacio():
             flash('Módulo de inventario corporativo no disponible', 'warning')
             return redirect('/dashboard')
+
+# Importación condicional de blueprint de confirmaciones (NUEVO)
+try:
+    from blueprints.confirmacion_asignaciones import confirmacion_bp
+    logger.info("Blueprint de confirmaciones cargado exitosamente")
+except ImportError as e:
+    logger.warning(f"Blueprint de confirmaciones no disponible: {e}")
+    from flask import Blueprint
+    confirmacion_bp = Blueprint('confirmacion', __name__)
+    
+    @confirmacion_bp.route('/')
+    def confirmacion_vacio():
+        flash('Módulo de confirmaciones no disponible', 'warning')
+        return redirect('/dashboard')
 
 # ============================================================================
 # MIDDLEWARE DE SESIÓN
@@ -423,7 +436,7 @@ logger.info("Blueprint de préstamos registrado")
 app.register_blueprint(inventario_corporativo_bp, url_prefix='/inventario-corporativo')
 logger.info("Blueprint de inventario corporativo registrado")
 
-app.register_blueprint(confirmacion_bp)
+app.register_blueprint(confirmacion_bp, url_prefix='/confirmacion')
 logger.info("Blueprint de confirmaciones registrado")
 
 # ============================================================================

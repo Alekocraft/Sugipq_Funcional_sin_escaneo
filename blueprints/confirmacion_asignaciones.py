@@ -5,6 +5,7 @@ VERSION MODIFICADA: Incluye validación y almacenamiento de número de identific
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from models.confirmacion_asignaciones_model import ConfirmacionAsignacionesModel
+from helpers import sanitizar_email, sanitizar_username, sanitizar_ip
 from utils.auth import login_required
 from datetime import datetime
 import logging
@@ -184,13 +185,13 @@ def confirmar_asignacion(token):
                         error='Debe ingresar usuario y contrasena'
                     )
                 
-                logger.info(f"🔐 Intentando validar LDAP para usuario: {username}")
+                logger.info(f"🔐 Intentando validar LDAP para usuario: {sanitizar_username(username)}")
                 
                 # Validar contra LDAP
                 exito, email_ldap, nombre_ldap, mensaje_error = validar_ldap(username, password)
                 
                 if not exito:
-                    logger.warning(f"❌ Fallo autenticacion LDAP para usuario: {username}")
+                    logger.warning(f"❌ Fallo autenticacion LDAP para usuario: {sanitizar_username(username)}")
                     flash(f'Error de autenticacion: {mensaje_error}', 'error')
                     return render_template(
                         'confirmacion/confirmar.html',
@@ -201,7 +202,7 @@ def confirmar_asignacion(token):
                         username_anterior=username  # Mantener el usuario ingresado
                     )
                 
-                logger.info(f"✅ LDAP validado: {username} -> {email_ldap}")
+                logger.info(f"✅ LDAP validado: {sanitizar_username(username)} -> {sanitizar_email(email_ldap)}")
                 
                 # Verificar que el usuario LDAP coincida con el asignado
                 email_asignado = validacion.get('usuario_email', '').lower()
@@ -223,7 +224,7 @@ def confirmar_asignacion(token):
                 
                 usuario_confirmacion = email_ldap
                 nombre_confirmacion = nombre_ldap
-                logger.info(f"✅ Usuario validado y coincidente: {username} ({email_ldap})")
+                logger.info(f"✅ Usuario validado y coincidente: {sanitizar_username(username)} ({sanitizar_email(email_ldap)})")
             else:
                 # Sin autenticacion LDAP (fallback)
                 usuario_confirmacion = validacion.get('usuario_email', 'Usuario')
@@ -234,7 +235,7 @@ def confirmar_asignacion(token):
             direccion_ip = request.remote_addr
             user_agent = request.headers.get('User-Agent', '')
             
-            logger.info(f"📝 Confirmando asignacion - Usuario: {usuario_confirmacion}, CC: {numero_limpio}, IP: {direccion_ip}")
+            logger.info(f"📝 Confirmando asignacion - Usuario: {sanitizar_email(usuario_confirmacion)}, CC: [PROTEGIDO], IP: {sanitizar_ip(direccion_ip)}")
             
             # Confirmar la asignacion (INCLUYENDO NÚMERO DE IDENTIFICACIÓN)
             resultado = ConfirmacionAsignacionesModel.confirmar_asignacion(
