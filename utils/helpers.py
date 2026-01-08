@@ -19,16 +19,6 @@ def allowed_file(filename):
 def save_uploaded_file(file, subfolder=''):
     """
     Guarda un archivo subido de forma segura en el sistema de archivos
-    
-    Args:
-        file: Objeto FileStorage de Flask
-        subfolder: Subdirectorio dentro de UPLOAD_FOLDER
-        
-    Returns:
-        str: Ruta relativa del archivo guardado o None si no se guardó
-        
-    Raises:
-        ValueError: Si el tipo de archivo no está permitido
     """
     if not file or not file.filename:
         return None
@@ -112,13 +102,6 @@ def flash_errors(form):
 def generate_codigo_unico(prefix, existing_codes):
     """
     Genera un código único con prefijo especificado
-    
-    Args:
-        prefix: Prefijo del código
-        existing_codes: Conjunto o lista de códigos existentes
-        
-    Returns:
-        str: Código único generado
     """
     max_attempts = 100
     for attempt in range(max_attempts):
@@ -166,17 +149,27 @@ def obtener_mes_actual():
     return mes_actual
 
 # ==================== FUNCIONES DE SANITIZACIÓN PARA LOGS ====================
-# Agregadas para proteger información sensible en logs (Día 1 - Plan Vulnerabilidades)
+
+def sanitizar_identificacion(numero):
+    """
+    Enmascara números de identificación para logs, protegiendo información sensible.
+    Muestra solo los primeros 3 y últimos 3 dígitos.
+    """
+    if not numero:
+        return '[identificacion-protegida]'
+    
+    try:
+        num_str = str(numero).strip()
+        if len(num_str) <= 6:
+            return '***' + num_str[-3:] if len(num_str) > 3 else '***'
+        return num_str[:3] + '***' + num_str[-3:]
+    except Exception as e:
+        logger.warning(f"Error sanitizando identificación: {e}")
+        return '[identificacion-protegida]'
 
 def sanitizar_email(email):
     """
     Enmascara emails para logs, protegiendo información sensible
-    
-    Args:
-        email: Dirección de email a sanitizar
-        
-    Returns:
-        str: Email enmascarado (ej: jo***@example.com)
     """
     if not email or '@' not in email:
         return '[email-protegido]'
@@ -200,12 +193,6 @@ def sanitizar_email(email):
 def sanitizar_username(username):
     """
     Enmascara usernames para logs, protegiendo información sensible
-    
-    Args:
-        username: Nombre de usuario a sanitizar
-        
-    Returns:
-        str: Username enmascarado (ej: jo***)
     """
     if not username:
         return '[usuario-protegido]'
@@ -223,12 +210,6 @@ def sanitizar_username(username):
 def sanitizar_ip(ip):
     """
     Enmascara direcciones IP para logs, protegiendo información sensible
-    
-    Args:
-        ip: Dirección IP a sanitizar
-        
-    Returns:
-        str: IP enmascarada (ej: 192.168.***.***)
     """
     if not ip:
         return '[ip-protegida]'
@@ -245,3 +226,12 @@ def sanitizar_ip(ip):
     except Exception as e:
         logger.warning(f"Error sanitizando IP: {e}")
         return '[ip-protegida]'
+
+# Exportar las funciones de sanitización para que estén disponibles
+__all__ = [
+    'allowed_file', 'save_uploaded_file', 'get_user_permissions', 'can_access',
+    'format_currency', 'format_date', 'get_pagination_params', 'flash_errors',
+    'generate_codigo_unico', 'calcular_valor_total', 'validar_stock', 
+    'obtener_mes_actual', 'sanitizar_identificacion', 'sanitizar_email', 
+    'sanitizar_username', 'sanitizar_ip'
+]

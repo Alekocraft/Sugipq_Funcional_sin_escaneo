@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>MSBuild|envirt|$(MSBuildProjectFullPath)</InterpreterId>
+    <InterpreterId>MSBuild|envt2|$(MSBuildProjectFullPath)</InterpreterId>
     <SuppressEnvironmentCreationPrompt>True</SuppressEnvironmentCreationPrompt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
@@ -134,37 +134,10 @@
     <Folder Include="templates\solicitudes\" />
   </ItemGroup>
   <ItemGroup>
-    <Interpreter Include=".venv\env1\">
-      <Id>env1</Id>
+    <Interpreter Include="envt2\">
+      <Id>envt2</Id>
       <Version>3.9</Version>
-      <Description>env1 (Python 3.9 (64-bit))</Description>
-      <InterpreterPath>Scripts\python.exe</InterpreterPath>
-      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
-      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
-      <Architecture>X64</Architecture>
-    </Interpreter>
-    <Interpreter Include="env1\">
-      <Id>env11</Id>
-      <Version>3.9</Version>
-      <Description>env1 (Python 3.9 (64-bit))</Description>
-      <InterpreterPath>Scripts\python.exe</InterpreterPath>
-      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
-      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
-      <Architecture>X64</Architecture>
-    </Interpreter>
-    <Interpreter Include="envirt\">
-      <Id>envirt</Id>
-      <Version>3.9</Version>
-      <Description>envirt (Python 3.9 (64-bit))</Description>
-      <InterpreterPath>Scripts\python.exe</InterpreterPath>
-      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
-      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
-      <Architecture>X64</Architecture>
-    </Interpreter>
-    <Interpreter Include="envt\">
-      <Id>envt</Id>
-      <Version>3.9</Version>
-      <Description>envt (Python 3.9 (64-bit))</Description>
+      <Description>envt2 (Python 3.9 (64-bit))</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
       <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>

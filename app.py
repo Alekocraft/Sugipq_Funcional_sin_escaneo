@@ -1,5 +1,5 @@
-﻿# app/app.py
-
+import sys
+import io
 import os
 import logging
 from datetime import datetime, timedelta
@@ -14,34 +14,136 @@ import json
 import traceback
 
 # ============================================================================
-# CONFIGURACIÓN DE LOGGING
+# 0. CORRECCIÓN ENCODING PARA WINDOWS
 # ============================================================================
+# Configurar encoding UTF-8 para Windows
+if sys.platform == "win32":
+    # Forzar UTF-8 en stdout/stderr
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    
+    # Configurar logging para Windows (reemplazar emojis)
+    class SafeFilter(logging.Filter):
+        def filter(self, record):
+            if hasattr(record, 'msg'):
+                # Reemplazar emojis con texto seguro para Windows
+                replacements = {
+                    '✅': '[OK]',
+                    '⚠️': '[WARN]',
+                    '❌': '[ERROR]',
+                    'ℹ️': '[INFO]',
+                    '📦': '[INVENTARIO]',
+                    '📋': '[SOLICITUD]',
+                    '🔐': '[LDAP]',
+                    '📧': '[EMAIL]',
+                    '🚀': '[INICIO]',
+                    '👥': '[ROLES]',
+                    '🔧': '[CONFIG]',
+                    '📁': '[DIRECTORIO]'
+                }
+                for emoji, text in replacements.items():
+                    record.msg = record.msg.replace(emoji, text)
+            return True
+
+# ============================================================================
+# 1. CARGAR VARIABLES DE ENTORNO
+# ============================================================================
+from dotenv import load_dotenv
+
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(env_path)
+
+if os.path.exists(env_path):
+    print(f"[OK] Archivo .env encontrado en: {env_path}")
+else:
+    print(f"[WARN] Archivo .env NO encontrado en: {env_path}")
+
+# ============================================================================
+# 2. CONFIGURAR LOGGING INICIAL (CORREGIDO PARA WINDOWS)
+# ============================================================================
+# Configurar logging primero
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('logs/app.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+# Aplicar filtro para Windows si es necesario
+if sys.platform == "win32":
+    for handler in logging.root.handlers:
+        handler.addFilter(SafeFilter())
+
+# ============================================================================
+# 3. IMPRESIÓN DE VARIABLES DE ENTORNO (CORREGIDO)
+# ============================================================================
+print("\n=== VARIABLES DE ENTORNO CARGADAS ===")
+print(f"SMTP_SERVER: {os.getenv('SMTP_SERVER', 'NO CONFIGURADO')}")
+print(f"SMTP_PORT: {os.getenv('SMTP_PORT', 'NO CONFIGURADO')}")
+print(f"SMTP_FROM_EMAIL: {os.getenv('SMTP_FROM_EMAIL', 'NO CONFIGURADO')}")
+print(f"FLASK_ENV: {os.getenv('FLASK_ENV', 'NO CONFIGURADO')}")
+print(f"DATABASE_URL: {os.getenv('DATABASE_URL', 'NO CONFIGURADO')}")
+print(f"SECRET_KEY: {'CONFIGURADO' if os.getenv('SECRET_KEY') else 'NO CONFIGURADO'}")
+print("====================================\n")
+
+# ============================================================================
+# 4. IMPORTACIÓN DEL SERVICIO DE NOTIFICACIONES
+# ============================================================================
+try:
+    from services.notification_service import NotificationService, servicio_notificaciones_disponible
+    
+    if not servicio_notificaciones_disponible():
+        logger.warning("[WARN] Servicio de notificaciones no disponible (configuración faltante)")
+    else:
+        logger.info("[OK] Servicio de notificaciones disponible")
+except ImportError as e:
+    logger.warning(f"No se pudo importar el servicio de notificaciones: {e}")
+    
+    def servicio_notificaciones_disponible():
+        return False
+
+# ============================================================================
+# 5. CONFIGURACIÓN DE LOGGING COMPLETA (CORREGIDA)
+# ============================================================================
+# Re-configurar logging con encoding correcto
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('logs/app.log', encoding='utf-8'),
+        logging.StreamHandler(stream=sys.stdout)
+    ]
 )
+
+# Aplicar filtro para Windows
+if sys.platform == "win32":
+    for handler in logging.root.handlers:
+        handler.addFilter(SafeFilter())
+
 logger = logging.getLogger(__name__)
 
 # Configuración de logging para LDAP
 ldap_logger = logging.getLogger('ldap3')
 ldap_logger.setLevel(logging.WARNING)
 
-# Configurar formato para LDAP
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-# Crear directorio de logs si no existe
 log_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'logs')
 os.makedirs(log_dir, exist_ok=True)
 
-# Configurar handler para archivo de LDAP
 ldap_log_file = os.path.join(log_dir, 'ldap.log')
-file_handler = logging.FileHandler(ldap_log_file)
+file_handler = logging.FileHandler(ldap_log_file, encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(formatter)
 ldap_logger.addHandler(file_handler)
 
-# También configurar un handler para consola (opcional)
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.WARNING)
 console_handler.setFormatter(formatter)
@@ -50,9 +152,71 @@ ldap_logger.addHandler(console_handler)
 logger.info(f"Logging de LDAP configurado. Archivo: {ldap_log_file}")
 
 # ============================================================================
-# CONFIGURACIÓN DE LA APLICACIÓN FLASK
+# 6. CREAR MÓDULO HELPERS SI NO EXISTE
 # ============================================================================
+# Crear un módulo helpers temporal si no existe en utils
+import types
 
+# Verificar si utils.helpers existe
+try:
+    import utils.helpers as helpers_module
+    logger.info("Módulo utils.helpers cargado correctamente")
+except ImportError:
+    logger.warning("Creando módulo helpers temporal...")
+    
+    # Crear módulo helpers temporal
+    helpers_module = types.ModuleType('utils.helpers')
+    sys.modules['utils.helpers'] = helpers_module
+    
+    # Definir funciones mínimas requeridas
+    def sanitizar_email(email):
+        """Enmascara emails para logs"""
+        if not email or '@' not in email:
+            return '[email-protegido]'
+        try:
+            partes = email.split('@')
+            usuario = partes[0]
+            dominio = partes[1]
+            if len(usuario) <= 2:
+                return f"{usuario[0]}***@{dominio}"
+            return f"{usuario[:2]}***@{dominio}"
+        except Exception:
+            return '[email-protegido]'
+    
+    def sanitizar_username(username):
+        """Enmascara usernames para logs"""
+        if not username:
+            return '[usuario-protegido]'
+        try:
+            if len(username) < 3:
+                return username[0] + '***'
+            return username[:2] + '***'
+        except Exception:
+            return '[usuario-protegido]'
+    
+    def sanitizar_ip(ip):
+        """Enmascara direcciones IP para logs"""
+        if not ip:
+            return '[ip-protegida]'
+        try:
+            if '.' in ip:
+                partes = ip.split('.')
+                if len(partes) == 4:
+                    return f"{partes[0]}.{partes[1]}.***.***"
+            return '[ip-protegida]'
+        except Exception:
+            return '[ip-protegida]'
+    
+    # Agregar funciones al módulo
+    helpers_module.sanitizar_email = sanitizar_email
+    helpers_module.sanitizar_username = sanitizar_username
+    helpers_module.sanitizar_ip = sanitizar_ip
+    
+    logger.info("Módulo helpers temporal creado")
+
+# ============================================================================
+# 7. CONFIGURACIÓN DE LA APLICACIÓN FLASK
+# ============================================================================
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(
@@ -61,30 +225,29 @@ app = Flask(
     static_folder=os.path.join(BASE_DIR, 'static')
 )
 
-# Configuración de seguridad y aplicación
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(32))
 app.config['JSON_AS_ASCII'] = False
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-# Configuración de archivos subidos
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 logger.info(f"Directorio de uploads configurado en: {os.path.abspath(UPLOAD_FOLDER)}")
 
-# Configuración de sesión segura
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
 
-# Tiempo de inactividad (minutos)
 SESSION_TIMEOUT_MINUTES = 30
 
+# Resto del archivo se mantiene igual desde aquí...
+# [El resto del archivo app.py se mantiene igual desde la línea 7. CONEXIÓN A BASE DE DATOS Y MODELOS]
+
 # ============================================================================
-# CONEXIÓN A BASE DE DATOS Y MODELOS
+# 7. CONEXIÓN A BASE DE DATOS Y MODELOS
 # ============================================================================
 
 # Importación de modelos
@@ -98,10 +261,24 @@ try:
 except ImportError as e:
     logger.error(f"Error cargando modelos: {e}")
     # Definir clases dummy para evitar errores
-    class MaterialModel: pass
-    class OficinaModel: pass
-    class SolicitudModel: pass
-    class UsuarioModel: pass
+    class MaterialModel: 
+        @staticmethod
+        def obtener_todos(oficina_id=None): return []
+        @staticmethod
+        def crear(data): pass
+    class OficinaModel: 
+        @staticmethod
+        def obtener_todas(): return []
+    class SolicitudModel: 
+        @staticmethod
+        def obtener_todas(oficina_id=None): return []
+        @staticmethod
+        def crear(data): pass
+    class UsuarioModel: 
+        @staticmethod
+        def obtener_todos(): return []
+        @staticmethod
+        def obtener_aprobadores(): return []
     class InventarioCorporativoModel: pass
 
 # Importación de utilidades
@@ -144,7 +321,7 @@ except ImportError as e:
     PERMISSION_FUNCTIONS = {}
 
 # ============================================================================
-# IMPORTACIÓN CONDICIONAL DE BLUEPRINTS
+# 8. IMPORTACIÓN CONDICIONAL DE BLUEPRINTS
 # ============================================================================
 
 # Importación de blueprints principales (siempre disponibles)
@@ -171,6 +348,7 @@ except ImportError as e:
     reportes_bp = Blueprint('reportes', __name__)
     api_bp = Blueprint('api', __name__)
     usuarios_bp = Blueprint('usuarios', __name__)
+    certificado_bp = Blueprint('certificado', __name__)  # ← LÍNEA AGREGADA
 
 # Importación condicional de blueprint de préstamos
 try:
@@ -220,7 +398,7 @@ except ImportError as e:
         return redirect('/dashboard')
 
 # ============================================================================
-# MIDDLEWARE DE SESIÓN
+# 9. MIDDLEWARE DE SESIÓN
 # ============================================================================
 
 @app.before_request
@@ -228,7 +406,8 @@ def check_session_timeout():
     """Verifica timeout de sesión antes de cada request"""
     # Rutas públicas que no requieren verificación
     public_routes = ['/login', '/logout', '/static', '/api/session-check', 
-                     '/auth/login', '/auth/logout', '/auth/test-ldap']
+                     '/auth/login', '/auth/logout', '/auth/test-ldap',
+                     '/certificado', '/certificado/generar']  # ← AÑADIDO
     
     if any(request.path.startswith(route) for route in public_routes):
         return
@@ -258,7 +437,7 @@ def update_session_activity(response):
     return response
 
 # ============================================================================
-# FUNCIONES DE PERMISOS PARA TEMPLATES (DEFINIDAS LOCALMENTE)
+# 10. FUNCIONES DE PERMISOS PARA TEMPLATES (DEFINIDAS LOCALMENTE)
 # ============================================================================
 
 # Roles con permisos completos
@@ -348,7 +527,7 @@ def should_show_detalle_button(solicitud):
     return solicitud is not None and can_create_or_view()
 
 # ============================================================================
-# CONTEXT PROCESSOR
+# 11. CONTEXT PROCESSOR
 # ============================================================================
 
 @app.context_processor
@@ -415,10 +594,13 @@ def utility_processor():
     return all_functions
 
 # ============================================================================
-# REGISTRO DE BLUEPRINTS
+# 12. REGISTRO DE BLUEPRINTS
 # ============================================================================
 
-app.register_blueprint(auth_bp, name='auth_bp')
+# Registrar auth_bp con url_prefix CORREGIDO
+app.register_blueprint(auth_bp, url_prefix='/auth')
+logger.info("Blueprint de autenticación registrado en /auth")
+
 app.register_blueprint(materiales_bp)
 app.register_blueprint(solicitudes_bp, url_prefix='/solicitudes')
 app.register_blueprint(oficinas_bp)
@@ -426,8 +608,8 @@ app.register_blueprint(aprobadores_bp)
 app.register_blueprint(reportes_bp)
 app.register_blueprint(api_bp)
 app.register_blueprint(usuarios_bp)
-app.register_blueprint(certificado_bp)  # ← LÍNEA AGREGADA
-logger.info("Blueprint de certificados registrado")  # ← LÍNEA AGREGADA
+app.register_blueprint(certificado_bp)
+logger.info("Blueprint de certificados registrado")
 
 # Registrar blueprints opcionales
 app.register_blueprint(prestamos_bp, url_prefix='/prestamos')
@@ -440,7 +622,7 @@ app.register_blueprint(confirmacion_bp, url_prefix='/confirmacion')
 logger.info("Blueprint de confirmaciones registrado")
 
 # ============================================================================
-# RUTAS PRINCIPALES (UNIFICADAS)
+# 13. RUTAS PRINCIPALES (UNIFICADAS)
 # ============================================================================
 
 @app.route('/')
@@ -488,10 +670,10 @@ def logout():
 @app.route('/test-ldap', methods=['GET', 'POST'])
 def test_ldap():
     """Redirige a la ruta de test-ldap en auth"""
-    return redirect('/auth/test-ldap')
+    return redirect('/auth/test-ldap')  
 
 # ============================================================================
-# RUTAS DE AUTENTICACIÓN (BACKUP PARA CASO DE ERROR)
+# 14. RUTAS DE AUTENTICACIÓN (BACKUP PARA CASO DE ERROR)
 # ============================================================================
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -512,7 +694,7 @@ def login_backup():
         return render_template('auth/login_backup.html')
 
 # ============================================================================
-# API DE ESTADO DE SESIÓN
+# 15. API DE ESTADO DE SESIÓN
 # ============================================================================
 
 @app.route('/api/session-check')
@@ -545,7 +727,7 @@ def api_session_check():
     return jsonify({'authenticated': True, 'user': session.get('usuario_nombre')})
 
 # ============================================================================
-# RUTAS DE MATERIALES (BACKUP)
+# 16. RUTAS DE MATERIALES (BACKUP)
 # ============================================================================
 
 @app.route('/materiales/crear', methods=['GET', 'POST'])
@@ -589,7 +771,7 @@ def crear_material_backup():
     return render_template('materiales/crear.html')
 
 # ============================================================================
-# RUTAS DE SOLICITUDES (BACKUP)
+# 17. RUTAS DE SOLICITUDES (BACKUP)
 # ============================================================================
 
 @app.route('/solicitudes/listar')
@@ -654,7 +836,7 @@ def crear_solicitud_backup():
     )
 
 # ============================================================================
-# RUTAS DE USUARIOS (BACKUP)
+# 18. RUTAS DE USUARIOS (BACKUP)
 # ============================================================================
 
 @app.route('/usuarios')
@@ -680,7 +862,7 @@ def listar_usuarios_backup():
         return redirect('/dashboard')
 
 # ============================================================================
-# RUTAS DE REPORTES (BACKUP)
+# 19. RUTAS DE REPORTES (BACKUP)
 # ============================================================================
 
 @app.route('/reportes')
@@ -696,7 +878,7 @@ def reportes_backup():
     return render_template('reportes/index.html')
 
 # ============================================================================
-# MANEJADORES DE ERRORES
+# 20. MANEJADORES DE ERRORES
 # ============================================================================
 
 @app.errorhandler(404)
@@ -726,7 +908,7 @@ def no_autorizado(error):
     return redirect('/auth/login')
 
 # ============================================================================
-# RUTAS DE SISTEMA
+# 21. RUTAS DE SISTEMA
 # ============================================================================
 
 @app.route('/system/health')
@@ -741,10 +923,14 @@ def system_health():
         cursor.close()
         conn.close()
         
+        # Verificar servicio de notificaciones
+        notification_status = 'available' if servicio_notificaciones_disponible() else 'unavailable'
+        
         return jsonify({
             'status': 'healthy',
             'timestamp': datetime.now().isoformat(),
             'database': 'connected',
+            'notifications': notification_status,
             'session': 'active' if 'usuario_id' in session else 'inactive',
             'blueprints': {
                 'auth': 'registered',
@@ -772,24 +958,35 @@ def system_info():
         'debug': app.debug,
         'session_timeout_minutes': SESSION_TIMEOUT_MINUTES,
         'upload_folder': app.config['UPLOAD_FOLDER'],
-        'registered_blueprints': list(app.blueprints.keys())
+        'registered_blueprints': list(app.blueprints.keys()),
+        'notifications_available': servicio_notificaciones_disponible()
     }
     return jsonify(info)
 
 # ============================================================================
-# PUNTO DE ENTRADA
+# 22. PUNTO DE ENTRADA
 # ============================================================================
 
 if __name__ == '__main__':
     logger.info("Iniciando servidor Flask de Sistema de Gestión de Inventarios")
     logger.info(f"Logging de LDAP activo en: {ldap_log_file}")
     
+    # Verificar disponibilidad del servicio de notificaciones
+    if not servicio_notificaciones_disponible():
+        logger.warning("⚠️ El servicio de notificaciones no está disponible")
+    else:
+        logger.info("✅ Servicio de notificaciones configurado correctamente")
+    
     try:
-        # Inicialización del sistema
-        inicializar_oficina_principal()
-        logger.info("Sistema inicializado correctamente")
+        # Inicialización del sistema - ahora devuelve True/False
+        if inicializar_oficina_principal():
+            logger.info("Inicialización de oficina completada correctamente")
+        else:
+            logger.warning("Inicialización de oficina tuvo problemas, pero el sistema continúa")
+        logger.info("Sistema listo para operar")
     except Exception as e:
         logger.error(f"Error en inicialización: {e}")
+        logger.warning("Continuando con la ejecución a pesar del error de inicialización")
     
     # Configuración del puerto
     port = int(os.environ.get('PORT', 5010))

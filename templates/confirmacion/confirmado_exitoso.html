@@ -1,4 +1,4 @@
-<!-- templates/confirmacion/confirmado_exitoso.html -->
+<!-- templates/confirmacion/confirmado_exitoso.html, UTF 8 -->
 {% extends "base.html" %}
 
 {% block title %}Confirmacion Exitosa{% endblock %}
@@ -15,7 +15,7 @@
                     </div>
                     
                     <!-- Mensaje principal -->
-                    <h2 class="text-success mb-3">Confirmacion Exitosa!</h2>
+                    <h2 class="text-success mb-3">¡Confirmación Exitosa!</h2>
                     <p class="lead">{{ mensaje or 'Su asignacion ha sido confirmada correctamente.' }}</p>
                     
                     <!-- Detalles -->
@@ -27,9 +27,9 @@
                     
                     <!-- Informacion adicional -->
                     <div class="mt-4 text-muted">
-                        <p><i class="fas fa-calendar-check"></i> Fecha de confirmacion: {{ fecha_confirmacion.strftime('%d/%m/%Y %H:%M') }}</p>
+                        <p><i class="fas fa-calendar-check"></i> Fecha de confirmación: {{ fecha_confirmacion.strftime('%d/%m/%Y %H:%M') }}</p>
                         <p class="small">
-                            Se ha registrado la recepcion del elemento en el sistema de inventario corporativo.
+                            Se ha registrado la recepción del elemento en el sistema de inventario corporativo.
                             El registro queda guardado con su usuario y timestamp.
                         </p>
                     </div>

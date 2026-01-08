@@ -1,6 +1,6 @@
 ESTRUCTURA DEL PROYECTO FLASK 
 ============================= 
-Fecha: Mon 01/05/2026  9:21:52.25 
+Fecha: Thu 01/08/2026 12:39:47.27 
 Directorio actual: C:\Users\sinventarios\source\repos\sugipq 
  
 [ARCHIVOS PRINCIPALES .PY] 
@@ -26,6 +26,7 @@ config\config.py
 config\ldap_config.py 
 config\permissions.py 
 config\__init__.py 
+ 
 models\confirmacion_asignaciones_model.py 
 models\generar_hash.py 
 models\inventario_corporativo_model.py 
@@ -111,13 +112,18 @@ static\css\login.css
 [ARCHIVOS DE CONFIGURACION] 
 --------------------------- 
 requirements.txt 
+.env 
  
 [ARCHIVOS DE ENTORNO] 
 -------------------- 
+.env 
+.env 
  
 [ARCHIVOS DE LOGS] 
 ------------------ 
+logs\app.log 
 logs\ldap.log 
+logs\app.log 
 logs\ldap.log 
  
 [ARCHIVOS LOG EN RAIZ] 
@@ -129,6 +135,7 @@ logs\ldap.log
 [.vs] 
 [blueprints] 
 [config] 
+[envt2] 
 [logs] 
 [models] 
 [services] 
@@ -139,16 +146,14 @@ logs\ldap.log
  
 Resumen: 
 --------- 
-Archivos .py: 3760 
+Archivos .py: 4185 
 Archivos HTML: 43 
 Archivos CSS: 5 
 Archivos JS: 0 
-Archivos de entorno: 0 
-Archivos de logs: 2 
-Carpetas (sin entornos virtuales): 11 
+Archivos de entorno: 2 
+Archivos de logs: 4 
+Carpetas (sin entornos virtuales): 12 
  
 [ENTORNOS VIRTUALES EXCLUIDOS] 
 ------------------------------ 
-.venv 
-envirt 
  

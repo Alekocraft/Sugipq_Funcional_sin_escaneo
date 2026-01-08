@@ -8,6 +8,7 @@ import logging
 import secrets
 import hashlib
 from datetime import datetime, timedelta
+from utils.helpers import sanitizar_username, sanitizar_email, sanitizar_ip  # ✅ CORRECCIÓN: Importar funciones de sanitización
 
 logger = logging.getLogger(__name__)
 
@@ -57,11 +58,10 @@ class ConfirmacionAsignacionesModel:
                 INSERT INTO TokensConfirmacionAsignacion 
                 (AsignacionId, Token, TokenHash, UsuarioEmail, FechaExpiracion, Utilizado, FechaCreacion)
                 VALUES (?, ?, ?, ?, ?, 0, GETDATE())
-            """, (asignacion_id, token_raw, token_hash, usuario_ad_email, fecha_expiracion))
+            """, (asignacion_id, token_raw, token_hash, sanitizar_email(usuario_ad_email), fecha_expiracion))  # ✅ CORRECCIÓN
             
             conn.commit()
-            logger.info(f"Token generado para asignación {asignacion_id}")
-            
+            logger.info(f"Token generado para asignación {asignacion_id} para usuario: {sanitizar_email(usuario_ad_email)}")  # ✅ CORRECCIÓN
             return token_raw
             
         except Exception as e:
@@ -180,8 +180,8 @@ class ConfirmacionAsignacionesModel:
                 'categoria': categoria,
                 'oficina_id': oficina_id,
                 'oficina_nombre': oficina_nombre,
-                'usuario_email': usuario_email,
-                'usuario_nombre': usuario_nombre,
+                'usuario_email': sanitizar_email(usuario_email),  # ✅ CORRECCIÓN
+                'usuario_nombre': sanitizar_username(usuario_nombre),  # ✅ CORRECCIÓN
                 'fecha_asignacion': fecha_asignacion,
                 'fecha_expiracion': fecha_expiracion,
                 'estado': estado,
@@ -251,7 +251,9 @@ class ConfirmacionAsignacionesModel:
                     DireccionIP = ?,
                     UserAgent = ?
                 WHERE TokenHash = ?
-            """, (usuario_ad_username, numero_identificacion, direccion_ip, user_agent, token_hash))
+            """, (sanitizar_username(usuario_ad_username), numero_identificacion, 
+                  sanitizar_ip(direccion_ip) if direccion_ip else None,  # ✅ CORRECCIÓN
+                  user_agent, token_hash))
             
             # Actualizar estado de la asignación
             cursor.execute("""
@@ -260,7 +262,7 @@ class ConfirmacionAsignacionesModel:
                     FechaConfirmacion = GETDATE(),
                     UsuarioConfirmacion = ?
                 WHERE AsignacionId = ?
-            """, (usuario_ad_username, asignacion_id))
+            """, (sanitizar_username(usuario_ad_username), asignacion_id))  # ✅ CORRECCIÓN
             
             # Registrar en historial
             cursor.execute("""
@@ -271,15 +273,16 @@ class ConfirmacionAsignacionesModel:
             """, (
                 validacion['producto_id'],
                 validacion['oficina_id'],
-                usuario_ad_username,
-                validacion['usuario_nombre'],
-                validacion['usuario_email'],
-                f"Confirmación realizada desde IP: {direccion_ip or 'N/A'}. Cédula: {numero_identificacion}"
+                sanitizar_username(usuario_ad_username),  # ✅ CORRECCIÓN
+                sanitizar_username(validacion['usuario_nombre']),  # ✅ CORRECCIÓN
+                sanitizar_email(validacion['usuario_email']),  # ✅ CORRECCIÓN
+                f"Confirmación realizada desde IP: {sanitizar_ip(direccion_ip) if direccion_ip else 'N/A'}. Cédula: [PROTEGIDA]"  # ✅ CORRECCIÓN: No mostrar número de identificación
             ))
             
             conn.commit()
             
-            logger.info(f"Asignación {asignacion_id} confirmada por {usuario_ad_username} (CC: {numero_identificacion})")
+            # ✅ CORRECCIÓN: Línea 283 - No mostrar información sensible
+            logger.info(f"Asignación {asignacion_id} confirmada por {sanitizar_username(usuario_ad_username)} (CC: [PROTEGIDO])")
             
             return {
                 'success': True,
@@ -347,12 +350,21 @@ class ConfirmacionAsignacionesModel:
             
             if usuario_email:
                 query += " AND a.UsuarioADEmail = ?"
-                cursor.execute(query, (usuario_email,))
+                cursor.execute(query, (sanitizar_email(usuario_email),))  # ✅ CORRECCIÓN
             else:
                 cursor.execute(query)
             
             cols = [c[0] for c in cursor.description]
-            return [dict(zip(cols, row)) for row in cursor.fetchall()]
+            results = [dict(zip(cols, row)) for row in cursor.fetchall()]
+            
+            # Sanitizar emails en los resultados
+            for result in results:
+                if 'UsuarioADEmail' in result:
+                    result['UsuarioADEmail'] = sanitizar_email(result['UsuarioADEmail'])
+                if 'UsuarioADNombre' in result:
+                    result['UsuarioADNombre'] = sanitizar_username(result['UsuarioADNombre'])
+            
+            return results
             
         except Exception as e:
             logger.error(f"Error obteniendo confirmaciones pendientes: {e}")

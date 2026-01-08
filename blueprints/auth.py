@@ -7,13 +7,15 @@ from functools import wraps
 # =====================================================
 # CONFIGURACIÓN DEL BLUEPRINT
 # =====================================================
+
 auth_bp = Blueprint('auth', __name__, url_prefix='')
+
 
 # =====================================================
 # CONFIGURACIÓN DE SESIÓN MODIFICADA
 # =====================================================
 SESSION_TIMEOUT_MINUTES = 5  # REDUCIDO: 30 → 5 minutos de inactividad
-SESSION_ABSOLUTE_TIMEOUT_HOURS = 3  # REDUCIDO: 8 → 3 horas máximo
+SESSION_ABSOLUTE_TIMEOUT_HOURS = 3  
 
 # =====================================================
 # FUNCIONES DE MANEJO DE SESIÓN

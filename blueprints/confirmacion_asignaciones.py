@@ -1,11 +1,12 @@
 ﻿# blueprints/confirmacion_asignaciones.py
+ 
 """
 Blueprint para gestionar confirmaciones de asignaciones mediante tokens temporales.
-VERSION MODIFICADA: Incluye validación y almacenamiento de número de identificación (cédula)
+VERSION CORREGIDA: Usa helpers desde utils.helpers
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from models.confirmacion_asignaciones_model import ConfirmacionAsignacionesModel
-from helpers import sanitizar_email, sanitizar_username, sanitizar_ip
+from utils.helpers import sanitizar_email, sanitizar_username, sanitizar_ip  # CORRECCIÓN: usa utils.helpers
 from utils.auth import login_required
 from datetime import datetime
 import logging

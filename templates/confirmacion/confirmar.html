@@ -1,7 +1,7 @@
 <!-- templates/confirmacion/confirmar.html -->
 {% extends "base.html" %}
 
-{% block title %}Confirmar Asignacion de Inventario{% endblock %}
+{% block title %}Confirmar Recepción de Activo Corporativo{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -11,7 +11,7 @@
             <div class="card shadow-lg">
                 <div class="card-header bg-primary text-white">
                     <h3 class="mb-0">
-                        <i class="fas fa-check-circle"></i> Confirmacion de Asignacion
+                        <i class="fas fa-check-circle"></i> Confirmar Recepción de Activo Corporativo
                     </h3>
                 </div>
                 
@@ -20,26 +20,26 @@
                     {% if error %}
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Error de Autenticacion:</strong> {{ error }}
+                        <strong>Error de verificación:</strong> {{ error }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                     {% endif %}
 
-                    <!-- Informacion de la asignacion -->
+                    <!-- Información de la asignación -->
                     <div class="alert alert-info">
-                        <h5><i class="fas fa-info-circle"></i> Informacion de la Asignacion</h5>
+                        <h5><i class="fas fa-info-circle"></i> Detalles del Activo Corporativo a Recibir</h5>
                         <hr>
                         <div class="row">
                             <div class="col-md-6">
                                 <p><strong>Producto:</strong><br>{{ asignacion.producto_nombre }}</p>
-                                <p><strong>Codigo:</strong> {{ asignacion.codigo_unico }}</p>
-                                <p><strong>Categoria:</strong> {{ asignacion.categoria or 'N/A' }}</p>
+                                <p><strong>Código único:</strong> {{ asignacion.codigo_unico }}</p>
+                                <p><strong>Categoría:</strong> {{ asignacion.categoria or 'N/A' }}</p>
                             </div>
                             <div class="col-md-6">
                                 <p><strong>Oficina:</strong><br>{{ asignacion.oficina_nombre }}</p>
-                                <p><strong>Fecha de Asignacion:</strong><br>{{ asignacion.fecha_asignacion.strftime('%d/%m/%Y %H:%M') }}</p>
+                                <p><strong>Fecha de asignación:</strong><br>{{ asignacion.fecha_asignacion.strftime('%d/%m/%Y %H:%M') }}</p>
                                 <p><strong>Asignado a:</strong><br>{{ asignacion.usuario_nombre }}</p>
-                                <p><strong>Email:</strong><br><span class="badge bg-secondary">{{ asignacion.usuario_email }}</span></p>
+                                <p><strong>Email corporativo:</strong><br><span class="badge bg-secondary">{{ asignacion.usuario_email }}</span></p>
                             </div>
                         </div>
                     </div>
@@ -48,71 +48,71 @@
                     {% if asignacion.dias_restantes <= 2 %}
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Atencion:</strong> Este token expira en {{ asignacion.dias_restantes }} dia(s).
-                        Fecha de expiracion: {{ asignacion.fecha_expiracion.strftime('%d/%m/%Y %H:%M') }}
+                        <strong>Atención:</strong> Este enlace de confirmación vence en {{ asignacion.dias_restantes }} día(s).
+                        Fecha de vencimiento: {{ asignacion.fecha_expiracion.strftime('%d/%m/%Y %H:%M') }}
                     </div>
                     {% endif %}
 
-                    <!-- Formulario de confirmacion -->
+                    <!-- Formulario de confirmación -->
                     <div class="card mt-4">
                         <div class="card-body">
                             <h5 class="card-title">
-                                <i class="fas fa-lock"></i> Confirmar Recepcion con Active Directory
+                                <i class="fas fa-lock"></i> Verificar tu Identidad
                             </h5>
                             <p class="text-muted">
-                                Para confirmar que ha recibido este elemento, debe autenticarse con sus credenciales del Active Directory.
+                                Para confirmar que has recibido este activo corporativo, necesitamos verificar tu identidad con las credenciales de red de la empresa.
                             </p>
 
                             <form method="POST" action="{{ url_for('confirmacion.confirmar_asignacion', token=token) }}" id="formConfirmacion">
                                 <input type="hidden" name="email" value="{{ asignacion.usuario_email }}">
                                 
                                 {% if ldap_disponible %}
-                                <!-- Autenticacion con AD -->
+                                <!-- Autenticación con credenciales de red -->
                                 <div id="authSection">
                                     <div class="alert alert-info alert-sm mb-3">
                                         <i class="fas fa-shield-alt"></i>
                                         <small>
-                                            <strong>Importante:</strong> Debe usar las credenciales del usuario asignado: 
+                                            <strong>Nota:</strong> Debes usar las credenciales del usuario asignado: 
                                             <strong class="text-primary">{{ asignacion.usuario_email }}</strong>
                                         </small>
                                     </div>
 
                                     <div class="form-group mb-3">
                                         <label for="username">
-                                            <i class="fas fa-user"></i> Usuario Active Directory <span class="text-danger">*</span>
+                                            <i class="fas fa-user"></i> Usuario Correo electrónico<span class="text-danger">*</span>
                                         </label>
                                         <input type="text" 
                                                class="form-control {% if error %}is-invalid{% endif %}" 
                                                id="username" 
                                                name="username" 
-                                               placeholder="Ej: lramirez"
+                                               placeholder="Ej: gsuarez"
                                                value="{{ username_anterior or '' }}"
                                                required
                                                autocomplete="username"
                                                autofocus>
-                                        <small class="form-text text-muted">Su nombre de usuario de red (sin @qualitascolombia.com.co)</small>
+                                        <small class="form-text text-muted">Tu nombre de usuario de la red corporativa (sin el dominio @qualitascolombia.com.co)</small>
                                     </div>
 
                                     <div class="form-group mb-3">
                                         <label for="password">
-                                            <i class="fas fa-lock"></i> Contrasena <span class="text-danger">*</span>
+                                            <i class="fas fa-lock"></i> Contraseña de correo electrónico <span class="text-danger">*</span>
                                         </label>
                                         <div class="input-group">
                                             <input type="password" 
                                                    class="form-control {% if error %}is-invalid{% endif %}" 
                                                    id="password" 
                                                    name="password" 
-                                                   placeholder="Su contrasena de red"
+                                                   placeholder="Tu contraseña de red"
                                                    required
                                                    autocomplete="current-password">
                                             <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                                 <i class="fas fa-eye" id="toggleIcon"></i>
                                             </button>
                                         </div>
-                                        <small class="form-text text-muted">La misma que usa para iniciar sesion en Windows</small>
+                                        <small class="form-text text-muted">La misma contraseña que usas para iniciar sesión en tu computador de la empresa</small>
                                     </div>
 
-                                    <!-- NUEVO CAMPO: Número de Identificación (Cédula) -->
+                                    <!-- Número de Identificación (Cédula) -->
                                     <div class="form-group mb-3">
                                         <label for="numero_identificacion">
                                             <i class="fas fa-id-card"></i> Número de Identificación (Cédula) <span class="text-danger">*</span>
@@ -126,17 +126,17 @@
                                                maxlength="20"
                                                required
                                                autocomplete="off">
-                                        <small class="form-text text-muted">Ingrese su número de cédula o documento de identidad (solo números)</small>
+                                        <small class="form-text text-muted">Ingresa tu número de cédula o documento de identidad (solo números)</small>
                                     </div>
                                 </div>
                                 {% else %}
-                                <!-- Sin autenticacion AD disponible -->
+                                <!-- Sin verificación disponible -->
                                 <input type="hidden" name="sin_autenticar" value="true">
                                 <div class="alert alert-warning">
                                     <i class="fas fa-exclamation-triangle"></i>
-                                    <strong>Sistema de autenticacion no disponible.</strong><br>
-                                    La confirmacion se registrara sin validacion de credenciales.
-                                    Por favor contacte al administrador del sistema.
+                                    <strong>Sistema de verificación temporalmente no disponible.</strong><br>
+                                    La confirmación se registrará sin verificación de identidad.
+                                    Por favor contacta al área de tecnología si necesitas asistencia.
                                 </div>
                                 
                                 <!-- Campo de cédula también en modo sin autenticación -->
@@ -153,11 +153,11 @@
                                            maxlength="20"
                                            required
                                            autocomplete="off">
-                                    <small class="form-text text-muted">Ingrese su número de cédula o documento de identidad (solo números)</small>
+                                    <small class="form-text text-muted">Ingresa tu número de cédula o documento de identidad (solo números)</small>
                                 </div>
                                 {% endif %}
 
-                                <!-- Checkbox de confirmacion -->
+                                <!-- Checkbox de confirmación -->
                                 <div class="form-check mb-3 p-3 bg-light rounded">
                                     <input class="form-check-input" 
                                            type="checkbox" 
@@ -166,14 +166,14 @@
                                     <label class="form-check-label" for="confirmoRecepcion">
                                         <strong>Confirmo bajo mi responsabilidad que:</strong><br>
                                         <ul class="mb-0 mt-2">
-                                            <li>He recibido fisicamente el producto: <span class="text-primary">{{ asignacion.producto_nombre }}</span></li>
-                                            <li>El producto esta en condiciones adecuadas</li>
-                                            <li>Acepto la responsabilidad sobre este elemento</li>
+                                            <li>He recibido físicamente el producto: <span class="text-primary">{{ asignacion.producto_nombre }}</span></li>
+                                            <li>El producto está en buenas condiciones de funcionamiento</li>
+                                            <li>Acepto la responsabilidad sobre este activo corporativo asignado</li>
                                         </ul>
                                     </label>
                                 </div>
 
-                                <!-- NUEVO: Autorización de Tratamiento de Datos Personales -->
+                                <!-- Autorización de Tratamiento de Datos Personales -->
                                 <div class="card border-primary mb-3">
                                     <div class="card-header bg-primary text-white">
                                         <strong><i class="fas fa-shield-alt"></i> Autorización de Tratamiento de Datos Personales</strong>
@@ -207,32 +207,32 @@
                                     <button type="submit" 
                                             class="btn btn-primary btn-lg" 
                                             id="btnConfirmar">
-                                        <i class="fas fa-check"></i> Confirmar Recepcion
+                                        <i class="fas fa-check"></i> Confirmar que he Recibido el Activo Corporativo
                                     </button>
                                 </div>
                             </form>
                         </div>
                     </div>
 
-                    <!-- Informacion adicional -->
+                    <!-- Información adicional -->
                     <div class="mt-4">
                         <div class="card bg-light">
                             <div class="card-body">
-                                <h6 class="card-title"><i class="fas fa-question-circle"></i> Que significa esto?</h6>
+                                <h6 class="card-title"><i class="fas fa-question-circle"></i> ¿Para qué sirve esta confirmación?</h6>
                                 <p class="card-text small mb-0">
-                                    Al confirmar con sus credenciales del Active Directory, usted esta declarando que ha recibido 
-                                    fisicamente el elemento mencionado y que esta en condiciones adecuadas. Esta confirmacion 
-                                    quedara registrada en el sistema de inventario corporativo con:
+                                    Al confirmar con tus credenciales de red, estás declarando oficialmente que has recibido 
+                                    físicamente el activo corporativo mencionado y que está en condiciones adecuadas. Este registro 
+                                    quedará guardado en el sistema de inventario con:
                                 </p>
                                 <ul class="small mb-0 mt-2">
-                                    <li><strong>Usuario AD:</strong> Su identidad verificada</li>
-                                    <li><strong>Número de Identificación:</strong> Su cédula o documento de identidad</li>
-                                    <li><strong>Fecha y Hora:</strong> Timestamp de confirmacion</li>
-                                    <li><strong>Direccion IP:</strong> Desde donde confirmo</li>
-                                    <li><strong>Navegador:</strong> Informacion del dispositivo</li>
+                                    <li><strong>Usuario verificado:</strong> Tu identidad confirmada</li>
+                                    <li><strong>Número de Identificación:</strong> Tu cédula o documento</li>
+                                    <li><strong>Fecha y Hora:</strong> Momento exacto de confirmación</li>
+                                    <li><strong>Dirección IP:</strong> Ubicación desde donde confirmaste</li>
+                                    <li><strong>Dispositivo:</strong> Información del navegador usado</li>
                                 </ul>
                                 <p class="small text-muted mb-0 mt-2">
-                                    <i class="fas fa-info-circle"></i> Esta informacion garantiza la autenticidad y trazabilidad de la confirmacion.
+                                    <i class="fas fa-info-circle"></i> Esta información garantiza la autenticidad y trazabilidad de tu confirmación.
                                 </p>
                             </div>
                         </div>
@@ -242,7 +242,7 @@
                 <div class="card-footer text-muted text-center">
                     <small>
                         <i class="fas fa-shield-alt"></i> 
-                        Conexion segura - Sus credenciales son validadas contra Active Directory
+                        Conexión segura - Tus credenciales se validan contra el sistema de red corporativo
                     </small>
                 </div>
             </div>
@@ -316,7 +316,7 @@
 </style>
 
 <script>
-// Toggle password visibility
+// Mostrar/ocultar contraseña
 document.getElementById('togglePassword').addEventListener('click', function() {
     const passwordInput = document.getElementById('password');
     const toggleIcon = document.getElementById('toggleIcon');
@@ -358,7 +358,7 @@ document.getElementById('formConfirmacion').addEventListener('submit', function(
     }
     
     btnConfirmar.disabled = true;
-    btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando credenciales y confirmando...';
+    btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando y registrando confirmación...';
 });
 </script>
 {% endblock %}
