@@ -547,7 +547,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (invModal) {
         invModal.addEventListener('show.bs.modal', function () {
-            fetch('{{ url_for("inventario_corporativo.api_estadisticas_dashboard") }}')
+            fetch('/inventario-corporativo/api/estadisticas-dashboard')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Error en la respuesta: ' + response.status);

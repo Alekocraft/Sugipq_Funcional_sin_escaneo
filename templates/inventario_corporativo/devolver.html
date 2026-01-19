@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Devolver Producto - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="container-fluid fade-in">
+    <!-- Botón de volver -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <a href="/inventario-corporativo" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Volver al Inventario
+            </a>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold" style="color: #0098B1;">
+                <i class="fas fa-undo-alt"></i> Devolver Producto
+            </h1>
+            <p class="text-muted">Procesar devolución de productos asignados</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Columna izquierda: Formulario -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>Información de Devolución
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="formDevolucion">
+                        <!-- Seleccionar Asignación -->
+                        <div class="mb-4">
+                            <label for="asignacion_id" class="form-label fw-bold">
+                                <i class="fas fa-box me-2"></i>Producto Asignado *
+                            </label>
+                            <select class="form-select" id="asignacion_id" name="asignacion_id" required>
+                                <option value="">Seleccione un producto...</option>
+                                {% for asig in asignaciones %}
+                                <option value="{{ asig.AsignacionId }}" 
+                                    data-producto="{{ asig.NombreProducto }}"
+                                    data-codigo="{{ asig.CodigoUnico }}"
+                                    data-usuario="{{ asig.UsuarioADNombre }}"
+                                    data-email="{{ asig.UsuarioADEmail }}"
+                                    data-oficina="{{ asig.Oficina }}"
+                                    data-fecha="{{ asig.FechaAsignacion.strftime('%d/%m/%Y') if asig.FechaAsignacion else 'N/A' }}">
+                                    {{ asig.CodigoUnico }} - {{ asig.NombreProducto }}
+                                    (Asignado a: {{ asig.UsuarioADNombre }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">
+                                Seleccione el producto que se va a devolver
+                            </small>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="mb-4">
+                            <label for="cantidad" class="form-label fw-bold">
+                                <i class="fas fa-sort-numeric-up me-2"></i>Cantidad a Devolver *
+                            </label>
+                            <input type="number" class="form-control" id="cantidad" name="cantidad" 
+                                   min="1" value="1" required>
+                            <small class="text-muted">
+                                Cantidad de unidades a devolver
+                            </small>
+                        </div>
+
+                        <!-- Motivo -->
+                        <div class="mb-4">
+                            <label for="motivo" class="form-label fw-bold">
+                                <i class="fas fa-question-circle me-2"></i>Motivo de Devolución *
+                            </label>
+                            <select class="form-select" id="motivo" name="motivo" required>
+                                <option value="">Seleccione un motivo...</option>
+                                <option value="Finalización de proyecto">Finalización de proyecto</option>
+                                <option value="Cambio de área">Cambio de área</option>
+                                <option value="Equipo dañado">Equipo dañado</option>
+                                <option value="Equipo obsoleto">Equipo obsoleto</option>
+                                <option value="Ya no se necesita">Ya no se necesita</option>
+                                <option value="Otro">Otro motivo</option>
+                            </select>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div class="mb-4">
+                            <label for="observaciones" class="form-label fw-bold">
+                                <i class="fas fa-comment me-2"></i>Observaciones
+                            </label>
+                            <textarea class="form-control" id="observaciones" name="observaciones" 
+                                      rows="3" placeholder="Agregue información adicional sobre la devolución..."></textarea>
+                            <small class="text-muted">
+                                Información adicional sobre el estado del producto o motivo de devolución
+                            </small>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger flex-grow-1">
+                                <i class="fas fa-undo-alt me-2"></i>Procesar Devolución
+                            </button>
+                            <a href="/inventario-corporativo" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna derecha: Vista previa de asignación seleccionada -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm" id="vistaPrevia" style="display: none;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Detalles de la Asignación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">Producto</h6>
+                        <p class="fw-bold mb-0" id="preview-producto">-</p>
+                        <small class="text-muted" id="preview-codigo">-</small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <h6 class="text-muted mb-2">Usuario Asignado</h6>
+                            <p class="mb-0" id="preview-usuario">-</p>
+                            <small class="text-muted" id="preview-email">-</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h6 class="text-muted mb-2">Oficina</h6>
+                            <p class="mb-0" id="preview-oficina">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">Fecha de Asignación</h6>
+                        <p class="mb-0" id="preview-fecha">-</p>
+                    </div>
+                    
+                    <div class="alert alert-warning mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Importante:</strong> Al procesar la devolución, el stock del producto 
+                        se incrementará y la asignación quedará marcada como devuelta.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instrucciones -->
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Instrucciones
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0 ps-3">
+                        <li class="mb-2">Seleccione el producto que se va a devolver de la lista</li>
+                        <li class="mb-2">Ingrese la cantidad de unidades a devolver</li>
+                        <li class="mb-2">Especifique el motivo de la devolución</li>
+                        <li class="mb-2">Agregue observaciones adicionales si es necesario</li>
+                        <li>Confirme la devolución para actualizar el inventario</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAsignacion = document.getElementById('asignacion_id');
+    const vistaPrevia = document.getElementById('vistaPrevia');
+    
+    // Actualizar vista previa cuando se selecciona una asignación
+    selectAsignacion.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (this.value) {
+            // Mostrar y llenar vista previa
+            vistaPrevia.style.display = 'block';
+            document.getElementById('preview-producto').textContent = selectedOption.dataset.producto;
+            document.getElementById('preview-codigo').textContent = 'Código: ' + selectedOption.dataset.codigo;
+            document.getElementById('preview-usuario').textContent = selectedOption.dataset.usuario;
+            document.getElementById('preview-email').textContent = selectedOption.dataset.email;
+            document.getElementById('preview-oficina').textContent = selectedOption.dataset.oficina;
+            document.getElementById('preview-fecha').textContent = selectedOption.dataset.fecha;
+        } else {
+            // Ocultar vista previa
+            vistaPrevia.style.display = 'none';
+        }
+    });
+    
+    // Validación del formulario
+    document.getElementById('formDevolucion').addEventListener('submit', function(e) {
+        const cantidad = document.getElementById('cantidad').value;
+        const motivo = document.getElementById('motivo').value;
+        
+        if (!cantidad || cantidad <= 0) {
+            e.preventDefault();
+            alert('La cantidad debe ser mayor a 0');
+            return false;
+        }
+        
+        if (!motivo) {
+            e.preventDefault();
+            alert('Debe seleccionar un motivo de devolución');
+            return false;
+        }
+        
+        // Confirmación
+        const producto = document.getElementById('preview-producto').textContent;
+        if (!confirm(`¿Está seguro que desea procesar la devolución de ${cantidad} unidad(es) del producto "${producto}"?`)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

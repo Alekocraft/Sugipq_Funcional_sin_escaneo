@@ -34,6 +34,8 @@
     <Content Include="templates\confirmacion\mis_pendientes.html" />
     <Content Include="templates\confirmacion\ya_confirmado.htm" />
     <Content Include="templates\inventario_corporativo\confirmaciones.html" />
+    <Content Include="templates\inventario_corporativo\devolver.html" />
+    <Content Include="templates\inventario_corporativo\traspasar.html" />
     <Content Include="templates\prestamos\elemento_crear.html" />
     <Content Include="templates\auth\listar.html" />
     <Content Include="templates\auth\login.html" />

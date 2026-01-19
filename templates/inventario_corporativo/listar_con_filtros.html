@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-Inventario Corporativo - Sistema de Gestión
+Inventario Corporativo - Sistema de GestiÃ³n
 {% endblock %}
 
 {% block content %}
@@ -28,7 +28,7 @@ Inventario Corporativo - Sistema de Gestión
         </div>
     </div>
 
-    <!-- ⬇️ ESTADÍSTICAS SIMPLIFICADAS -->
+    <!-- â¬‡ï¸ ESTADÃSTICAS SIMPLIFICADAS -->
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card border-0 bg-primary text-white shadow-sm">
@@ -80,9 +80,9 @@ Inventario Corporativo - Sistema de Gestión
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Filtrar por Categoría</label>
+                    <label class="form-label">Filtrar por CategorÃ­a</label>
                     <select name="categoria" class="form-select">
-                        <option value="">Todas las categorías</option>
+                        <option value="">Todas las categorÃ­as</option>
                         {% for categoria in categorias %}
                         <option value="{{ categoria.nombre }}" {% if filtro_categoria==categoria.nombre %}selected{% endif %}>
                             {{ categoria.nombre }}
@@ -114,7 +114,7 @@ Inventario Corporativo - Sistema de Gestión
             <span class="text-muted">Mostrando {{ productos|length }} de {{ total_productos }} productos</span>
         </div>
         <div>
-            <a href="{{ url_for('inventario_corporativo.exportar_inventario_corporativo_excel', tipo=tipo) }}?oficina={{ filtro_oficina }}&categoria={{ filtro_categoria }}&stock={{ filtro_stock }}"
+            <a href="/inventario-corporativo/exportar/excel/{{ tipo }}?oficina={{ filtro_oficina }}&categoria={{ filtro_categoria }}&stock={{ filtro_stock }}"
                class="btn btn-success">
                 <i class="fas fa-file-excel"></i> Exportar a Excel
             </a>
@@ -128,9 +128,9 @@ Inventario Corporativo - Sistema de Gestión
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Código</th>
+                            <th>CÃ³digo</th>
                             <th>Producto</th>
-                            <th>Categoría</th>
+                            <th>CategorÃ­a</th>
                             <th>Oficina</th>
                             <th>Valor</th>
                             <th>Stock</th>

@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% block title %}Traspasar Producto - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="container-fluid fade-in">
+    <!-- Botón de volver -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <a href="/inventario-corporativo" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Volver al Inventario
+            </a>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold" style="color: #0098B1;">
+                <i class="fas fa-exchange-alt"></i> Traspasar Producto entre Oficinas
+            </h1>
+            <p class="text-muted">Mover productos de una oficina a otra</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Columna izquierda: Formulario -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>Información del Traspaso
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="formTraspaso">
+                        <!-- Seleccionar Producto -->
+                        <div class="mb-4">
+                            <label for="producto_id" class="form-label fw-bold">
+                                <i class="fas fa-box me-2"></i>Producto *
+                            </label>
+                            <select class="form-select" id="producto_id" name="producto_id" required>
+                                <option value="">Seleccione un producto...</option>
+                                {% for prod in productos %}
+                                <option value="{{ prod.ProductoId }}" 
+                                    data-nombre="{{ prod.NombreProducto }}"
+                                    data-codigo="{{ prod.CodigoUnico }}"
+                                    data-stock="{{ prod.CantidadDisponible }}"
+                                    data-categoria="{{ prod.Categoria }}">
+                                    {{ prod.CodigoUnico }} - {{ prod.NombreProducto }} 
+                                    (Stock: {{ prod.CantidadDisponible }} unidades)
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">
+                                Seleccione el producto que desea traspasar
+                            </small>
+                        </div>
+
+                        <!-- Oficina Origen -->
+                        <div class="mb-4">
+                            <label for="oficina_origen_id" class="form-label fw-bold">
+                                <i class="fas fa-building me-2"></i>Oficina Origen *
+                            </label>
+                            <select class="form-select" id="oficina_origen_id" name="oficina_origen_id" required>
+                                <option value="">Seleccione oficina de origen...</option>
+                                {% for oficina in oficinas %}
+                                <option value="{{ oficina.id }}" data-nombre="{{ oficina.nombre }}">
+                                    {{ oficina.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">
+                                Oficina desde donde se traslada el producto
+                            </small>
+                        </div>
+
+                        <!-- Oficina Destino -->
+                        <div class="mb-4">
+                            <label for="oficina_destino_id" class="form-label fw-bold">
+                                <i class="fas fa-building me-2"></i>Oficina Destino *
+                            </label>
+                            <select class="form-select" id="oficina_destino_id" name="oficina_destino_id" required>
+                                <option value="">Seleccione oficina de destino...</option>
+                                {% for oficina in oficinas %}
+                                <option value="{{ oficina.id }}" data-nombre="{{ oficina.nombre }}">
+                                    {{ oficina.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">
+                                Oficina a donde se traslada el producto
+                            </small>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="mb-4">
+                            <label for="cantidad" class="form-label fw-bold">
+                                <i class="fas fa-sort-numeric-up me-2"></i>Cantidad a Traspasar *
+                            </label>
+                            <input type="number" class="form-control" id="cantidad" name="cantidad" 
+                                   min="1" value="1" required>
+                            <small class="text-muted">
+                                <span id="stockDisponible">Stock disponible: -</span>
+                            </small>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div class="mb-4">
+                            <label for="observaciones" class="form-label fw-bold">
+                                <i class="fas fa-comment me-2"></i>Observaciones
+                            </label>
+                            <textarea class="form-control" id="observaciones" name="observaciones" 
+                                      rows="3" placeholder="Agregue información adicional sobre el traspaso..."></textarea>
+                            <small class="text-muted">
+                                Motivo del traspaso o información adicional relevante
+                            </small>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="fas fa-exchange-alt me-2"></i>Realizar Traspaso
+                            </button>
+                            <a href="/inventario-corporativo" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna derecha: Vista previa del traspaso -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm" id="vistaPrevia" style="display: none;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Resumen del Traspaso
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">Producto</h6>
+                        <p class="fw-bold mb-0" id="preview-producto">-</p>
+                        <small class="text-muted" id="preview-codigo">-</small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="text-center my-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div class="text-center">
+                                <div class="badge bg-danger mb-2" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                                    <i class="fas fa-building me-2"></i>
+                                    <span id="preview-origen">-</span>
+                                </div>
+                                <p class="small text-muted mb-0">Origen</p>
+                            </div>
+                            
+                            <div class="mx-4">
+                                <i class="fas fa-arrow-right fa-2x text-primary"></i>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="badge bg-success mb-2" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                                    <i class="fas fa-building me-2"></i>
+                                    <span id="preview-destino">-</span>
+                                </div>
+                                <p class="small text-muted mb-0">Destino</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">Cantidad a Traspasar</h6>
+                        <p class="fw-bold mb-0">
+                            <span class="badge bg-primary" style="font-size: 1.2rem;">
+                                <span id="preview-cantidad">-</span> unidades
+                            </span>
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Nota:</strong> El traspaso se registrará en el historial 
+                        como salida de la oficina origen y entrada en la oficina destino.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instrucciones -->
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Instrucciones
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0 ps-3">
+                        <li class="mb-2">Seleccione el producto que desea traspasar</li>
+                        <li class="mb-2">Indique la oficina de origen</li>
+                        <li class="mb-2">Seleccione la oficina de destino (debe ser diferente al origen)</li>
+                        <li class="mb-2">Especifique la cantidad a traspasar (no debe exceder el stock disponible)</li>
+                        <li class="mb-2">Agregue observaciones sobre el motivo del traspaso</li>
+                        <li>Confirme el traspaso para registrar el movimiento</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectProducto = document.getElementById('producto_id');
+    const selectOrigen = document.getElementById('oficina_origen_id');
+    const selectDestino = document.getElementById('oficina_destino_id');
+    const inputCantidad = document.getElementById('cantidad');
+    const vistaPrevia = document.getElementById('vistaPrevia');
+    
+    // Actualizar stock disponible cuando se selecciona un producto
+    selectProducto.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (this.value) {
+            const stock = selectedOption.dataset.stock;
+            document.getElementById('stockDisponible').textContent = `Stock disponible: ${stock} unidades`;
+            inputCantidad.max = stock;
+            
+            actualizarVistaPrevia();
+        } else {
+            document.getElementById('stockDisponible').textContent = 'Stock disponible: -';
+            inputCantidad.max = '';
+        }
+    });
+    
+    // Actualizar vista previa con todos los cambios
+    selectOrigen.addEventListener('change', actualizarVistaPrevia);
+    selectDestino.addEventListener('change', actualizarVistaPrevia);
+    inputCantidad.addEventListener('input', actualizarVistaPrevia);
+    
+    function actualizarVistaPrevia() {
+        const producto = selectProducto.options[selectProducto.selectedIndex];
+        const origen = selectOrigen.options[selectOrigen.selectedIndex];
+        const destino = selectDestino.options[selectDestino.selectedIndex];
+        const cantidad = inputCantidad.value;
+        
+        if (selectProducto.value && selectOrigen.value && selectDestino.value && cantidad) {
+            vistaPrevia.style.display = 'block';
+            
+            document.getElementById('preview-producto').textContent = producto.dataset.nombre;
+            document.getElementById('preview-codigo').textContent = 'Código: ' + producto.dataset.codigo;
+            document.getElementById('preview-origen').textContent = origen.dataset.nombre;
+            document.getElementById('preview-destino').textContent = destino.dataset.nombre;
+            document.getElementById('preview-cantidad').textContent = cantidad;
+        } else {
+            vistaPrevia.style.display = 'none';
+        }
+    }
+    
+    // Validación del formulario
+    document.getElementById('formTraspaso').addEventListener('submit', function(e) {
+        const origenId = selectOrigen.value;
+        const destinoId = selectDestino.value;
+        const cantidad = parseInt(inputCantidad.value);
+        const stockMax = parseInt(inputCantidad.max);
+        
+        // Validar que origen y destino sean diferentes
+        if (origenId === destinoId) {
+            e.preventDefault();
+            alert('La oficina de origen y destino deben ser diferentes');
+            return false;
+        }
+        
+        // Validar cantidad
+        if (!cantidad || cantidad <= 0) {
+            e.preventDefault();
+            alert('La cantidad debe ser mayor a 0');
+            return false;
+        }
+        
+        if (cantidad > stockMax) {
+            e.preventDefault();
+            alert(`La cantidad no puede ser mayor al stock disponible (${stockMax} unidades)`);
+            return false;
+        }
+        
+        // Confirmación
+        const producto = selectProducto.options[selectProducto.selectedIndex].dataset.nombre;
+        const origen = selectOrigen.options[selectOrigen.selectedIndex].dataset.nombre;
+        const destino = selectDestino.options[selectDestino.selectedIndex].dataset.nombre;
+        
+        if (!confirm(`¿Está seguro que desea traspasar ${cantidad} unidad(es) de "${producto}" desde "${origen}" hacia "${destino}"?`)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

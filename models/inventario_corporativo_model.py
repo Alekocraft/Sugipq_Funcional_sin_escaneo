@@ -16,9 +16,9 @@ class InventarioCorporativoModel:
     @staticmethod
     def generar_codigo_unico():
         """
-        Proxy estático para generar códigos únicos desde el modelo.
+        Proxy estÃ¡tico para generar cÃ³digos Ãºnicos desde el modelo.
         Permite usar InventarioCorporativoModel.generar_codigo_unico()
-        manteniendo también la función de módulo.
+        manteniendo tambiÃ©n la funciÃ³n de mÃ³dulo.
         """
         return generar_codigo_unico()
 
@@ -65,7 +65,7 @@ class InventarioCorporativoModel:
 
     @staticmethod
     def obtener_todos_con_oficina():
-        """Obtener todos los productos con información de oficina asignada"""
+        """Obtener todos los productos con informaciÃ³n de oficina asignada"""
         conn = get_database_connection()
         if not conn:
             return []
@@ -326,8 +326,8 @@ class InventarioCorporativoModel:
     @staticmethod
     def obtener_categorias():
         """
-        Retorna todas las categorías activas desde la tabla CategoriasProductos,
-        incluso si todavía no tienen productos asociados.
+        Retorna todas las categorÃ­as activas desde la tabla CategoriasProductos,
+        incluso si todavÃ­a no tienen productos asociados.
         """
         conn = get_database_connection()
         if not conn:
@@ -345,7 +345,7 @@ class InventarioCorporativoModel:
             """)
             return [{'id': r[0], 'nombre': r[1]} for r in cursor.fetchall()]
         except Exception as e:
-            print(f"❌ Error obteniendo categorías activas: {e}")
+            print(f"âŒ Error obteniendo categorÃ­as activas: {e}")
             return []
         finally:
             if cursor: cursor.close()
@@ -412,7 +412,7 @@ class InventarioCorporativoModel:
         try:
             cursor = conn.cursor()
 
-            # 1. PRIMERO: Obtener un UsuarioId válido
+            # 1. PRIMERO: Obtener un UsuarioId vÃ¡lido
             cursor.execute(
                 "SELECT TOP 1 UsuarioId FROM Usuarios WHERE Activo = 1 ORDER BY UsuarioId"
             )
@@ -434,7 +434,7 @@ class InventarioCorporativoModel:
             stock = int(row[0])
             cant = int(cantidad)
 
-            # ✅ CORRECCIÓN: condición correcta
+            # âœ… CORRECCIÃ“N: condiciÃ³n correcta
             if cant <= 0 or cant > stock:
                 return False
 
@@ -445,7 +445,7 @@ class InventarioCorporativoModel:
                 WHERE ProductoId = ?
             """, (cant, int(producto_id)))
 
-            # 4. Crear registro en tabla Asignaciones (CON USUARIO VÁLIDO)
+            # 4. Crear registro en tabla Asignaciones (CON USUARIO VÃLIDO)
             cursor.execute("""
                 INSERT INTO Asignaciones 
                 (ProductoId, OficinaId, UsuarioAsignadoId, FechaAsignacion, Estado, UsuarioAsignador, Activo)
@@ -474,14 +474,14 @@ class InventarioCorporativoModel:
 
     @staticmethod
     def historial_asignaciones(producto_id):
-        """Obtener historial de asignaciones para un producto específico"""
+        """Obtener historial de asignaciones para un producto especÃ­fico"""
         conn = get_database_connection()
         if not conn:
             return []
         cursor = None
         try:
             cursor = conn.cursor()
-            # ✅ CORRECCIÓN: Agregados los campos UsuarioAsignadoNombre y UsuarioAsignadoEmail
+            # âœ… CORRECCIÃ“N: Agregados los campos UsuarioAsignadoNombre y UsuarioAsignadoEmail
             cursor.execute("""
                 SELECT 
                     h.HistorialId,
@@ -626,7 +626,7 @@ class InventarioCorporativoModel:
 
     @staticmethod
     def reporte_stock_bajo():
-        """Productos con stock bajo o crítico"""
+        """Productos con stock bajo o crÃ­tico"""
         conn = get_database_connection()
         if not conn:
             return []
@@ -644,7 +644,7 @@ class InventarioCorporativoModel:
                     p.ValorUnitario,
                     (p.ValorUnitario * p.CantidadDisponible) AS valor_total,
                     CASE 
-                        WHEN p.CantidadDisponible = 0 THEN 'Crítico'
+                        WHEN p.CantidadDisponible = 0 THEN 'CrÃ­tico'
                         WHEN p.CantidadDisponible <= p.CantidadMinima THEN 'Bajo'
                         ELSE 'Normal'
                     END AS estado_stock
@@ -697,7 +697,7 @@ class InventarioCorporativoModel:
 
     @staticmethod
     def obtener_estadisticas_generales():
-        """Estadísticas generales del inventario"""
+        """EstadÃ­sticas generales del inventario"""
         conn = get_database_connection()
         if not conn:
             return {}
@@ -736,7 +736,7 @@ class InventarioCorporativoModel:
             """)
             asignables = cursor.fetchone()[0]
 
-            # Total categorías
+            # Total categorÃ­as
             cursor.execute("""
                 SELECT COUNT(DISTINCT CategoriaId)
                 FROM ProductosCorporativos
