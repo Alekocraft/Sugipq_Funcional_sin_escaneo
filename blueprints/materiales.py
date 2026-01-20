@@ -16,6 +16,10 @@ from models.materiales_model import MaterialModel
 from models.oficinas_model import OficinaModel
 from utils.permissions import can_access
 from utils.filters import verificar_acceso_oficina, filtrar_por_oficina_usuario
+import logging
+from utils.helpers import sanitizar_log_text, sanitizar_username
+
+logger = logging.getLogger(__name__)
 
 # ✅ Importación segura de SolicitudModel
 try:
@@ -23,7 +27,7 @@ try:
     SOLICITUD_MODEL_DISPONIBLE = True
 except ImportError:
     SOLICITUD_MODEL_DISPONIBLE = False
-    print("⚠️ SolicitudModel no disponible - estadísticas deshabilitadas")
+    logger.warning(sanitizar_log_text("⚠️ SolicitudModel no disponible - estadísticas deshabilitadas"))
 
 materiales_bp = Blueprint('materiales', __name__, url_prefix='/materiales')
 
@@ -43,7 +47,7 @@ def _obtener_estadisticas_material(material_id):
     try:
         return SolicitudModel.obtener_estadisticas_por_material(material_id)
     except Exception as e:
-        print(f"⚠️ Error obteniendo estadísticas para material {material_id}: {e}")
+        logger.error(sanitizar_log_text(f"⚠️ Error obteniendo estadísticas para material {material_id}: {e}"))
         return None
 
 
@@ -52,7 +56,7 @@ def listar_materiales():
     """Listar todos los materiales (protegido por permisos)."""
     if not can_access('materiales', 'view'):
         flash('❌ No tienes permisos para acceder a materiales', 'danger')
-        print(f"🚫 Acceso denegado a /materiales - Usuario: {session.get('usuario_nombre')}")
+        logger.warning(sanitizar_log_text(f"🚫 Acceso denegado a /materiales - Usuario: {session.get('usuario_nombre')}"))
         return redirect('/dashboard')
 
     # Inicializar variables con valores por defecto
@@ -63,7 +67,7 @@ def listar_materiales():
     total_entregado = 0
 
     try:
-        print("📦 Cargando lista de materiales...")
+        logger.info(sanitizar_log_text("📦 Cargando lista de materiales..."))
         
         # ✅ Obtener todos los materiales
         todos_materiales = MaterialModel.obtener_todos() or []
@@ -71,12 +75,12 @@ def listar_materiales():
         # ✅ Aplicar filtro por oficina según permisos del usuario
         materiales = filtrar_por_oficina_usuario(todos_materiales, 'oficina_id')
         
-        print(f"📦 Se cargaron {len(materiales)} materiales para mostrar (filtrados por oficina)")
+        logger.info(sanitizar_log_text(f"📦 Se cargaron {len(materiales)} materiales para mostrar (filtrados por oficina)"))
         
     except Exception as e:
-        print(f"❌ Error obteniendo materiales: {e}")
-        import traceback
-        print(traceback.format_exc())
+        logger.error(sanitizar_log_text(f"❌ Error obteniendo materiales: {e}"))
+        
+        logger.debug(sanitizar_log_text('Traceback omitido por seguridad'))
         flash('Error al cargar los materiales', 'danger')
         # Continuar con lista vacía en lugar de fallar completamente
         materiales = []
@@ -103,12 +107,12 @@ def listar_materiales():
                     total_entregado += int(stats[3] or 0)
                     
             except Exception as e:
-                print(f"⚠️ Error procesando estadísticas del material {material.get('id', 'desconocido')}: {e}")
+                logger.error(sanitizar_log_text(f"⚠️ Error procesando estadísticas del material {material.get('id', 'desconocido')}: {e}"))
                 # Continuar con el siguiente material
                 continue
                 
     except Exception as e:
-        print(f"⚠️ Error general en cálculo de estadísticas: {e}")
+        logger.error(sanitizar_log_text(f"⚠️ Error general en cálculo de estadísticas: {e}"))
         # Las estadísticas fallan pero los materiales se muestran igual
 
     return render_template('materials/listar.html', 
@@ -178,7 +182,7 @@ def crear_materiales():
                 filepath = os.path.join(upload_folder, unique_filename)
                 imagen.save(filepath)
                 ruta_imagen = unique_filename
-                print(f"✅ Imagen guardada en: {filepath}")
+                logger.info(sanitizar_log_text(f"✅ Imagen guardada en: {filepath}"))
             
             materiales_data.append({
                 'nombre': nombre,
@@ -206,7 +210,7 @@ def crear_materiales():
             
             if material_id:
                 materiales_creados += 1
-                print(f"✅ Material creado: {material['nombre']} (ID: {material_id})")
+                logger.info(sanitizar_log_text(f"✅ Material creado: {material['nombre']} (ID: {material_id})"))
             else:
                 flash(f'❌ Error al crear el material: {material["nombre"]}', 'danger')
         
@@ -218,9 +222,9 @@ def crear_materiales():
         return redirect('/materiales')
         
     except Exception as e:
-        print(f"❌ Error al crear materiales: {e}")
-        import traceback
-        print(traceback.format_exc())
+        logger.error(sanitizar_log_text(f"❌ Error al crear materiales: {e}"))
+        
+        logger.debug(sanitizar_log_text('Traceback omitido por seguridad'))
         flash('Error al crear los materiales', 'danger')
         return redirect('/materiales/crear')
 
@@ -295,7 +299,7 @@ def editar_material(material_id):
             filepath = os.path.join(upload_folder, unique_filename)
             imagen.save(filepath)
             ruta_imagen = unique_filename
-            print(f"✅ Nueva imagen guardada en: {filepath}")
+            logger.info(sanitizar_log_text(f"✅ Nueva imagen guardada en: {filepath}"))
 
         # Actualizar el material
         actualizado = MaterialModel.actualizar(
@@ -316,9 +320,9 @@ def editar_material(material_id):
         return redirect('/materiales')
 
     except Exception as e:
-        print(f"❌ Error editando material: {e}")
-        import traceback
-        print(traceback.format_exc())
+        logger.error(sanitizar_log_text(f"❌ Error editando material: {e}"))
+        
+        logger.debug(sanitizar_log_text('Traceback omitido por seguridad'))
         flash('Error interno al actualizar el material', 'danger')
         return redirect('/materiales')
 
@@ -354,6 +358,6 @@ def eliminar_material(material_id):
         return redirect('/materiales')
 
     except Exception as e:
-        print(f"❌ Error eliminando material: {e}")
+        logger.error(sanitizar_log_text(f"❌ Error eliminando material: {e}"))
         flash('Error interno al eliminar el material', 'danger')
         return redirect('/materiales')

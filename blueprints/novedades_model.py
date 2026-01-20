@@ -86,9 +86,7 @@ class NovedadModel:
             return novedades
             
         except Exception as e:
-            logger.error(f"Error obteniendo novedades: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error("Error obteniendo novedades: [error](%s)", type(e).__name__)
             return []
         finally:
             cursor.close()
@@ -152,9 +150,7 @@ class NovedadModel:
             return None
             
         except Exception as e:
-            logger.error(f"Error obteniendo novedad {novedad_id}: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error("Error obteniendo novedad {novedad_id}: [error](%s)", type(e).__name__)
             return None
         finally:
             cursor.close()
@@ -196,9 +192,7 @@ class NovedadModel:
             
         except Exception as e:
             conn.rollback()
-            logger.error(f"Error creando novedad: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error("Error creando novedad: [error](%s)", type(e).__name__)
             return None
         finally:
             cursor.close()
@@ -228,9 +222,7 @@ class NovedadModel:
             
         except Exception as e:
             conn.rollback()
-            logger.error(f"Error actualizando novedad: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error("Error actualizando novedad: [error](%s)", type(e).__name__)
             return False
         finally:
             cursor.close()
@@ -267,7 +259,7 @@ class NovedadModel:
             return {"total": 0, "pendientes": 0, "resueltas": 0, "aceptadas": 0, "rechazadas": 0}
             
         except Exception as e:
-            logger.error(f"Error obteniendo estadísticas: {e}")
+            logger.error("Error obteniendo estadísticas: [error](%s)", type(e).__name__)
             return {"total": 0, "pendientes": 0, "resueltas": 0, "aceptadas": 0, "rechazadas": 0}
         finally:
             cursor.close()
@@ -324,9 +316,7 @@ class NovedadModel:
             return novedades
             
         except Exception as e:
-            logger.error(f"Error obteniendo novedades de solicitud {solicitud_id}: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error("Error obteniendo novedades de solicitud {solicitud_id}: [error](%s)", type(e).__name__)
             return []
         finally:
             cursor.close()

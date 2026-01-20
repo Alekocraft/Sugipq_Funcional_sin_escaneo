@@ -1,6 +1,10 @@
 from flask import Blueprint, jsonify, session
 from models.materiales_model import MaterialModel
 from utils.filters import verificar_acceso_oficina
+import logging
+from utils.helpers import sanitizar_log_text
+
+logger = logging.getLogger(__name__)
 
 api_bp = Blueprint('api', __name__)
 
@@ -15,7 +19,7 @@ def api_material(material_id):
         else:
             return jsonify({'error': 'Material no encontrado o sin permisos'}), 404
     except Exception as e:
-        print(f"❌ Error API material: {e}")
+        logger.error("❌ Error API material: %s", sanitizar_log_text('Error interno'))
         return jsonify({'error': 'Error interno del servidor'}), 500
 
 @api_bp.route('/material/<int:material_id>/stock', methods=['GET'])
@@ -32,7 +36,7 @@ def api_material_stock(material_id):
         else:
             return jsonify({'error': 'Material no encontrado o sin permisos'}), 404
     except Exception as e:
-        print(f"❌ Error API stock: {e}")
+        logger.error("❌ Error API stock: %s", sanitizar_log_text('Error interno'))
         return jsonify({'error': 'Error interno del servidor'}), 500
 
 @api_bp.route('/oficina/<int:oficina_id>/materiales')
@@ -47,5 +51,5 @@ def api_oficina_materiales(oficina_id):
         materiales_oficina = [mat for mat in materiales if mat.get('oficina_id') == oficina_id]
         return jsonify(materiales_oficina)
     except Exception as e:
-        print(f"❌ Error API oficina materiales: {e}")
+        logger.error("❌ Error API oficina materiales: %s", sanitizar_log_text('Error interno'))
         return jsonify({'error': 'Error interno del servidor'}), 500

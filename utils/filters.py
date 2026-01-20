@@ -1,12 +1,15 @@
 # utils/filters.py - CORREGIDO
 from flask import session
+import logging
+logger = logging.getLogger(__name__)
 
 def filtrar_por_oficina_usuario(datos, campo_oficina_id='oficina_id'):
     """
     Filtra datos según la oficina del usuario actual.
     """
     if 'usuario_id' not in session:
-        print("🔍 DEBUG filtrar_por_oficina_usuario: Usuario no autenticado")
+        logger.info("🔍 DEBUG filtrar_por_oficina_usuario: Usuario no autenticado")
+
         return []
     
     # Importar aquí para evitar dependencia circular
@@ -17,7 +20,8 @@ def filtrar_por_oficina_usuario(datos, campo_oficina_id='oficina_id'):
     
     # Si office_filter es None, significa acceso total
     if office_filter is None:
-        print("🔍 DEBUG filtrar_por_oficina_usuario: Usuario con acceso total")
+        logger.info("🔍 DEBUG filtrar_por_oficina_usuario: Usuario con acceso total")
+
         return datos
     
     # Para roles que filtran por oficina específica
@@ -26,12 +30,14 @@ def filtrar_por_oficina_usuario(datos, campo_oficina_id='oficina_id'):
         oficina_id_usuario = session.get('oficina_id')
         
         if not oficina_id_usuario:
-            print("🔍 DEBUG filtrar_por_oficina_usuario: No hay ID de oficina en sesión")
+            logger.info("🔍 DEBUG filtrar_por_oficina_usuario: No hay ID de oficina en sesión")
+
             return []
         
-        print(f"🔍 DEBUG filtrar_por_oficina_usuario: Oficina ID usuario: {oficina_id_usuario}")
-        print(f"🔍 DEBUG filtrar_por_oficina_usuario: Total datos a filtrar: {len(datos)}")
-        
+        logger.info(f"🔍 DEBUG filtrar_por_oficina_usuario: Oficina ID usuario: {oficina_id_usuario}")
+
+        logger.info(f"🔍 DEBUG filtrar_por_oficina_usuario: Total datos a filtrar: {len(datos)}")
+
         datos_filtrados = []
         for i, item in enumerate(datos):
             item_oficina_id = str(item.get(campo_oficina_id, ''))
@@ -39,17 +45,20 @@ def filtrar_por_oficina_usuario(datos, campo_oficina_id='oficina_id'):
             
             if item_oficina_id == usuario_oficina_id:
                 datos_filtrados.append(item)
-                print(f"🔍 DEBUG filtrar_por_oficina_usuario: Item {i} coincide - Oficina: {item_oficina_id}")
+                logger.info(f"🔍 DEBUG filtrar_por_oficina_usuario: Item {i} coincide - Oficina: {item_oficina_id}")
+
             else:
-                print(f"🔍 DEBUG filtrar_por_oficina_usuario: Item {i} NO coincide - Item Oficina: {item_oficina_id}, Usuario Oficina: {usuario_oficina_id}")
-        
-        print(f"🔍 DEBUG filtrar_por_oficina_usuario: Filtrados {len(datos_filtrados)} de {len(datos)} items")
+                logger.info(f"🔍 DEBUG filtrar_por_oficina_usuario: Item {i} NO coincide - Item Oficina: {item_oficina_id}, Usuario Oficina: {usuario_oficina_id}")
+
+        logger.info(f"🔍 DEBUG filtrar_por_oficina_usuario: Filtrados {len(datos_filtrados)} de {len(datos)} items")
+
         return datos_filtrados
     else:
         # Si office_filter es un string específico (ej: 'COQ', 'CALI', etc.)
         # Aquí necesitarías lógica adicional para filtrar por nombre de oficina
         # Por ahora, devolvemos todos los datos ya que el filtro no es por ID numérico
-        print(f"🔍 DEBUG filtrar_por_oficina_usuario: Filtro de oficina por nombre: {office_filter}")
+        logger.info(f"🔍 DEBUG filtrar_por_oficina_usuario: Filtro de oficina por nombre: {office_filter}")
+
         return datos
 
 def verificar_acceso_oficina(oficina_id):

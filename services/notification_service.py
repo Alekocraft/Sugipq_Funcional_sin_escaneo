@@ -62,7 +62,7 @@ class NotificationService:
             return smtp
             
         except Exception as e:
-            logger.error(f"❌ Error conectando al SMTP: {e}")
+            logger.error("❌ Error conectando al SMTP: [error](%s)", type(e).__name__)
             return None
     
     @staticmethod
@@ -89,7 +89,7 @@ class NotificationService:
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error enviando email: {e}")
+            logger.error("❌ Error enviando email: [error](%s)", type(e).__name__)
             return False
             
         finally:
@@ -280,7 +280,7 @@ class NotificationService:
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Error en enviar_notificacion_asignacion_con_confirmacion: {e}")
+            logger.error("❌ Error en enviar_notificacion_asignacion_con_confirmacion: [error](%s)", type(e).__name__)
             import traceback
             logger.error(f"❌ Traceback: {traceback.format_exc()}")
             return False
@@ -430,7 +430,7 @@ class NotificationService:
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Error en enviar_notificacion_asignacion_simple: {e}")
+            logger.error("❌ Error en enviar_notificacion_asignacion_simple: [error](%s)", type(e).__name__)
             import traceback
             logger.error(f"❌ Traceback: {traceback.format_exc()}")
             return False
@@ -565,7 +565,7 @@ class NotificationService:
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Error en enviar_notificacion_confirmacion_exitosa: {e}")
+            logger.error("❌ Error en enviar_notificacion_confirmacion_exitosa: [error](%s)", type(e).__name__)
             import traceback
             logger.error(f"❌ Traceback: {traceback.format_exc()}")
             return False
@@ -626,7 +626,7 @@ class NotificationService:
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Error en enviar_notificacion_general: {e}")
+            logger.error("❌ Error en enviar_notificacion_general: [error](%s)", type(e).__name__)
             import traceback
             logger.error(f"❌ Traceback: {traceback.format_exc()}")
             return False
@@ -665,7 +665,7 @@ class NotificationService:
                 }
                 
         except Exception as e:
-            logger.error(f"❌ Error en prueba SMTP: {e}")
+            logger.error("❌ Error en prueba SMTP: [error](%s)", type(e).__name__)
             return {
                 'success': False,
                 'message': f'Error: {str(e)}',

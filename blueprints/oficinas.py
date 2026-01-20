@@ -4,6 +4,7 @@ from flask import Blueprint, render_template, request, redirect, session, flash,
 from models.oficinas_model import OficinaModel
 from utils.permissions import can_access
 import logging
+from utils.helpers import sanitizar_log_text, sanitizar_username
 
 # Configurar logger específico para este blueprint
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ def listar_oficinas():
         return redirect('/login')
     
     if not can_access('oficinas', 'view'):
-        logger.warning(f"⚠️ Usuario {session.get('usuario')} sin permisos para ver oficinas")
+        logger.warning("⚠️ Usuario %s sin permisos para ver oficinas", sanitizar_log_text(sanitizar_username(session.get("usuario"))))
         flash('No tienes permisos para acceder a esta sección', 'danger')
         return redirect('/dashboard')
     
@@ -53,7 +54,7 @@ def listar_oficinas():
         return render_template('oficinas/listar.html', **context)
         
     except Exception as e:
-        logger.error(f"❌ Error listando oficinas: {e}", exc_info=True)
+        logger.error("❌ Error listando oficinas: %s", sanitizar_log_text('Error interno'))
         flash('Error al cargar las oficinas. Por favor, intente nuevamente.', 'danger')
         
         # Renderizar con valores por defecto
@@ -98,7 +99,7 @@ def crear_oficina():
                 return render_template('oficinas/crear.html')
                 
         except Exception as e:
-            logger.error(f"❌ Error al crear oficina: {e}", exc_info=True)
+            logger.error("❌ Error al crear oficina: %s", sanitizar_log_text('Error interno'))
             flash('Error interno al crear la oficina', 'danger')
             return render_template('oficinas/crear.html')
     
@@ -144,7 +145,7 @@ def editar_oficina(oficina_id):
             return redirect('/oficinas')
             
         except Exception as e:
-            logger.error(f"❌ Error al actualizar oficina {oficina_id}: {e}", exc_info=True)
+            logger.error("❌ Error al actualizar oficina %s: %s", sanitizar_log_text(oficina_id), sanitizar_log_text('Error interno'))
             flash('Error interno al actualizar la oficina', 'danger')
             return redirect(f'/oficinas/editar/{oficina_id}')
     
@@ -156,7 +157,7 @@ def editar_oficina(oficina_id):
         
         return render_template('oficinas/editar.html', oficina=oficina)
     except Exception as e:
-        logger.error(f"❌ Error al obtener oficina {oficina_id}: {e}", exc_info=True)
+        logger.error("❌ Error al obtener oficina %s: %s", sanitizar_log_text(oficina_id), sanitizar_log_text('Error interno'))
         flash('Error al cargar la oficina', 'danger')
         return redirect('/oficinas')
 
@@ -178,7 +179,7 @@ def eliminar_oficina(oficina_id):
         else:
             flash('Error al eliminar la oficina', 'danger')
     except Exception as e:
-        logger.error(f"❌ Error al eliminar oficina {oficina_id}: {e}", exc_info=True)
+        logger.error("❌ Error al eliminar oficina %s: %s", sanitizar_log_text(oficina_id), sanitizar_log_text('Error interno'))
         flash('Error interno al eliminar la oficina', 'danger')
     
     return redirect('/oficinas')
@@ -200,7 +201,7 @@ def api_oficinas():
         
         return jsonify(oficinas_data)
     except Exception as e:
-        logger.error(f"❌ Error en API oficinas: {e}", exc_info=True)
+        logger.error("❌ Error en API oficinas: %s", sanitizar_log_text('Error interno'))
         return jsonify({'error': 'Error interno del servidor'}), 500
 
 @oficinas_bp.route('/detalle/<int:oficina_id>')
@@ -221,6 +222,6 @@ def detalle_oficina(oficina_id):
         
         return render_template('oficinas/detalle.html', oficina=oficina)
     except Exception as e:
-        logger.error(f"❌ Error al obtener detalle de oficina {oficina_id}: {e}", exc_info=True)
+        logger.error("❌ Error al obtener detalle de oficina %s: %s", sanitizar_log_text(oficina_id), sanitizar_log_text('Error interno'))
         flash('Error al cargar los detalles de la oficina', 'danger')
         return redirect('/oficinas')

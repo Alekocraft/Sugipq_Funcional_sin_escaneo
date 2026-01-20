@@ -1,4 +1,6 @@
-﻿from database import get_database_connection
+import logging
+logger = logging.getLogger(__name__)
+from database import get_database_connection
 
 class MaterialModel:
     @staticmethod
@@ -57,7 +59,7 @@ class MaterialModel:
                 materiales.append(material)
             return materiales
         except Exception as e:
-            print(f"Error en MaterialModel.obtener_todos: {e}")
+            logger.info("Error en MaterialModel.obtener_todos: [error](%s)", type(e).__name__)
             return []
         finally:
             cursor.close()
@@ -109,7 +111,7 @@ class MaterialModel:
                 }
             return None
         except Exception as e:
-            print(f"Error al obtener material por ID: {e}")
+            logger.info("Error al obtener material por ID: [error](%s)", type(e).__name__)
             return None
         finally:
             cursor.close()
@@ -119,18 +121,18 @@ class MaterialModel:
     def crear(nombre, valor_unitario, cantidad, oficina_id, usuario_creador="Sistema", ruta_imagen=None, cantidad_minima=None):
         conn = get_database_connection()
         if conn is None:
-            print("ERROR: No hay conexion a la BD")
+            logger.info("ERROR: No hay conexion a la BD")
             return None
         cursor = conn.cursor()
         try:
             if not nombre or nombre.strip() == '':
-                print("Nombre vacio")
+                logger.info("Nombre vacio")
                 return None
             if valor_unitario <= 0:
-                print("Valor unitario invalido")
+                logger.info("Valor unitario invalido")
                 return None
             if cantidad < 0:
-                print("Cantidad invalida")
+                logger.info("Cantidad invalida")
                 return None
         
             ruta_imagen_final = str(ruta_imagen).strip() if ruta_imagen else None
@@ -138,7 +140,7 @@ class MaterialModel:
             cursor.execute("SELECT COUNT(*) FROM Oficinas WHERE OficinaId = ?", (oficina_id,))
             oficina_exists = cursor.fetchone()[0]
             if oficina_exists == 0:
-                print("La oficina no existe")
+                logger.info("La oficina no existe")
                 return None
         
             # Asegurar que cantidad_minima tenga un valor por defecto si es None
@@ -178,12 +180,12 @@ class MaterialModel:
                 material_id = int(max_row[0])
                 return material_id
             else:
-                print("No se pudo obtener el ID del material creado")
+                logger.info("No se pudo obtener el ID del material creado")
                 return None
         except Exception as e:
-            print(f"ERROR CRITICO en MaterialModel.crear: {str(e)}")
+            logger.info("ERROR CRITICO en MaterialModel.crear: [error](%s)", type(e).__name__)
             import traceback
-            print(traceback.format_exc())
+            logger.info(traceback.format_exc())
             conn.rollback()
             return None
         finally:
@@ -194,7 +196,7 @@ class MaterialModel:
     def actualizar(material_id, nombre, valor_unitario, cantidad, oficina_id, ruta_imagen=None, cantidad_minima=None):
         conn = get_database_connection()
         if conn is None:
-            print("No se pudo establecer conexion a la base de datos")
+            logger.info("No se pudo establecer conexion a la base de datos")
             return False
         cursor = conn.cursor()
         try:
@@ -223,7 +225,7 @@ class MaterialModel:
             conn.commit()
             return cursor.rowcount > 0
         except Exception as e:
-            print(f"Error al actualizar material: {e}")
+            logger.info("Error al actualizar material: [error](%s)", type(e).__name__)
             conn.rollback()
             return False
         finally:
@@ -235,7 +237,7 @@ class MaterialModel:
         """Actualiza solo la imagen de un material"""
         conn = get_database_connection()
         if conn is None:
-            print("No se pudo establecer conexion a la base de datos")
+            logger.info("No se pudo establecer conexion a la base de datos")
             return False
         cursor = conn.cursor()
         try:
@@ -248,7 +250,7 @@ class MaterialModel:
             conn.commit()
             return affected > 0
         except Exception as e:
-            print(f"Error al actualizar imagen: {e}")
+            logger.info("Error al actualizar imagen: [error](%s)", type(e).__name__)
             conn.rollback()
             return False
         finally:
@@ -259,7 +261,7 @@ class MaterialModel:
     def eliminar(material_id):
         conn = get_database_connection()
         if conn is None:
-            print("No se pudo establecer conexion a la base de datos")
+            logger.info("No se pudo establecer conexion a la base de datos")
             return False
         cursor = conn.cursor()
         try:
@@ -267,7 +269,7 @@ class MaterialModel:
             conn.commit()
             return cursor.rowcount > 0
         except Exception as e:
-            print(f"Error al eliminar material: {e}")
+            logger.info("Error al eliminar material: [error](%s)", type(e).__name__)
             conn.rollback()
             return False
         finally:

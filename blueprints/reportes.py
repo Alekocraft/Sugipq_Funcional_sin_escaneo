@@ -19,6 +19,8 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
 from reportlab.lib.units import inch
+import logging
+logger = logging.getLogger(__name__)
 
 # Crear blueprint de reportes
 reportes_bp = Blueprint('reportes', __name__, url_prefix='/reportes')
@@ -667,10 +669,9 @@ def reporte_novedades():
                              reportantes=reportantes,
                              novedades_recientes=novedades_recientes)
     except Exception as e:
-        flash(f'Error al generar el reporte de novedades: {str(e)}', 'danger')
-        print(f"❌ ERROR en reporte_novedades: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        flash('Error al generar el reporte de novedades: Error interno', 'danger')
+        logger.error("Error interno (%s)", type(e).__name__)
+
         return render_template('reportes/novedades.html',
                              novedades=[],
                              total_novedades=0,
@@ -841,10 +842,9 @@ def reporte_oficinas():
                              valor_total=valor_total)
     
     except Exception as e:
-        flash(f'Error al generar el reporte de oficinas: {str(e)}', 'danger')
-        print(f"❌ ERROR en reporte_oficinas: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        flash('Error al generar el reporte de oficinas: Error interno', 'danger')
+        logger.error("Error interno (%s)", type(e).__name__)
+
         return redirect('/reportes')
 
 @reportes_bp.route('/prestamos')
@@ -1280,7 +1280,7 @@ def exportar_inventario_corporativo_pdf():
         )
         
     except Exception as e:
-        flash(f'Error al generar el PDF del inventario: {str(e)}', 'danger')
+        flash('Error al generar el PDF del inventario: Error interno', 'danger')
         return redirect('/reportes')
 
 @reportes_bp.route('/prestamos/exportar/pdf')
@@ -1453,7 +1453,7 @@ def exportar_prestamos_pdf():
         )
         
     except Exception as e:
-        flash(f'Error al generar el PDF de préstamos: {str(e)}', 'danger')
+        flash('Error al generar el PDF de préstamos: Error interno', 'danger')
         return redirect('/reportes')
 
 @reportes_bp.route('/materiales/exportar/pdf')
@@ -1635,7 +1635,7 @@ def exportar_materiales_pdf():
         )
         
     except Exception as e:
-        flash(f'Error al generar el PDF de materiales: {str(e)}', 'danger')
+        flash('Error al generar el PDF de materiales: Error interno', 'danger')
         return redirect('/reportes')
 
 @reportes_bp.route('/material/<int:material_id>')
@@ -1670,9 +1670,10 @@ def material_detalle(material_id):
         # Asegurar que material_id es un int
         material_id_int = int(material_id)
         
-        print(f"🔍 DEBUG: Buscando solicitudes para MaterialId = {material_id_int}")
-        print(f"🔍 DEBUG: Material obtenido: {material.get('nombre', 'N/A')}")
-        
+        logger.info(f"🔍 DEBUG: Buscando solicitudes para MaterialId = {material_id_int}")
+
+        logger.info(f"🔍 DEBUG: Material obtenido: {material.get('nombre', 'N/A')}")
+
         # QUERY MEJORADO con mejor manejo
         query = """
             SELECT 
@@ -1700,19 +1701,19 @@ def material_detalle(material_id):
             
             solicitudes = []
             rows = cursor.fetchall()
-            print(f"✅ DEBUG: Se encontraron {len(rows)} solicitudes en la BD")
-            
+            logger.info(f"✅ DEBUG: Se encontraron {len(rows)} solicitudes en la BD")
+
             if len(rows) == 0:
                 # Verificar si el MaterialId existe
                 cursor.execute("SELECT COUNT(*) FROM Materiales WHERE MaterialId = ?", (material_id_int,))
                 count_mat = cursor.fetchone()[0]
-                print(f"🔍 DEBUG: ¿MaterialId {material_id_int} existe en Materiales? {count_mat > 0}")
-                
+                logger.info(f"🔍 DEBUG: ¿MaterialId {material_id_int} existe en Materiales? {count_mat > 0}")
+
                 # Verificar si hay solicitudes para cualquier material
                 cursor.execute("SELECT COUNT(*) FROM SolicitudesMaterial WHERE MaterialId = ?", (material_id_int,))
                 count_sol = cursor.fetchone()[0]
-                print(f"🔍 DEBUG: Solicitudes directas encontradas: {count_sol}")
-            
+                logger.info(f"🔍 DEBUG: Solicitudes directas encontradas: {count_sol}")
+
             for row in rows:
                 estado_nombre = row[9] if row[9] else 'Pendiente'
                 solicitud = {
@@ -1729,12 +1730,11 @@ def material_detalle(material_id):
                     'observacion': row[10]
                 }
                 solicitudes.append(solicitud)
-                print(f"  📋 Solicitud {row[0]}: Estado={estado_nombre}, Cantidad={row[5]}")
-            
+                logger.info(f"  📋 Solicitud {row[0]}: Estado={estado_nombre}, Cantidad={row[5]}")
+
         except Exception as query_error:
-            print(f"❌ ERROR en query de solicitudes: {str(query_error)}")
-            import traceback
-            traceback.print_exc()
+            logger.error("Error interno (%s)", type(e).__name__)
+
             solicitudes = []
         
         conn.close()
@@ -1743,8 +1743,8 @@ def material_detalle(material_id):
         total_solicitudes = len(solicitudes)
         solicitudes_aprobadas = len([s for s in solicitudes if 'aprobada' in s['estado'].lower()])
         
-        print(f"DEBUG: Total solicitudes = {total_solicitudes}, Aprobadas = {solicitudes_aprobadas}")
-        
+        logger.info(f"DEBUG: Total solicitudes = {total_solicitudes}, Aprobadas = {solicitudes_aprobadas}")
+
         return render_template('reportes/material_detalle.html',
                              material=material,
                              solicitudes=solicitudes,
@@ -1752,10 +1752,9 @@ def material_detalle(material_id):
                              solicitudes_aprobadas=solicitudes_aprobadas)
         
     except Exception as e:
-        print(f"❌ Error en material_detalle: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        flash(f'Error al obtener el detalle del material: {str(e)}', 'danger')
+        logger.error("Error interno (%s)", type(e).__name__)
+
+        flash('Error al obtener el detalle del material: Error interno', 'danger')
         return redirect('/reportes/materiales')
 
 @reportes_bp.route('/exportar/inventario-corporativo/excel')
@@ -2303,7 +2302,7 @@ def debug_oficina_data(oficina_id):
         return jsonify(debug_info)
         
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return jsonify({'error': 'Error interno'})
 
 @reportes_bp.route('/material/<int:material_id>/historial')
 def material_historial(material_id):
@@ -2408,7 +2407,7 @@ def material_historial(material_id):
         })
         
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return jsonify({'error': 'Error interno'})
 
 # ==============================
 # API PARA DETALLE DE PRÉSTAMOS 
@@ -2519,7 +2518,7 @@ def api_prestamo_detalle(prestamo_id):
     except Exception as e:
         return jsonify({
             'success': False,
-            'message': f'Error interno del servidor: {str(e)}'
+            'message': 'Error interno del servidor: Error interno'
         }), 500
 
 # ============================================================================
@@ -2599,7 +2598,7 @@ def api_prestamo_devolver(prestamo_id):
     except Exception as e:
         return jsonify({
             'success': False,
-            'message': f'Error al registrar la devolución: {str(e)}'
+            'message': 'Error al registrar la devolución: Error interno'
         }), 500
 
 # ============================================================================
@@ -2659,8 +2658,8 @@ def reporte_inventario_corporativo():
             producto = dict(zip(columns, row))
             productos.append(producto)
             if producto.get('AsignacionId'):
-                print(f"DEBUG - Producto {producto['ProductoId']}: Estado='{producto.get('EstadoAsignacion')}', AsignacionId={producto.get('AsignacionId')}")
-        
+                logger.info(f"DEBUG - Producto {producto['ProductoId']}: Estado='{producto.get('EstadoAsignacion')}', AsignacionId={producto.get('AsignacionId')}")
+
         conn.close()
         
         # Aplicar filtro según permisos
@@ -2675,7 +2674,8 @@ def reporte_inventario_corporativo():
         total_pendientes = len([p for p in productos if p.get('EstadoAsignacion') == 'ASIGNADO'])
         valor_total = sum([float(p.get('ValorCompra', 0) or 0) for p in productos if p.get('ProductoId')])
         
-        print(f"DEBUG - Total confirmados: {total_confirmados}, Total asignados: {total_asignados}")
+        logger.info(f"DEBUG - Total confirmados: {total_confirmados}, Total asignados: {total_asignados}")
+
         return render_template('reportes/inventario_corporativo.html',
                              productos=productos,
                              total_productos=total_productos,
@@ -2684,10 +2684,9 @@ def reporte_inventario_corporativo():
                              total_pendientes=total_pendientes,
                              valor_total=valor_total)
     except Exception as e:
-        flash(f'Error al generar el reporte de inventario corporativo: {str(e)}', 'danger')
-        print(f"ERROR en reporte_inventario_corporativo: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        flash('Error al generar el reporte de inventario corporativo: Error interno', 'danger')
+        logger.error("Error interno (%s)", type(e).__name__)
+
         return render_template('reportes/inventario_corporativo.html',
                              productos=[],
                              total_productos=0,

@@ -5,6 +5,8 @@ Paquete de utilidades del sistema
 
 # Exportar helpers
 from .helpers import *
+import logging
+logger = logging.getLogger(__name__)
 
 # Exportar otras utilidades si existen
 try:

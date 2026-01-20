@@ -98,7 +98,7 @@ class PermissionManager:
         try:
             from config.permissions import ROLE_PERMISSIONS, get_office_key
         except ImportError as e:
-            logger.error(f"Error importando configuraciones: {e}")
+            logger.error("Error importando configuraciones: [error](%s)", type(e).__name__)
             return {
                 'role_key': role_key,
                 'role': {'modules': [], 'actions': {}, 'office_filter': 'own'},

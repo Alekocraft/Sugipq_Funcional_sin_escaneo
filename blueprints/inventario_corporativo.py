@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # blueprints/inventario_corporativo.py
 
 from flask import Blueprint, render_template, request, redirect, session, flash, jsonify, send_file
@@ -51,12 +50,6 @@ def _handle_unauthorized():
 def _handle_not_found():
     flash('Producto no encontrado', 'danger')
     return redirect('/inventario-corporativo')
-
-
-def _is_inventory_approver():
-    """Admin o Lider de inventario: pueden aprobar/rechazar devoluciones y traslados."""
-    rol = (session.get('rol') or '').lower()
-    return rol in ('administrador', 'lider_inventario')
 
 def _calculate_inventory_stats(productos):
     if not productos:
@@ -163,30 +156,25 @@ def listar_sede_principal():
 
 @inventario_corporativo_bp.route('/oficinas-servicio')
 def listar_oficinas_servicio():
-    """
-    Vista para TODO usuario autenticado.
-    Muestra unicamente el inventario corporativo asignado a la oficina del usuario.
-    """
     if not _require_login():
         return redirect('/login')
 
-    # Permitir acceso a todos los usuarios autenticados (filtrado por su oficina)
-    oficina_id = session.get('oficina_id')
-    oficina_nombre = session.get('oficina_nombre', '')
-    if not oficina_id:
-        flash('No se pudo determinar la oficina del usuario.', 'danger')
-        return redirect('/inventario-corporativo')
+    # Permitir:
+    # - Acceso completo (view)
+    # - Acceso mínimo de oficinas (view_oficinas_servicio)
+    if not (can_access('inventario_corporativo', 'view') or can_access('inventario_corporativo', 'view_oficinas_servicio')):
+        return _handle_unauthorized()
 
-    # Productos asignados a la oficina
-    productos = InventarioCorporativoModel.obtener_por_oficina(int(oficina_id)) or []
+    productos = InventarioCorporativoModel.obtener_por_oficinas_servicio() or []
     categorias = InventarioCorporativoModel.obtener_categorias() or []
     proveedores = InventarioCorporativoModel.obtener_proveedores() or []
 
-    # Asignaciones activas (para solicitar devoluciones/traslados)
-    try:
-        asignaciones = InventarioCorporativoModel.obtener_asignaciones_por_oficina(int(oficina_id)) or []
-    except Exception:
-        asignaciones = []
+    # Si NO tiene permiso de ver todo, entonces filtrar a la oficina del usuario
+    if not can_access('inventario_corporativo', 'view'):
+        oficina_nombre = (session.get('oficina_nombre') or '').strip()
+        if oficina_nombre:
+            oficina_upper = oficina_nombre.upper()
+            productos = [p for p in productos if (p.get('oficina') or '').upper() == oficina_upper]
 
     stats = _calculate_inventory_stats(productos)
 
@@ -195,18 +183,19 @@ def listar_oficinas_servicio():
         productos=productos,
         categorias=categorias,
         proveedores=proveedores,
-        asignaciones=asignaciones,
         total_productos=stats['total_productos'],
         valor_total_inventario=stats['valor_total'],
         productos_bajo_stock=stats['productos_bajo_stock'],
         productos_asignables=stats['productos_asignables'],
         filtro_tipo='oficinas_servicio',
-        titulo=f'Inventario - Oficina {oficina_nombre}',
+        titulo='Inventario - Oficinas de Servicio',
         puede_gestionar_inventario=can_manage_inventario_corporativo(),
-        puede_ver_acciones_inventario=can_view_inventario_actions()
+        puede_ver_acciones_inventario=can_view_inventario_actions(),
+
+        # Flags extra (no rompen template si no se usan)
+        puede_solicitar_devolucion=can_access('inventario_corporativo', 'request_return'),
+        puede_solicitar_traslado=can_access('inventario_corporativo', 'request_transfer')
     )
-
-
 @inventario_corporativo_bp.route('/<int:producto_id>')
 def ver_inventario_corporativo(producto_id):
     if not _require_login():
@@ -560,182 +549,51 @@ def api_obtener_usuario_ad(username):
         logger.error(f"Error obteniendo usuario AD: {e}")
         return jsonify({'error': 'Error al obtener usuario'}), 500
 
-
-
-# ================== DEVOLUCIONES / TRASLADOS (SOLICITUDES) ==================
-
-@inventario_corporativo_bp.route('/solicitar-devolucion/<int:asignacion_id>', methods=['GET', 'POST'])
-def solicitar_devolucion(asignacion_id):
-    if not _require_login():
-        return redirect('/login')
-
-    asignacion = InventarioCorporativoModel.obtener_asignacion_detalle(asignacion_id)
-    if not asignacion:
-        flash('Asignacion no encontrada.', 'danger')
-        return redirect('/inventario-corporativo/oficinas-servicio')
-
-    # Solo permitir solicitar sobre asignaciones de la misma oficina
-    if int(asignacion.get('oficina_id', 0)) != int(session.get('oficina_id', 0)):
-        flash('No tiene permisos para solicitar devoluciones de otra oficina.', 'danger')
-        return redirect('/inventario-corporativo/oficinas-servicio')
-
-    if request.method == 'POST':
-        try:
-            cantidad = int(request.form.get('cantidad', 0))
-        except Exception:
-            cantidad = 0
-        motivo = (request.form.get('motivo') or '').strip()
-
-        ok, msg = InventarioCorporativoModel.crear_solicitud_devolucion(
-            asignacion_id=asignacion_id,
-            cantidad=cantidad,
-            motivo=motivo,
-            usuario_solicita=session.get('usuario')
-        )
-        flash(msg, 'success' if ok else 'danger')
-        return redirect('/inventario-corporativo/oficinas-servicio')
-
-    # GET
-    return render_template('inventario_corporativo/devolver.html', asignacion=asignacion)
-
-
-@inventario_corporativo_bp.route('/solicitar-traslado/<int:asignacion_id>', methods=['GET', 'POST'])
-def solicitar_traslado(asignacion_id):
-    if not _require_login():
-        return redirect('/login')
-
-    asignacion = InventarioCorporativoModel.obtener_asignacion_detalle(asignacion_id)
-    if not asignacion:
-        flash('Asignacion no encontrada.', 'danger')
-        return redirect('/inventario-corporativo/oficinas-servicio')
-
-    if int(asignacion.get('oficina_id', 0)) != int(session.get('oficina_id', 0)):
-        flash('No tiene permisos para solicitar traslados de otra oficina.', 'danger')
-        return redirect('/inventario-corporativo/oficinas-servicio')
-
-    oficinas = InventarioCorporativoModel.obtener_oficinas() or []
-
-    if request.method == 'POST':
-        try:
-            cantidad = int(request.form.get('cantidad', 0))
-        except Exception:
-            cantidad = 0
-        motivo = (request.form.get('motivo') or '').strip()
-        try:
-            oficina_destino_id = int(request.form.get('oficina_destino_id', 0))
-        except Exception:
-            oficina_destino_id = 0
-
-        ok, msg = InventarioCorporativoModel.crear_solicitud_traspaso(
-            asignacion_id=asignacion_id,
-            oficina_destino_id=oficina_destino_id,
-            cantidad=cantidad,
-            motivo=motivo,
-            usuario_solicita=session.get('usuario')
-        )
-        flash(msg, 'success' if ok else 'danger')
-        return redirect('/inventario-corporativo/oficinas-servicio')
-
-    return render_template('inventario_corporativo/traspasar.html', asignacion=asignacion, oficinas=oficinas)
-
-
-# ================== APROBACION (ADMIN / LIDER INVENTARIO) ==================
-
-@inventario_corporativo_bp.route('/movimientos/pendientes')
-def movimientos_pendientes():
-    if not _require_login():
-        return redirect('/login')
-
-    if not _is_inventory_approver():
-        return _handle_unauthorized()
-
-    devoluciones = InventarioCorporativoModel.listar_devoluciones(pendientes=True) or []
-    traspasos = InventarioCorporativoModel.listar_traspasos(pendientes=True) or []
-
-    # Si existe template, renderiza. Si no, responde JSON.
-    try:
-        return render_template('inventario_corporativo/movimientos_pendientes.html', devoluciones=devoluciones, traspasos=traspasos)
-    except Exception:
-        return jsonify({'devoluciones': devoluciones, 'traspasos': traspasos})
-
-
-@inventario_corporativo_bp.route('/devoluciones/<int:devolucion_id>/aprobar', methods=['POST'])
-def aprobar_devolucion(devolucion_id):
-    if not _require_login():
-        return redirect('/login')
-
-    if not _is_inventory_approver():
-        return _handle_unauthorized()
-
-    observaciones = request.form.get('observaciones') or request.form.get('observacion') or ''
-    ok, msg = InventarioCorporativoModel.aprobar_devolucion(devolucion_id, session.get('usuario'), observaciones)
-    flash(msg, 'success' if ok else 'danger')
-    return redirect('/inventario-corporativo/movimientos/pendientes')
-
-
-@inventario_corporativo_bp.route('/devoluciones/<int:devolucion_id>/rechazar', methods=['POST'])
-def rechazar_devolucion(devolucion_id):
-    if not _require_login():
-        return redirect('/login')
-
-    if not _is_inventory_approver():
-        return _handle_unauthorized()
-
-    observaciones = request.form.get('observaciones') or request.form.get('observacion') or ''
-    ok, msg = InventarioCorporativoModel.rechazar_devolucion(devolucion_id, session.get('usuario'), observaciones)
-    flash(msg, 'success' if ok else 'danger')
-    return redirect('/inventario-corporativo/movimientos/pendientes')
-
-
-@inventario_corporativo_bp.route('/traspasos/<int:traspaso_id>/aprobar', methods=['POST'])
-def aprobar_traspaso(traspaso_id):
-    if not _require_login():
-        return redirect('/login')
-
-    if not _is_inventory_approver():
-        return _handle_unauthorized()
-
-    observaciones = request.form.get('observaciones') or request.form.get('observacion') or ''
-    ok, msg = InventarioCorporativoModel.aprobar_traspaso(traspaso_id, session.get('usuario'), observaciones)
-    flash(msg, 'success' if ok else 'danger')
-    return redirect('/inventario-corporativo/movimientos/pendientes')
-
-
-@inventario_corporativo_bp.route('/traspasos/<int:traspaso_id>/rechazar', methods=['POST'])
-def rechazar_traspaso(traspaso_id):
-    if not _require_login():
-        return redirect('/login')
-
-    if not _is_inventory_approver():
-        return _handle_unauthorized()
-
-    observaciones = request.form.get('observaciones') or request.form.get('observacion') or ''
-    ok, msg = InventarioCorporativoModel.rechazar_traspaso(traspaso_id, session.get('usuario'), observaciones)
-    flash(msg, 'success' if ok else 'danger')
-    return redirect('/inventario-corporativo/movimientos/pendientes')
-
 @inventario_corporativo_bp.route('/api/estadisticas-dashboard')
 def api_estadisticas_dashboard():
     if not _require_login():
         return jsonify({'error': 'No autorizado'}), 401
 
     try:
-        productos_todos = InventarioCorporativoModel.obtener_todos() or []
-        productos_sede = InventarioCorporativoModel.obtener_por_sede_principal() or []
-        productos_oficinas = InventarioCorporativoModel.obtener_por_oficinas_servicio() or []
-        
-        stats_todos = _calculate_inventory_stats(productos_todos)
-        
-        return jsonify({
-            "total_productos": stats_todos['total_productos'],
-            "valor_total": stats_todos['valor_total'],
-            "stock_bajo": stats_todos['productos_bajo_stock'],
-            "productos_sede": len(productos_sede),
-            "productos_oficinas": len(productos_oficinas)
-        })
-        
+        # Si tiene acceso completo, devuelve métricas globales
+        if can_access('inventario_corporativo', 'view'):
+            productos_todos = InventarioCorporativoModel.obtener_todos() or []
+            productos_sede = InventarioCorporativoModel.obtener_por_sede_principal() or []
+            productos_oficinas = InventarioCorporativoModel.obtener_por_oficinas_servicio() or []
+
+            stats_todos = _calculate_inventory_stats(productos_todos)
+
+            return jsonify({
+                "total_productos": stats_todos['total_productos'],
+                "valor_total": stats_todos['valor_total'],
+                "stock_bajo": stats_todos['productos_bajo_stock'],
+                "productos_sede": len(productos_sede),
+                "productos_oficinas": len(productos_oficinas)
+            })
+
+        # Acceso mínimo: solo oficina actual
+        if can_access('inventario_corporativo', 'view_oficinas_servicio'):
+            productos_oficinas = InventarioCorporativoModel.obtener_por_oficinas_servicio() or []
+            oficina_nombre = (session.get('oficina_nombre') or '').strip()
+
+            if oficina_nombre:
+                oficina_upper = oficina_nombre.upper()
+                productos_oficinas = [p for p in productos_oficinas if (p.get('oficina') or '').upper() == oficina_upper]
+
+            stats = _calculate_inventory_stats(productos_oficinas)
+
+            return jsonify({
+                "total_productos": stats['total_productos'],
+                "valor_total": stats['valor_total'],
+                "stock_bajo": stats['productos_bajo_stock'],
+                "productos_sede": 0,
+                "productos_oficinas": stats['total_productos']
+            })
+
+        return jsonify({'error': 'No autorizado'}), 403
+
     except Exception as e:
-        logger.error(f"Error en API estadisticas dashboard: {e}")
+        logger.error(f"Error en API estadisticas dashboard: {type(e).__name__}")
         return jsonify({
             "total_productos": 0,
             "valor_total": 0,
@@ -743,7 +601,6 @@ def api_estadisticas_dashboard():
             "productos_sede": 0,
             "productos_oficinas": 0
         })
-
 @inventario_corporativo_bp.route('/api/estadisticas')
 def api_estadisticas_inventario():
     if not _require_login():

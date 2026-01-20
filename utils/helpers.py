@@ -59,7 +59,7 @@ def format_currency(value):
         formatted = f"${value:,.0f}"
         return formatted.replace(",", ".")
     except (ValueError, TypeError) as e:
-        logger.warning(f"Error formateando valor monetario: {value}, error: {e}")
+        logger.warning("Error formateando valor monetario: {value}, error: [error](%s)", type(e).__name__)
         return "$0"
 
 def format_date(date_value, format_str='%d/%m/%Y'):
@@ -73,7 +73,7 @@ def format_date(date_value, format_str='%d/%m/%Y'):
         formatted = date_value.strftime(format_str)
         return formatted
     except (AttributeError, ValueError) as e:
-        logger.warning(f"Error formateando fecha: {date_value}, error: {e}")
+        logger.warning("Error formateando fecha: {date_value}, error: [error](%s)", type(e).__name__)
         return str(date_value)
 
 def get_pagination_params(default_per_page=20):
@@ -123,7 +123,7 @@ def calcular_valor_total(cantidad, valor_unitario):
         total = cantidad * valor_unitario
         return total
     except (TypeError, ValueError) as e:
-        logger.warning(f"Error calculando valor total: cantidad={cantidad}, valor={valor_unitario}, error: {e}")
+        logger.warning("Error calculando valor total: cantidad={cantidad}, valor={valor_unitario}, error: [error](%s)", type(e).__name__)
         return 0
 
 def validar_stock(cantidad_solicitada, stock_disponible):
@@ -164,7 +164,7 @@ def sanitizar_identificacion(numero):
             return '***' + num_str[-3:] if len(num_str) > 3 else '***'
         return num_str[:3] + '***' + num_str[-3:]
     except Exception as e:
-        logger.warning(f"Error sanitizando identificación: {e}")
+        logger.warning("Error sanitizando identificación: [error](%s)", type(e).__name__)
         return '[identificacion-protegida]'
 
 def sanitizar_email(email):
@@ -187,7 +187,7 @@ def sanitizar_email(email):
         
         return f"{usuario_sanitizado}@{dominio}"
     except Exception as e:
-        logger.warning(f"Error sanitizando email: {e}")
+        logger.warning("Error sanitizando email: [error](%s)", type(e).__name__)
         return '[email-protegido]'
 
 def sanitizar_username(username):
@@ -204,7 +204,7 @@ def sanitizar_username(username):
         else:
             return username[:2] + '***'
     except Exception as e:
-        logger.warning(f"Error sanitizando username: {e}")
+        logger.warning("Error sanitizando username: [error](%s)", type(e).__name__)
         return '[usuario-protegido]'
 
 def sanitizar_ip(ip):
@@ -224,8 +224,35 @@ def sanitizar_ip(ip):
         # Para IPv6 u otros formatos, enmascarar completamente
         return '[ip-protegida]'
     except Exception as e:
-        logger.warning(f"Error sanitizando IP: {e}")
+        logger.warning("Error sanitizando IP: [error](%s)", type(e).__name__)
         return '[ip-protegida]'
+
+
+def sanitizar_log_text(value, max_len=500):
+    """
+    Neutraliza caracteres de control para evitar Log Injection (CWE-117).
+    - Reemplaza CR/LF/TAB por secuencias visibles.
+    - Elimina otros caracteres de control ASCII (< 32), excepto espacio.
+    - Trunca a max_len.
+    """
+    if value is None:
+        return ''
+    try:
+        s = str(value)
+    except Exception:
+        return '[texto-protegido]'
+
+    # Normalizar y neutralizar
+    s = s.replace('\r', '\\r').replace('\n', '\\n').replace('\t', '\\t')
+
+    # Remover otros controles (0-31) excepto espacio
+    s = ''.join(ch for ch in s if (ord(ch) >= 32) or ch == ' ')
+
+    if max_len and len(s) > max_len:
+        s = s[:max_len] + '...'
+    return s
+
+
 
 # Exportar las funciones de sanitización para que estén disponibles
 __all__ = [
@@ -233,5 +260,6 @@ __all__ = [
     'format_currency', 'format_date', 'get_pagination_params', 'flash_errors',
     'generate_codigo_unico', 'calcular_valor_total', 'validar_stock', 
     'obtener_mes_actual', 'sanitizar_identificacion', 'sanitizar_email', 
-    'sanitizar_username', 'sanitizar_ip'
+    'sanitizar_username', 'sanitizar_ip',
+    'sanitizar_log_text'
 ]

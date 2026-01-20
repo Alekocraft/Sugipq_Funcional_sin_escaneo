@@ -38,10 +38,10 @@ class Database:
             logger.info(f"Conexión a la base de datos establecida exitosamente - Servidor: {self.server}")
             return conn
         except pyodbc.InterfaceError as e:
-            logger.error(f"Error de interfaz ODBC al conectar a la base de datos: {e}")
+            logger.error("Error de interfaz ODBC al conectar a la base de datos: [error](%s)", type(e).__name__)
             return None
         except pyodbc.OperationalError as e:
-            logger.error(f"Error operacional al conectar a la base de datos: {e}")
+            logger.error("Error operacional al conectar a la base de datos: [error](%s)", type(e).__name__)
             
             # Mensaje de diagnóstico adicional
             if "Named Pipes" in str(e) or "Server is not found" in str(e):
@@ -59,7 +59,7 @@ class Database:
                 """)
             return None
         except Exception as e:
-            logger.error(f"Error inesperado al conectar a la base de datos: {e}", exc_info=True)
+            logger.error("Error inesperado al conectar a la base de datos: [error](%s)", type(e).__name__)
             return None
 
 # Instancia global de la base de datos para uso en toda la aplicación

@@ -78,20 +78,20 @@ def inicializar_oficina_principal():
         return True
         
     except pyodbc.IntegrityError as e:
-        error_str = str(e)
+        error_str = 'Error interno'
         if any(keyword in error_str for keyword in ['UQ_Oficinas_Nombre', '2627', 'duplicate key']):
             logger.info("Oficina COQ ya existe (evitado duplicado por constraint)")
             return True
         else:
-            logger.error(f"Error de integridad en base de datos: {e}")
+            logger.error("Error de integridad en base de datos: [error](%s)", type(e).__name__)
             return False
             
     except pyodbc.Error as e:
-        logger.error(f"Error de base de datos: {e}")
+        logger.error("Error de base de datos: [error](%s)", type(e).__name__)
         return False
         
     except Exception as e:
-        logger.error(f"Error inicializando oficina principal: {e}", exc_info=True)
+        logger.error("Error inicializando oficina principal: [error](%s)", type(e).__name__)
         return False
         
     finally:
@@ -126,7 +126,7 @@ def inicializar_directorios():
             os.makedirs(directorio, exist_ok=True)
             logger.debug(f"Directorio verificado/creado: {directorio}")
         except Exception as e:
-            logger.error(f"Error creando directorio {directorio}: {e}")
+            logger.error("Error creando directorio {directorio}: [error](%s)", type(e).__name__)
 
 def verificar_configuracion():
     """Valida la configuración básica del sistema"""
@@ -155,7 +155,7 @@ def inicializar_roles_permisos():
         logger.debug(f"Roles: {', '.join(roles_configurados)}")
         
     except Exception as e:
-        logger.error(f"Error verificando configuración de roles: {e}")
+        logger.error("Error verificando configuración de roles: [error](%s)", type(e).__name__)
 
 def inicializar_todo():
     """Ejecuta todas las rutinas de inicialización del sistema"""
@@ -171,7 +171,7 @@ def inicializar_todo():
         else:
             logger.warning("Inicialización de oficina tuvo problemas")
     except Exception as e:
-        logger.error(f"Error en inicialización de oficina: {e}")
+        logger.error("Error en inicialización de oficina: [error](%s)", type(e).__name__)
         # Continuar con otras inicializaciones
     
     inicializar_roles_permisos()

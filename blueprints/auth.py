@@ -1,4 +1,6 @@
 # blueprints/auth.py
+import logging
+logger = logging.getLogger(__name__)
 from flask import Blueprint, render_template, request, redirect, session, flash, current_app
 from models.usuarios_model import UsuarioModel
 from datetime import datetime, timedelta
@@ -33,9 +35,8 @@ def init_session_config(app):
     if is_production:
         app.config['SESSION_COOKIE_DOMAIN'] = '.qualitascolombia.com.co'
     
-    print(f"[SESIÓN] Configuración: SECURE={app.config['SESSION_COOKIE_SECURE']}, HTTPONLY=True, SAMESITE=Lax")
-    print(f"[SESIÓN] Entorno: {'PRODUCCIÓN (HTTPS)' if is_production else 'DESARROLLO (HTTP)'}")
-
+    logger.info(f"[SESIÓN] Configuración: SECURE={app.config['SESSION_COOKIE_SECURE']}, HTTPONLY=True, SAMESITE=Lax")
+    logger.info(f"[SESIÓN] Entorno: {'PRODUCCIÓN (HTTPS)' if is_production else 'DESARROLLO (HTTP)'}")
 def check_session_timeout():
     if 'usuario_id' not in session:
         return False
@@ -50,8 +51,7 @@ def check_session_timeout():
             if inactive_time > timedelta(minutes=SESSION_TIMEOUT_MINUTES):
                 return True
         except Exception as e:
-            print(f"Error verificando timeout: {e}")
-    
+            logger.info("Error verificando timeout: [error](%s)", type(e).__name__)
     return False
 
 def update_session_activity():
@@ -63,8 +63,7 @@ def clear_session_safely():
     try:
         session.clear()
     except Exception as e:
-        print(f"Error limpiando sesión: {e}")
-
+        logger.info("Error limpiando sesión: [error](%s)", type(e).__name__)
 def require_login(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -145,9 +144,8 @@ def login():
                 # ✅ CORRECCIÓN CRÍTICA: Forzar que Flask guarde la sesión
                 session.modified = True
                 
-                print(f"[SESIÓN] Creada para usuario: {usuario_info['usuario']}")
-                print(f"[SESIÓN] Permanent: {session.permanent}")
-                
+                logger.info(f"[SESIÓN] Creada para usuario: {usuario_info['usuario']}")
+                logger.info(f"[SESIÓN] Permanent: {session.permanent}")
                 flash(f'¡Bienvenido {usuario_info["nombre"]}!', 'success')
                 
                 # ✅ IMPORTANTE: return redirect
@@ -157,7 +155,7 @@ def login():
                 return render_template('auth/login.html')
                 
         except Exception as e:
-            print(f"[ERROR] Exception en login: {e}")
+            logger.info("[ERROR] Exception en login: [error](%s)", type(e).__name__)
             import traceback
             traceback.print_exc()
             flash('Error del sistema durante el login', 'danger')
@@ -170,8 +168,7 @@ def logout():
     usuario = session.get('usuario', 'Desconocido')
     client_info = get_client_info()
     
-    print(f"[SESIÓN] Logout de usuario: {usuario}")
-    
+    logger.info(f"[SESIÓN] Logout de usuario: {usuario}")
     clear_session_safely()
     flash('Sesión cerrada correctamente', 'info')
     return redirect('/auth/login')

@@ -1,4 +1,6 @@
-﻿"""
+import logging
+logger = logging.getLogger(__name__)
+"""
 Blueprint para generar certificados PDF de asignación de inventario corporativo
 con diseño Quálitas
 MODIFICADO: Incluye número de identificación (cédula) en el certificado
@@ -51,11 +53,10 @@ def add_header_footer(canvas, doc):
                             width=logo_width, height=logo_height, 
                             preserveAspectRatio=True, mask='auto')
             
-            print(f"✅ Logo dibujado: {logo_width:.2f} x {logo_height:.2f} pulgadas")
-            print(f"✅ Posición: ({logo_x:.2f}, {logo_y:.2f})")
-            
+            logger.info(f"✅ Logo dibujado: {logo_width:.2f} x {logo_height:.2f} pulgadas")
+            logger.info(f"✅ Posición: ({logo_x:.2f}, {logo_y:.2f})")
         except Exception as e:
-            print(f"❌ No se pudo cargar el logo: {e}")
+            logger.info("❌ No se pudo cargar el logo: [error](%s)", type(e).__name__)
             # Dibujar rectángulo como fallback
             canvas.setFillColor(QUALITAS_PURPLE)
             canvas.rect(0.75*inch, letter[1] - 1.3*inch, letter[0] - 1.5*inch, 1.0*inch, fill=1)
@@ -87,11 +88,10 @@ def generar_certificado(asignacion_id):
     """
     
     # 🔍 PRINT DE DIAGNÓSTICO
-    print("=" * 80)
-    print("🎨 CÓDIGO NUEVO QUÁLITAS EJECUTÁNDOSE")
-    print(f"📋 Generando certificado para asignación ID: {asignacion_id}")
-    print("=" * 80)
-    
+    logger.info("=" * 80)
+    logger.info("🎨 CÓDIGO NUEVO QUÁLITAS EJECUTÁNDOSE")
+    logger.info(f"📋 Generando certificado para asignación ID: {asignacion_id}")
+    logger.info("=" * 80)
     try:
         conn = get_database_connection()
         cursor = conn.cursor()
@@ -140,7 +140,7 @@ def generar_certificado(asignacion_id):
         
         if not row:
             conn.close()
-            print("❌ Asignación no encontrada")
+            logger.info("❌ Asignación no encontrada")
             return "Asignación no encontrada", 404
         
         # Convertir a diccionario
@@ -154,14 +154,13 @@ def generar_certificado(asignacion_id):
         if rol not in ['administrador', 'lider_inventario']:
             if asignacion.get('OficinaId') != oficina_id:
                 conn.close()
-                print("❌ Usuario sin permisos")
+                logger.info("❌ Usuario sin permisos")
                 return "No tiene permisos para ver este certificado", 403
         
         conn.close()
         
-        print(f"✅ Datos obtenidos para: {asignacion.get('UsuarioADNombre', 'N/A')}")
-        print(f"✅ Número de Identificación: {asignacion.get('NumeroIdentificacion', 'N/A')}")
-        
+        logger.info(f"✅ Datos obtenidos para: {asignacion.get('UsuarioADNombre', 'N/A')}")
+        logger.info(f"✅ Número de Identificación: {asignacion.get('NumeroIdentificacion', 'N/A')}")
         # Generar el PDF
         buffer = BytesIO()
         doc = SimpleDocTemplate(
@@ -213,18 +212,18 @@ def generar_certificado(asignacion_id):
         )
         
         # ========== TÍTULO PRINCIPAL ==========
-        elements.append(Paragraph("ASIGNACIÓN DE ACTIVO CORPORATIVO", title_style))
+        elements.append(Paragraph("CERTIFICADO DE ASIGNACIÓN DE ACTIVO CORPORATIVO", title_style))
         elements.append(Spacer(1, 0.2*inch))
         
         # ========== INFORMACIÓN DEL USUARIO ==========
         elements.append(Paragraph("INFORMACIÓN DEL COLABORADOR", subtitle_style))
         
-  
+        # INCLUIR NÚMERO DE IDENTIFICACIÓN EN LA INFORMACIÓN DEL USUARIO
         numero_identificacion = asignacion.get('NumeroIdentificacion', 'N/A')
         
         usuario_data = [
             ['Nombre Completo:', asignacion.get('UsuarioADNombre', 'N/A')],
-            ['Número de Identificación:',numero_identificacion],
+            ['Número de Identificación:', numero_identificacion],  # NUEVO CAMPO
             ['Correo Electrónico:', asignacion.get('UsuarioADEmail', 'N/A')],
             ['Oficina:', asignacion.get('NombreOficina', 'N/A')],
             ['Ubicación:', asignacion.get('Ubicacion', 'N/A')]
@@ -453,9 +452,8 @@ def generar_certificado(asignacion_id):
         nombre_usuario = asignacion.get('UsuarioADNombre', 'Usuario').replace(' ', '_')
         nombre_archivo = f"Certificado_Asignacion_{asignacion['AsignacionId']:06d}_{nombre_usuario}.pdf"
         
-        print(f"✅ Certificado generado exitosamente: {nombre_archivo}")
-        print("=" * 80)
-        
+        logger.info(f"✅ Certificado generado exitosamente: {nombre_archivo}")
+        logger.info("=" * 80)
         return send_file(
             buffer,
             mimetype='application/pdf',
@@ -464,8 +462,8 @@ def generar_certificado(asignacion_id):
         )
         
     except Exception as e:
-        print(f"❌ ERROR al generar certificado: {str(e)}")
-        print("=" * 80)
+        logger.info("❌ ERROR al generar certificado: [error](%s)", type(e).__name__)
+        logger.info("=" * 80)
         import traceback
         traceback.print_exc()
         return f"Error al generar el certificado: {str(e)}", 500

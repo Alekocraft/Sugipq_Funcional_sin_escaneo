@@ -221,7 +221,7 @@
     <div class="container">
         <h1>🔒 Reporte de Validación de Vulnerabilidades de Alto Riesgo</h1>
         <p><strong>Aplicación:</strong> SUGIPQ-V1</p>
-        <p><strong>Fecha de validación:</strong> 2026-01-20 13:26:35</p>
+        <p><strong>Fecha de validación:</strong> 2026-01-20 16:58:09</p>
         
         <div style="background-color: #e7f3ff; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #2196F3;">
             <h3 style="margin-top: 0; color: #1976D2;">ℹ️ Configuración del Análisis</h3>
@@ -233,19 +233,19 @@
         <div class="resumen">
             <div class="stat-card vulnerable">
                 <div class="stat-label">Vulnerabilidades Encontradas</div>
-                <div class="stat-number">162</div>
+                <div class="stat-number">41</div>
             </div>
             <div class="stat-card corregido">
                 <div class="stat-label">Vulnerabilidades Corregidas</div>
-                <div class="stat-number">24</div>
+                <div class="stat-number">101</div>
             </div>
             <div class="stat-card archivos">
                 <div class="stat-label">Archivos Afectados</div>
-                <div class="stat-number">36</div>
+                <div class="stat-number">16</div>
             </div>
             <div class="stat-card total">
                 <div class="stat-label">Total Validaciones</div>
-                <div class="stat-number">332</div>
+                <div class="stat-number">190</div>
             </div>
         </div>
         
@@ -254,57 +254,9 @@
             <h2>⚠️ Top 10 Archivos Críticos</h2>
             <p style="margin-bottom: 20px; color: #666;">Estos archivos requieren atención prioritaria por tener múltiples vulnerabilidades.</p>
             
-                <div class="archivo-card critico">
+                <div class="archivo-card alto">
                     <div class="archivo-header">
                         <span class="archivo-numero">1</span>
-                        <span class="archivo-nombre">models\inventario_corporativo_model.py</span>
-                        <span class="archivo-count">31 problema(s)</span>
-                    </div>
-                    <div class="archivo-lineas">
-                        Líneas afectadas: 60, 104, 174, 218, 255, 310, 343, 376, 398, 423
-                         ...
-                    </div>
-                </div>
-                
-                <div class="archivo-card alto">
-                    <div class="archivo-header">
-                        <span class="archivo-numero">2</span>
-                        <span class="archivo-nombre">solicitudes.py</span>
-                        <span class="archivo-count">10 problema(s)</span>
-                    </div>
-                    <div class="archivo-lineas">
-                        Líneas afectadas: 119, 168, 219, 332, 405, 433, 474, 504, 544, 571
-                        
-                    </div>
-                </div>
-                
-                <div class="archivo-card alto">
-                    <div class="archivo-header">
-                        <span class="archivo-numero">3</span>
-                        <span class="archivo-nombre">blueprints\solicitudes.py</span>
-                        <span class="archivo-count">9 problema(s)</span>
-                    </div>
-                    <div class="archivo-lineas">
-                        Líneas afectadas: 375, 433, 635, 671, 706, 820, 903, 934, 953
-                        
-                    </div>
-                </div>
-                
-                <div class="archivo-card alto">
-                    <div class="archivo-header">
-                        <span class="archivo-numero">4</span>
-                        <span class="archivo-nombre">models\solicitudes_model.py</span>
-                        <span class="archivo-count">9 problema(s)</span>
-                    </div>
-                    <div class="archivo-lineas">
-                        Líneas afectadas: 498, 737, 813, 847, 917, 996, 1076, 1122, 1176
-                        
-                    </div>
-                </div>
-                
-                <div class="archivo-card alto">
-                    <div class="archivo-header">
-                        <span class="archivo-numero">5</span>
                         <span class="archivo-nombre">blueprints\usuarios.py</span>
                         <span class="archivo-count">8 problema(s)</span>
                     </div>
@@ -316,7 +268,7 @@
                 
                 <div class="archivo-card alto">
                     <div class="archivo-header">
-                        <span class="archivo-numero">6</span>
+                        <span class="archivo-numero">2</span>
                         <span class="archivo-nombre">services\auth_service.py</span>
                         <span class="archivo-count">8 problema(s)</span>
                     </div>
@@ -326,50 +278,98 @@
                     </div>
                 </div>
                 
-                <div class="archivo-card alto">
+                <div class="archivo-card medio">
+                    <div class="archivo-header">
+                        <span class="archivo-numero">3</span>
+                        <span class="archivo-nombre">templates\usuarios\gestionar.html</span>
+                        <span class="archivo-count">5 problema(s)</span>
+                    </div>
+                    <div class="archivo-lineas">
+                        Líneas afectadas: 340, 346, 352, 402, 605
+                        
+                    </div>
+                </div>
+                
+                <div class="archivo-card medio">
+                    <div class="archivo-header">
+                        <span class="archivo-numero">4</span>
+                        <span class="archivo-nombre">models\confirmacion_asignaciones_model.py</span>
+                        <span class="archivo-count">2 problema(s)</span>
+                    </div>
+                    <div class="archivo-lineas">
+                        Líneas afectadas: 111, 123
+                        
+                    </div>
+                </div>
+                
+                <div class="archivo-card medio">
+                    <div class="archivo-header">
+                        <span class="archivo-numero">5</span>
+                        <span class="archivo-nombre">templates\auth\test_ldap.html</span>
+                        <span class="archivo-count">2 problema(s)</span>
+                    </div>
+                    <div class="archivo-lineas">
+                        Líneas afectadas: 63, 70
+                        
+                    </div>
+                </div>
+                
+                <div class="archivo-card medio">
+                    <div class="archivo-header">
+                        <span class="archivo-numero">6</span>
+                        <span class="archivo-nombre">templates\inventario_corporativo\asignar.html</span>
+                        <span class="archivo-count">2 problema(s)</span>
+                    </div>
+                    <div class="archivo-lineas">
+                        Líneas afectadas: 148, 150
+                        
+                    </div>
+                </div>
+                
+                <div class="archivo-card medio">
                     <div class="archivo-header">
                         <span class="archivo-numero">7</span>
-                        <span class="archivo-nombre">blueprints\prestamos.py</span>
-                        <span class="archivo-count">8 problema(s)</span>
+                        <span class="archivo-nombre">templates\usuarios\crear.html</span>
+                        <span class="archivo-count">2 problema(s)</span>
                     </div>
                     <div class="archivo-lineas">
-                        Líneas afectadas: 505, 665, 807, 910, 1009, 1298, 1408, 1459
+                        Líneas afectadas: 85, 94
                         
                     </div>
                 </div>
                 
-                <div class="archivo-card alto">
+                <div class="archivo-card medio">
                     <div class="archivo-header">
                         <span class="archivo-numero">8</span>
-                        <span class="archivo-nombre">blueprints\materiales.py</span>
-                        <span class="archivo-count">7 problema(s)</span>
+                        <span class="archivo-nombre">templates\usuarios\editar.html</span>
+                        <span class="archivo-count">2 problema(s)</span>
                     </div>
                     <div class="archivo-lineas">
-                        Líneas afectadas: 46, 77, 106, 111, 221, 319, 357
+                        Líneas afectadas: 139, 145
                         
                     </div>
                 </div>
                 
-                <div class="archivo-card alto">
+                <div class="archivo-card medio">
                     <div class="archivo-header">
                         <span class="archivo-numero">9</span>
-                        <span class="archivo-nombre">blueprints\oficinas.py</span>
-                        <span class="archivo-count">7 problema(s)</span>
+                        <span class="archivo-nombre">templates\reportes\solicitudes.html</span>
+                        <span class="archivo-count">2 problema(s)</span>
                     </div>
                     <div class="archivo-lineas">
-                        Líneas afectadas: 56, 101, 147, 159, 181, 203, 224
+                        Líneas afectadas: 370, 374
                         
                     </div>
                 </div>
                 
-                <div class="archivo-card alto">
+                <div class="archivo-card medio">
                     <div class="archivo-header">
                         <span class="archivo-numero">10</span>
-                        <span class="archivo-nombre">models\novedades_model.py</span>
-                        <span class="archivo-count">7 problema(s)</span>
+                        <span class="archivo-nombre">templates\solicitudes\solicitudes.html</span>
+                        <span class="archivo-count">2 problema(s)</span>
                     </div>
                     <div class="archivo-lineas">
-                        Líneas afectadas: 89, 200, 234, 268, 308, 375, 411
+                        Líneas afectadas: 594, 605
                         
                     </div>
                 </div>
@@ -555,22 +555,6 @@
                     <td>Datos sensibles sin sanitizar en log</td>
                 </tr>
 
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-117: Log Injection</td>
-                    <td><code>utils\ldap_auth.py</code></td>
-                    <td><strong>296</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Datos sensibles sin sanitizar en log</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-117: Log Injection</td>
-                    <td><code>utils\ldap_auth.py</code></td>
-                    <td><strong>349</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Datos sensibles sin sanitizar en log</td>
-                </tr>
-
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>app.py</code></td>
@@ -707,218 +691,66 @@
                     <td>Excepción en log sin sanitizar</td>
                 </tr>
 
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>certificado_route.py</code></td>
-                    <td><strong>58</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>certificado_route.py</code></td>
-                    <td><strong>470</strong></td>
+                    <td><strong>468</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>database.py</code></td>
-                    <td><strong>41</strong></td>
+                    <td><code>solicitudes.py</code></td>
+                    <td><strong>255</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Excepción en log sin sanitizar</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>database.py</code></td>
-                    <td><strong>44</strong></td>
+                    <td><code>solicitudes.py</code></td>
+                    <td><strong>300</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Excepción en log sin sanitizar</td>
                 </tr>
 
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>database.py</code></td>
-                    <td><strong>62</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
+                <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>solicitudes.py</code></td>
-                    <td><strong>119</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
+                    <td><strong>421</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
                 </tr>
 
-                <tr class="fila-resultado" data-estado="vulnerable">
+                <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>solicitudes.py</code></td>
-                    <td><strong>168</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
+                    <td><strong>470</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
                 </tr>
 
-                <tr class="fila-resultado" data-estado="vulnerable">
+                <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>solicitudes.py</code></td>
-                    <td><strong>219</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
+                    <td><strong>521</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
                 </tr>
 
-                <tr class="fila-resultado" data-estado="vulnerable">
+                <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>solicitudes.py</code></td>
-                    <td><strong>332</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>str(e) en log - exc_info expone detalles</td>
+                    <td><strong>567</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
                 </tr>
 
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>solicitudes.py</code></td>
-                    <td><strong>405</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>solicitudes.py</code></td>
-                    <td><strong>433</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>solicitudes.py</code></td>
-                    <td><strong>474</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>solicitudes.py</code></td>
-                    <td><strong>504</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>solicitudes.py</code></td>
-                    <td><strong>544</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>solicitudes.py</code></td>
-                    <td><strong>571</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utf8.py</code></td>
-                    <td><strong>156</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\api.py</code></td>
-                    <td><strong>18</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\api.py</code></td>
-                    <td><strong>35</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\api.py</code></td>
-                    <td><strong>50</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\aprobacion.py</code></td>
-                    <td><strong>31</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\aprobacion.py</code></td>
-                    <td><strong>66</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\aprobacion.py</code></td>
-                    <td><strong>93</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\aprobadores.py</code></td>
-                    <td><strong>40</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>str(e) en log - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\auth.py</code></td>
-                    <td><strong>53</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\auth.py</code></td>
-                    <td><strong>66</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
+                <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>blueprints\auth.py</code></td>
                     <td><strong>160</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\auth.py</code></td>
-                    <td><strong>162</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Stack trace expuesto</td>
                 </tr>
@@ -926,1022 +758,54 @@
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>blueprints\confirmacion_asignaciones.py</code></td>
-                    <td><strong>302</strong></td>
+                    <td><strong>301</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\confirmacion_asignaciones.py</code></td>
-                    <td><strong>326</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\confirmacion_asignaciones.py</code></td>
-                    <td><strong>382</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>str(e) en log</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\inventario_corporativo.py</code></td>
-                    <td><strong>280</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\inventario_corporativo.py</code></td>
-                    <td><strong>335</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\inventario_corporativo.py</code></td>
-                    <td><strong>360</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\inventario_corporativo.py</code></td>
-                    <td><strong>462</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\inventario_corporativo.py</code></td>
-                    <td><strong>486</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\inventario_corporativo.py</code></td>
-                    <td><strong>526</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\inventario_corporativo.py</code></td>
-                    <td><strong>560</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\inventario_corporativo.py</code></td>
-                    <td><strong>738</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\inventario_corporativo.py</code></td>
-                    <td><strong>768</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\materiales.py</code></td>
-                    <td><strong>46</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\materiales.py</code></td>
-                    <td><strong>77</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>blueprints\materiales.py</code></td>
-                    <td><strong>79</strong></td>
+                    <td><strong>50</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\materiales.py</code></td>
-                    <td><strong>106</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\materiales.py</code></td>
-                    <td><strong>111</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\materiales.py</code></td>
-                    <td><strong>221</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
+                    <td>Excepción en log sin sanitizar</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>blueprints\materiales.py</code></td>
-                    <td><strong>223</strong></td>
+                    <td><strong>81</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\materiales.py</code></td>
-                    <td><strong>319</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
+                    <td>Excepción en log sin sanitizar</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>blueprints\materiales.py</code></td>
-                    <td><strong>321</strong></td>
+                    <td><strong>115</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
+                    <td>Excepción en log sin sanitizar</td>
                 </tr>
 
-                <tr class="fila-resultado" data-estado="vulnerable">
+                <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>blueprints\materiales.py</code></td>
-                    <td><strong>357</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\novedades_model.py</code></td>
-                    <td><strong>89</strong></td>
+                    <td><strong>225</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Excepción en log sin sanitizar</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\novedades_model.py</code></td>
-                    <td><strong>91</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\novedades_model.py</code></td>
-                    <td><strong>155</strong></td>
+                    <td><code>blueprints\materiales.py</code></td>
+                    <td><strong>323</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Excepción en log sin sanitizar</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\novedades_model.py</code></td>
-                    <td><strong>157</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\novedades_model.py</code></td>
-                    <td><strong>199</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\novedades_model.py</code></td>
-                    <td><strong>201</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\novedades_model.py</code></td>
-                    <td><strong>231</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\novedades_model.py</code></td>
-                    <td><strong>233</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\novedades_model.py</code></td>
-                    <td><strong>270</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\novedades_model.py</code></td>
-                    <td><strong>327</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\novedades_model.py</code></td>
-                    <td><strong>329</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\oficinas.py</code></td>
-                    <td><strong>56</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\oficinas.py</code></td>
-                    <td><strong>101</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\oficinas.py</code></td>
-                    <td><strong>147</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\oficinas.py</code></td>
-                    <td><strong>159</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\oficinas.py</code></td>
-                    <td><strong>181</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\oficinas.py</code></td>
-                    <td><strong>203</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\oficinas.py</code></td>
-                    <td><strong>224</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>136</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>483</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>505</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>647</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>665</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>787</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>807</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>891</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>910</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>990</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>1009</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>1298</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>1408</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\prestamos.py</code></td>
-                    <td><strong>1459</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\reportes.py</code></td>
-                    <td><strong>673</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\reportes.py</code></td>
-                    <td><strong>847</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\reportes.py</code></td>
-                    <td><strong>1737</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\reportes.py</code></td>
-                    <td><strong>1757</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\reportes.py</code></td>
-                    <td><strong>2690</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>254</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>299</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>375</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>str(e) en log - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>420</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>433</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>str(e) en log - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>469</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>479</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>str(e) en log</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>520</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>528</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>str(e) en log</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>566</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>574</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>str(e) en log</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>635</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>str(e) en log - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>671</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>str(e) en log - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>706</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>str(e) en log - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>729</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>str(e) en log</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>808</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>820</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>str(e) en log - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>890</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>903</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>934</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>str(e) en log - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>953</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>976</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>str(e) en log</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>1000</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>str(e) en log</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>1024</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>str(e) en log</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>1041</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>str(e) en log</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>blueprints\solicitudes.py</code></td>
-                    <td><strong>1074</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>str(e) en log</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\confirmacion_asignaciones_model.py</code></td>
-                    <td><strong>130</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\confirmacion_asignaciones_model.py</code></td>
-                    <td><strong>183</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\confirmacion_asignaciones_model.py</code></td>
-                    <td><strong>302</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\confirmacion_asignaciones_model.py</code></td>
-                    <td><strong>372</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\confirmacion_asignaciones_model.py</code></td>
-                    <td><strong>500</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\confirmacion_asignaciones_model.py</code></td>
-                    <td><strong>577</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\confirmacion_asignaciones_model.py</code></td>
-                    <td><strong>616</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>60</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>104</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>174</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>218</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>255</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>310</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>343</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>376</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>398</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>423</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>493</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>533</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>563</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>585</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>617</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>649</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>688</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>720</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>783</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>830</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>873</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>930</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>988</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>1043</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>1108</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>1196</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>1235</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>1290</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>1354</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>1463</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model.py</code></td>
-                    <td><strong>1502</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model_extended.py</code></td>
-                    <td><strong>124</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model_extended.py</code></td>
-                    <td><strong>276</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model_extended.py</code></td>
-                    <td><strong>278</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model_extended.py</code></td>
-                    <td><strong>291</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model_extended.py</code></td>
+                    <td><code>blueprints\materiales.py</code></td>
                     <td><strong>361</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Excepción en log sin sanitizar</td>
@@ -1950,537 +814,97 @@
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>models\inventario_corporativo_model_extended.py</code></td>
-                    <td><strong>425</strong></td>
+                    <td><strong>277</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model_extended.py</code></td>
-                    <td><strong>476</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\inventario_corporativo_model_extended.py</code></td>
-                    <td><strong>522</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\materiales_model.py</code></td>
-                    <td><strong>60</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\materiales_model.py</code></td>
-                    <td><strong>112</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
+                    <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>models\materiales_model.py</code></td>
-                    <td><strong>186</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\materiales_model.py</code></td>
-                    <td><strong>226</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\materiales_model.py</code></td>
-                    <td><strong>251</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\materiales_model.py</code></td>
-                    <td><strong>270</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>89</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>91</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>200</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>202</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>234</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>236</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>268</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>270</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>308</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>310</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>375</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>377</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\novedades_model.py</code></td>
-                    <td><strong>411</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\oficinas_model.py</code></td>
-                    <td><strong>36</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\oficinas_model.py</code></td>
-                    <td><strong>59</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\oficinas_model.py</code></td>
-                    <td><strong>86</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\oficinas_model.py</code></td>
-                    <td><strong>117</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\oficinas_model.py</code></td>
-                    <td><strong>147</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\prestamos_model.py</code></td>
-                    <td><strong>39</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\prestamos_model.py</code></td>
-                    <td><strong>69</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\prestamos_model.py</code></td>
-                    <td><strong>117</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\prestamos_model.py</code></td>
-                    <td><strong>142</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\prestamos_model.py</code></td>
-                    <td><strong>182</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\prestamos_model.py</code></td>
-                    <td><strong>224</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\prestamos_model.py</code></td>
-                    <td><strong>278</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>498</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>500</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>737</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>739</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>813</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>847</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>917</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>996</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>998</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>1076</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>1078</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>1122</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\solicitudes_model.py</code></td>
-                    <td><strong>1176</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción completa en print() - Usar logger en lugar de print</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>88</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>158</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>240</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>242</strong></td>
+                    <td><strong>188</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>350</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>352</strong></td>
+                    <td><code>models\novedades_model.py</code></td>
+                    <td><strong>93</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>422</strong></td>
+                    <td><code>models\novedades_model.py</code></td>
+                    <td><strong>204</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
+                    <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>462</strong></td>
+                    <td><code>models\novedades_model.py</code></td>
+                    <td><strong>238</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
+                    <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>516</strong></td>
+                    <td><code>models\novedades_model.py</code></td>
+                    <td><strong>272</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
+                    <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>588</strong></td>
+                    <td><code>models\novedades_model.py</code></td>
+                    <td><strong>312</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
+                    <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>634</strong></td>
+                    <td><code>models\novedades_model.py</code></td>
+                    <td><strong>379</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
+                    <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>683</strong></td>
+                    <td><code>models\solicitudes_model.py</code></td>
+                    <td><strong>502</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
+                    <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>817</strong></td>
+                    <td><code>models\solicitudes_model.py</code></td>
+                    <td><strong>741</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
+                    <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>875</strong></td>
+                    <td><code>models\solicitudes_model.py</code></td>
+                    <td><strong>1000</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
+                    <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
-                    <td><code>models\usuarios_model.py</code></td>
-                    <td><strong>920</strong></td>
+                    <td><code>models\solicitudes_model.py</code></td>
+                    <td><strong>1080</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>services\auth_service.py</code></td>
-                    <td><strong>100</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>services\auth_service.py</code></td>
-                    <td><strong>116</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>services\notification_service.py</code></td>
-                    <td><strong>65</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>services\notification_service.py</code></td>
-                    <td><strong>92</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>services\notification_service.py</code></td>
-                    <td><strong>283</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
+                    <td>Stack trace expuesto</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
@@ -2494,25 +918,9 @@
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>services\notification_service.py</code></td>
-                    <td><strong>433</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>services\notification_service.py</code></td>
                     <td><strong>435</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>services\notification_service.py</code></td>
-                    <td><strong>568</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="revisar">
@@ -2526,169 +934,9 @@
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
                     <td><code>services\notification_service.py</code></td>
-                    <td><strong>629</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>services\notification_service.py</code></td>
                     <td><strong>631</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
                     <td>Stack trace expuesto</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>services\notification_service.py</code></td>
-                    <td><strong>668</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\helpers.py</code></td>
-                    <td><strong>62</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\helpers.py</code></td>
-                    <td><strong>76</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\helpers.py</code></td>
-                    <td><strong>126</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\helpers.py</code></td>
-                    <td><strong>167</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\helpers.py</code></td>
-                    <td><strong>190</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\helpers.py</code></td>
-                    <td><strong>207</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\helpers.py</code></td>
-                    <td><strong>227</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\initialization.py</code></td>
-                    <td><strong>86</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\initialization.py</code></td>
-                    <td><strong>90</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="vulnerable">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\initialization.py</code></td>
-                    <td><strong>94</strong></td>
-                    <td><span class="badge vulnerable">VULNERABLE</span></td>
-                    <td>Excepción en log sin sanitizar - exc_info expone detalles</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\initialization.py</code></td>
-                    <td><strong>129</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\initialization.py</code></td>
-                    <td><strong>158</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\initialization.py</code></td>
-                    <td><strong>174</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\ldap_auth.py</code></td>
-                    <td><strong>29</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\ldap_auth.py</code></td>
-                    <td><strong>219</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\ldap_auth.py</code></td>
-                    <td><strong>296</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\ldap_auth.py</code></td>
-                    <td><strong>349</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="revisar">
-                    <td>CWE-209: Information Exposure</td>
-                    <td><code>utils\permissions.py</code></td>
-                    <td><strong>101</strong></td>
-                    <td><span class="badge revisar">REVISAR</span></td>
-                    <td>Excepción en log sin sanitizar</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="vulnerable">
@@ -2838,7 +1086,7 @@
                 <tr class="fila-resultado" data-estado="corregido">
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>2763</strong></td>
+                    <td><strong>963</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
@@ -2846,7 +1094,7 @@
                 <tr class="fila-resultado" data-estado="corregido">
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>2771</strong></td>
+                    <td><strong>971</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
@@ -2854,7 +1102,7 @@
                 <tr class="fila-resultado" data-estado="corregido">
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>2779</strong></td>
+                    <td><strong>979</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
@@ -2862,7 +1110,7 @@
                 <tr class="fila-resultado" data-estado="corregido">
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>2787</strong></td>
+                    <td><strong>987</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
@@ -2870,7 +1118,7 @@
                 <tr class="fila-resultado" data-estado="corregido">
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>2795</strong></td>
+                    <td><strong>995</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
@@ -2878,7 +1126,7 @@
                 <tr class="fila-resultado" data-estado="corregido">
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>2803</strong></td>
+                    <td><strong>1003</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
@@ -2886,7 +1134,7 @@
                 <tr class="fila-resultado" data-estado="corregido">
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>2811</strong></td>
+                    <td><strong>1011</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
@@ -2894,7 +1142,7 @@
                 <tr class="fila-resultado" data-estado="corregido">
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>2819</strong></td>
+                    <td><strong>1019</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
@@ -2902,7 +1150,7 @@
                 <tr class="fila-resultado" data-estado="corregido">
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>2827</strong></td>
+                    <td><strong>1027</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
@@ -2910,7 +1158,7 @@
                 <tr class="fila-resultado" data-estado="corregido">
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>2835</strong></td>
+                    <td><strong>1035</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
@@ -2918,7 +1166,623 @@
                 <tr class="fila-resultado" data-estado="corregido">
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>2843</strong></td>
+                    <td><strong>1043</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1051</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1059</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1067</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1075</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1083</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1091</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1099</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1107</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1115</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1123</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1131</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1139</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1147</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1155</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1163</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1171</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1179</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1187</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1195</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1203</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1211</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1219</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1227</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1235</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1243</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1251</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1259</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1267</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1275</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1283</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1291</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1299</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1307</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1315</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1323</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1331</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1339</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1347</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1355</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1363</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1371</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1379</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1387</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1395</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1403</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1411</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1419</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1427</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1435</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1443</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1451</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1459</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1467</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1475</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1483</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1491</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1499</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1507</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1515</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1523</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1531</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1539</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1547</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1555</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1563</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1571</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1579</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1587</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1595</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1603</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1611</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1619</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1627</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1635</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1643</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1651</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1659</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>

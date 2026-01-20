@@ -1,375 +1,871 @@
-# app/solicitudes.py
-
-import os
-import logging
-from datetime import datetime
-from werkzeug.utils import secure_filename
-from flask import Blueprint, render_template, request, jsonify, session, flash, redirect, url_for
+# blueprints/solicitudes.py
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from functools import wraps
-
-# Importar modelos
-from models.novedades_model import NovedadModel
+import logging
+from utils.helpers import sanitizar_log_text, sanitizar_username
+from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
 from models.solicitudes_model import SolicitudModel
+from models.materiales_model import MaterialModel
+from models.oficinas_model import OficinaModel
+from models.usuarios_model import UsuarioModel
+from models.novedades_model import NovedadModel
 from database import get_database_connection
+from utils.filters import filtrar_por_oficina_usuario, verificar_acceso_oficina
+from utils.permissions import (
+    can_approve_solicitud, can_approve_partial_solicitud, 
+    can_reject_solicitud, can_return_solicitud,
+    can_create_novedad, can_manage_novedad, can_view_novedades
+)
 
-# Configurar blueprint
-solicitudes_bp = Blueprint('solicitudes', __name__)
+# Importar servicio de notificaciones
+try:
+    from services.notification_service import NotificationService, notificar_solicitud
+    NOTIFICACIONES_ACTIVAS = True
+except ImportError:
+    NOTIFICACIONES_ACTIVAS = False
+    logger.warning("⚠️ Servicio de notificaciones no disponible")
 
-# Configuraci�n de logging
+# Configuración de logging
 logger = logging.getLogger(__name__)
 
-# Configuraci�n para carga de im�genes
+# Crear blueprint
+solicitudes_bp = Blueprint('solicitudes', __name__)
+
+# Configuración para carga de imágenes de novedades
 UPLOAD_FOLDER_NOVEDADES = 'static/images/novedades'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 def allowed_file(filename):
-    """Valida si la extensi�n del archivo est� permitida"""
+    """Valida si la extensión del archivo está permitida"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Crear directorio si no existe
 os.makedirs(UPLOAD_FOLDER_NOVEDADES, exist_ok=True)
 
-# Decorador para verificar login
+
+# ============================================================================
+# FUNCIONES HELPER PARA MOSTRAR BOTONES (Context Processors)
+# ============================================================================
+
+def should_show_devolucion_button(solicitud):
+    """Determina si se debe mostrar el botón de solicitar devolución"""
+    if not can_return_solicitud():
+        return False
+    estado = solicitud.get('estado', '').lower()
+    estado_id = solicitud.get('estado_id', 0)
+    # Solo mostrar para solicitudes aprobadas, entregadas parcial o completadas
+    # y que no tengan devolución pendiente
+    return estado_id in (2, 4, 5) or estado in ('aprobada', 'entregada parcial', 'completada')
+
+
+def should_show_gestion_devolucion_button(solicitud):
+    """Determina si se debe mostrar el botón de gestionar devolución"""
+    if not can_manage_novedad():  # Usamos el mismo permiso de gestión
+        return False
+    # Verificar si tiene devolución pendiente
+    solicitud_id = solicitud.get('id') or solicitud.get('solicitud_id')
+    if solicitud_id:
+        return SolicitudModel.tiene_devolucion_pendiente(solicitud_id)
+    return False
+
+
+def should_show_novedad_button(solicitud):
+    """Determina si se debe mostrar el botón de crear novedad"""
+    if not can_create_novedad():
+        return False
+    estado = solicitud.get('estado', '').lower()
+    estado_id = solicitud.get('estado_id', 0)
+    # Solo mostrar para solicitudes aprobadas, entregadas o completadas
+    # y que no tengan novedad activa
+    if estado_id in (2, 4, 5) or estado in ('aprobada', 'entregada parcial', 'completada'):
+        if 'novedad' not in estado:
+            return True
+    return False
+
+
+def should_show_gestion_novedad_button(solicitud):
+    """Determina si se debe mostrar el botón de gestionar novedad"""
+    if not can_manage_novedad():
+        return False
+    estado = solicitud.get('estado', '').lower()
+    estado_id = solicitud.get('estado_id', 0)
+    # Mostrar para solicitudes con novedad registrada (estado 7)
+    return estado_id == 7 or estado == 'novedad registrada'
+
+
+def should_show_aprobacion_buttons(solicitud):
+    """Determina si se deben mostrar los botones de aprobación"""
+    estado = solicitud.get('estado', '').lower()
+    estado_id = solicitud.get('estado_id', 0)
+    # Solo mostrar para solicitudes pendientes
+    return estado_id == 1 or estado == 'pendiente'
+
+
+# Registrar funciones en el contexto del template
+@solicitudes_bp.context_processor
+def utility_processor():
+    """Registra funciones útiles para usar en templates"""
+    return {
+        'should_show_devolucion_button': should_show_devolucion_button,
+        'should_show_gestion_devolucion_button': should_show_gestion_devolucion_button,
+        'should_show_novedad_button': should_show_novedad_button,
+        'should_show_gestion_novedad_button': should_show_gestion_novedad_button,
+        'should_show_aprobacion_buttons': should_show_aprobacion_buttons,
+        'can_approve_solicitud': can_approve_solicitud,
+        'can_reject_solicitud': can_reject_solicitud,
+        'can_approve_partial_solicitud': can_approve_partial_solicitud,
+        'can_return_solicitud': can_return_solicitud,
+        'can_create_novedad': can_create_novedad,
+        'can_manage_novedad': can_manage_novedad,
+        'can_view_novedades': can_view_novedades
+    }
+
+
+# ============================================================================
+# DECORADORES
+# ============================================================================
+
 def login_required(f):
+    """Decorador que verifica autenticación"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'usuario_id' not in session:
-            flash('Debe iniciar sesi�n para acceder a esta p�gina', 'warning')
-            return redirect(url_for('auth.login'))
+            logger.warning("Acceso no autorizado a %s. Redirigiendo a login.", sanitizar_log_text(request.path))
+            flash('Debe iniciar sesión para acceder a esta página', 'warning')
+            return redirect('/auth/login')
         return f(*args, **kwargs)
     return decorated_function
 
-# Decorador para verificar permisos espec�ficos
-def permission_required(module, action=None):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            from utils.permissions import can_access
-            if not can_access(module, action):
-                flash('No tiene permisos para realizar esta acci�n', 'danger')
-                return redirect(url_for('solicitudes.ver_solicitudes'))
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
+
+def approval_required(f):
+    """Decorador para verificar permisos de aprobación"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not can_approve_solicitud():
+            flash('No tiene permisos para aprobar solicitudes', 'danger')
+            return redirect('/solicitudes')
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def return_required(f):
+    """Decorador para verificar permisos de devolución"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not can_return_solicitud():
+            flash('No tiene permisos para registrar devoluciones', 'danger')
+            return redirect('/solicitudes')
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def novedad_create_required(f):
+    """Decorador para verificar permisos de crear novedades"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not can_create_novedad():
+            flash('No tiene permisos para crear novedades', 'danger')
+            return redirect('/solicitudes')
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def novedad_manage_required(f):
+    """Decorador para verificar permisos de gestionar novedades"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not can_manage_novedad():
+            flash('No tiene permisos para gestionar novedades', 'danger')
+            return redirect('/solicitudes')
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def novedad_view_required(f):
+    """Decorador para verificar permisos de ver novedades"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not can_view_novedades():
+            flash('No tiene permisos para ver novedades', 'danger')
+            return redirect('/solicitudes')
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# ============================================================================
+# FUNCIÓN AUXILIAR PARA MAPEAR CAMPOS
+# ============================================================================
+
+def mapear_solicitud(s):
+    """
+    Mapea los campos del modelo a los nombres esperados por el template.
+    """
+    return {
+        'id': s.get('solicitud_id') or s.get('id'),
+        'solicitud_id': s.get('solicitud_id') or s.get('id'),
+        'estado_id': s.get('estado_id') or 1,
+        'estado': s.get('estado_nombre') or s.get('estado') or 'Pendiente',
+        'material_id': s.get('material_id'),
+        'material_nombre': s.get('material_nombre'),
+        'cantidad_solicitada': s.get('cantidad_solicitada') or 0,
+        'cantidad_entregada': s.get('cantidad_entregada') or 0,
+        'cantidad_devuelta': s.get('cantidad_devuelta') or 0,
+        'oficina_id': s.get('oficina_solicitante_id') or s.get('oficina_id'),
+        'oficina_solicitante_id': s.get('oficina_solicitante_id') or s.get('oficina_id'),
+        'oficina_nombre': s.get('oficina_nombre'),
+        'usuario_solicitante': s.get('usuario_solicitante'),
+        'fecha_solicitud': s.get('fecha_solicitud'),
+        'fecha_aprobacion': s.get('fecha_aprobacion'),
+        'fecha_ultima_entrega': s.get('fecha_ultima_entrega'),
+        'porcentaje_oficina': s.get('porcentaje_oficina') or 0,
+        'valor_total_solicitado': s.get('valor_total_solicitado') or 0,
+        'valor_oficina': s.get('valor_oficina') or 0,
+        'valor_sede_principal': s.get('valor_sede_principal') or 0,
+        'aprobador_id': s.get('aprobador_id'),
+        'aprobador_nombre': s.get('aprobador_nombre'),
+        'observacion': s.get('observacion') or '',
+        'tiene_novedad': s.get('tiene_novedad') or False,
+        'estado_novedad': s.get('estado_novedad'),
+        'tipo_novedad': s.get('tipo_novedad'),
+        'novedad_descripcion': s.get('novedad_descripcion'),
+        'cantidad_afectada': s.get('cantidad_afectada') or 0,
+    }
+
+
+# ============================================================================
+# FUNCIONES AUXILIARES PARA NOTIFICACIONES
+# ============================================================================
+
+def _obtener_email_solicitante(usuario_id):
+    """Obtiene el email del solicitante"""
+    conn = get_database_connection()
+    if not conn:
+        return None
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT CorreoElectronico FROM Usuarios WHERE UsuarioId = ? AND Activo = 1",
+            (usuario_id,)
+        )
+        row = cursor.fetchone()
+        return row[0] if row else None
+    except Exception as e:
+        logger.error(f"Error obteniendo email: {e}")
+        return None
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def _obtener_info_solicitud_completa(solicitud_id):
+    """Obtiene información completa de la solicitud para notificaciones"""
+    conn = get_database_connection()
+    if not conn:
+        return None
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                sm.SolicitudId,
+                m.NombreElemento as material_nombre,
+                sm.CantidadSolicitada,
+                sm.CantidadEntregada,
+                o.NombreOficina as oficina_nombre,
+                sm.UsuarioSolicitante,
+                u.CorreoElectronico as email_solicitante,
+                es.NombreEstado as estado
+            FROM SolicitudesMaterial sm
+            INNER JOIN Materiales m ON sm.MaterialId = m.MaterialId
+            INNER JOIN Oficinas o ON sm.OficinaSolicitanteId = o.OficinaId
+            LEFT JOIN Usuarios u ON sm.UsuarioSolicitante = u.NombreUsuario
+            INNER JOIN EstadosSolicitud es ON sm.EstadoId = es.EstadoId
+            WHERE sm.SolicitudId = ?
+        """, (solicitud_id,))
+        row = cursor.fetchone()
+        if row:
+            return {
+                'id': row[0],
+                'material_nombre': row[1],
+                'cantidad_solicitada': row[2],
+                'cantidad_entregada': row[3],
+                'oficina_nombre': row[4],
+                'usuario_solicitante': row[5],
+                'email_solicitante': row[6],
+                'estado': row[7]
+            }
+        return None
+    except Exception as e:
+        logger.error(f"Error obteniendo info solicitud: {e}")
+        return None
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ============================================================================
+# RUTAS PRINCIPALES
+# ============================================================================
 
 @solicitudes_bp.route('/')
 @login_required
-def ver_solicitudes():
-    """Muestra la p�gina principal de solicitudes"""
+def listar():
+    """Lista todas las solicitudes con filtros opcionales"""
     try:
-        # Obtener par�metros de filtro
         filtro_estado = request.args.get('estado', 'todos')
         filtro_oficina = request.args.get('oficina', 'todas')
         filtro_material = request.args.get('material', '')
         filtro_solicitante = request.args.get('solicitante', '')
         
-        # Obtener solicitudes con filtros
-        solicitudes = SolicitudModel.obtener_todas(
-            estado=filtro_estado if filtro_estado != 'todos' else None,
-            oficina=filtro_oficina if filtro_oficina != 'todas' else None,
-            material=filtro_material if filtro_material else None,
-            solicitante=filtro_solicitante if filtro_solicitante else None
-        )
+        if filtro_estado == 'todas_novedades':
+            solicitudes_raw = SolicitudModel.obtener_todas(estado='todas_novedades')
+        elif filtro_estado != 'todos':
+            solicitudes_raw = SolicitudModel.obtener_todas(estado=filtro_estado)
+        else:
+            solicitudes_raw = SolicitudModel.obtener_todas()
         
-        # Obtener estad�sticas usando los IDs correctos
-        total_solicitudes = len(solicitudes)
+        solicitudes = [mapear_solicitud(s) for s in solicitudes_raw]
         
-        # Mapear nombres de estado a IDs
-        estado_ids = {
-            'pendiente': 1,
-            'aprobada': 2,
-            'rechazada': 3,
-            'entregada_parcial': 4,
-            'completada': 5,
-            'devuelta': 6,
-            'novedad_registrada': 7,
-            'novedad_aceptada': 8,
-            'novedad_rechazada': 9
-        }
+        oficinas_unique = list(set([s.get('oficina_nombre', '') for s in solicitudes if s.get('oficina_nombre')]))
+        if filtro_oficina != 'todas':
+            solicitudes = [s for s in solicitudes if s.get('oficina_nombre', '') == filtro_oficina]
         
-        # Contar por estado usando los IDs
-        solicitudes_pendientes = len([s for s in solicitudes if s.get('estado_id') == estado_ids['pendiente']])
-        solicitudes_aprobadas = len([s for s in solicitudes if s.get('estado_id') == estado_ids['aprobada']])
-        solicitudes_rechazadas = len([s for s in solicitudes if s.get('estado_id') == estado_ids['rechazada']])
-        solicitudes_completadas = len([s for s in solicitudes if s.get('estado_id') == estado_ids['completada']])
-        solicitudes_devueltas = len([s for s in solicitudes if s.get('estado_id') == estado_ids['devuelta']])
+        if filtro_material:
+            solicitudes = [s for s in solicitudes if filtro_material.lower() in s.get('material_nombre', '').lower()]
         
-        # Novedades (estados 7, 8, 9)
-        solicitudes_novedad = len([s for s in solicitudes if s.get('estado_id') in [7, 8, 9]])
+        if filtro_solicitante:
+            solicitudes = [s for s in solicitudes if filtro_solicitante.lower() in s.get('usuario_solicitante', '').lower()]
         
-        # Obtener lista de oficinas �nicas para el filtro
-        from models.oficinas_model import OficinaModel
-        oficinas = OficinaModel.obtener_todas()
-        oficinas_unique = [o['nombre'] for o in oficinas if o['nombre']]
+        solicitudes = filtrar_por_oficina_usuario(solicitudes)
         
-        return render_template('solicitudes.html',
+        materiales = MaterialModel.obtener_todos()
+        materiales_dict = {m['id']: m for m in materiales}
+        
+        todas_solicitudes = [mapear_solicitud(s) for s in SolicitudModel.obtener_todas()]
+        todas_solicitudes = filtrar_por_oficina_usuario(todas_solicitudes)
+        
+        total_solicitudes = len(todas_solicitudes)
+        solicitudes_pendientes = len([s for s in todas_solicitudes if s.get('estado', '').lower() == 'pendiente'])
+        solicitudes_aprobadas = len([s for s in todas_solicitudes if s.get('estado', '').lower() == 'aprobada'])
+        solicitudes_rechazadas = len([s for s in todas_solicitudes if s.get('estado', '').lower() == 'rechazada'])
+        solicitudes_devueltas = len([s for s in todas_solicitudes if s.get('estado', '').lower() == 'devuelta'])
+        solicitudes_novedad = len([s for s in todas_solicitudes if 'novedad' in s.get('estado', '').lower()])
+        
+        mostrar_novedades = can_view_novedades()
+        
+        return render_template(
+            'solicitudes/solicitudes.html',
             solicitudes=solicitudes,
+            materiales_dict=materiales_dict,
             total_solicitudes=total_solicitudes,
             solicitudes_pendientes=solicitudes_pendientes,
             solicitudes_aprobadas=solicitudes_aprobadas,
             solicitudes_rechazadas=solicitudes_rechazadas,
-            solicitudes_completadas=solicitudes_completadas,
             solicitudes_devueltas=solicitudes_devueltas,
             solicitudes_novedad=solicitudes_novedad,
             oficinas_unique=oficinas_unique,
             filtro_estado=filtro_estado,
-            filtro_oficina=filtro_oficina
+            filtro_oficina=filtro_oficina,
+            filtro_material=filtro_material,
+            filtro_solicitante=filtro_solicitante,
+            mostrar_novedades=mostrar_novedades
         )
+        
     except Exception as e:
-        logger.error(f"Error al cargar solicitudes: {e}", exc_info=True)
+        logger.error("Error al listar solicitudes: %s", sanitizar_log_text(str(e)))
         flash('Error al cargar las solicitudes', 'danger')
-        return render_template('solicitudes.html', solicitudes=[], total_solicitudes=0)
+        return redirect('/dashboard')
 
-@solicitudes_bp.route('/api/<int:solicitud_id>/info-devolucion')
+
+@solicitudes_bp.route('/crear', methods=['GET', 'POST'])
 @login_required
-def obtener_info_devolucion(solicitud_id):
-    """Obtiene informaci�n para la devoluci�n de una solicitud"""
+def crear():
+    """Crear una nueva solicitud"""
     try:
-        conn = get_database_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT 
-                sm.SolicitudId,
-                sm.CantidadEntregada,
-                m.NombreElemento as material_nombre,
-                u.NombreUsuario as solicitante_nombre
-            FROM SolicitudesMaterial sm
-            INNER JOIN Materiales m ON sm.MaterialId = m.MaterialId
-            INNER JOIN Usuarios u ON sm.UsuarioSolicitante = u.NombreUsuario
-            WHERE sm.SolicitudId = ?
-        """, (solicitud_id,))
-        
-        row = cursor.fetchone()
-        
-        if row:
-            # Calcular cantidad ya devuelta
-            cursor.execute("""
-                SELECT SUM(CantidadDevuelta) as total_devuelto
-                FROM Devoluciones
-                WHERE SolicitudId = ?
-            """, (solicitud_id,))
+        if request.method == 'POST':
+            material_id = request.form.get('material_id')
+            cantidad = request.form.get('cantidad_solicitada')
+            porcentaje_oficina = request.form.get('porcentaje_oficina', '100')
+            observacion = request.form.get('observacion', '')
             
-            devolucion_row = cursor.fetchone()
-            cantidad_ya_devuelta = devolucion_row[0] if devolucion_row and devolucion_row[0] else 0
+            if not all([material_id, cantidad]):
+                flash('Material y cantidad son requeridos', 'danger')
+                return redirect('/solicitudes/crear')
             
+            usuario_id = session.get('usuario_id')
+            oficina_id = session.get('oficina_id')
+            
+            if not oficina_id:
+                flash('No se pudo determinar su oficina', 'danger')
+                return redirect('/solicitudes/crear')
+            
+            solicitud_id = SolicitudModel.crear_solicitud(
+                material_id=int(material_id),
+                cantidad_solicitada=int(cantidad),
+                usuario_solicitante=usuario_id,
+                oficina_solicitante=oficina_id,
+                porcentaje_oficina=float(porcentaje_oficina),
+                observacion=observacion
+            )
+            
+            if solicitud_id:
+                # ====== NOTIFICACIÓN: Solicitud creada ======
+                if NOTIFICACIONES_ACTIVAS:
+                    try:
+                        solicitud_info = _obtener_info_solicitud_completa(solicitud_id)
+                        if solicitud_info:
+                            NotificationService.notificar_solicitud_creada(solicitud_info)
+                            logger.info(f"📧 Notificación enviada: Nueva solicitud #{solicitud_id}")
+                    except Exception as e:
+                        logger.error(f"Error enviando notificación de solicitud creada: {e}")
+                # =============================================
+                
+                flash('Solicitud creada exitosamente', 'success')
+                return redirect('/solicitudes')
+            else:
+                flash('Error al crear la solicitud', 'danger')
+                return redirect('/solicitudes/crear')
+        
+        materiales = MaterialModel.obtener_todos()
+        return render_template('solicitudes/crear.html', materiales=materiales)
+        
+    except Exception as e:
+        logger.error("Error al crear solicitud: %s", sanitizar_log_text(str(e)))
+        flash('Error al crear la solicitud', 'danger')
+        return redirect('/solicitudes/crear')
+
+
+# ============================================================================
+# RUTAS DE APROBACIÓN
+# ============================================================================
+
+@solicitudes_bp.route('/aprobar/<int:solicitud_id>', methods=['POST'])
+@login_required
+@approval_required
+def aprobar_solicitud(solicitud_id):
+    """Aprobar una solicitud completamente"""
+    try:
+        usuario_aprobador = session.get('usuario_id')
+        usuario_nombre = session.get('usuario_nombre', 'Sistema')
+        
+        # Obtener info antes de aprobar
+        solicitud_info = _obtener_info_solicitud_completa(solicitud_id)
+        estado_anterior = solicitud_info.get('estado', 'Pendiente') if solicitud_info else 'Pendiente'
+        
+        success, mensaje = SolicitudModel.aprobar(solicitud_id, usuario_aprobador)
+        
+        if success:
+            # ====== NOTIFICACIÓN: Solicitud aprobada ======
+            if NOTIFICACIONES_ACTIVAS and solicitud_info and solicitud_info.get('email_solicitante'):
+                try:
+                    NotificationService.notificar_cambio_estado_solicitud(
+                        solicitud_info, 
+                        estado_anterior, 
+                        'Aprobada',
+                        usuario_nombre
+                    )
+                    logger.info(f"📧 Notificación enviada: Solicitud #{solicitud_id} aprobada")
+                except Exception as e:
+                    logger.error(f"Error enviando notificación de aprobación: {e}")
+            # =============================================
+            
+            flash('Solicitud aprobada exitosamente', 'success')
+            return jsonify({'success': True, 'message': mensaje})
+        else:
+            flash(mensaje, 'danger')
+            return jsonify({'success': False, 'message': mensaje})
+        
+    except Exception as e:
+        logger.error("Error al aprobar solicitud {solicitud_id}: %s", sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'message': 'Error al procesar la aprobación'})
+
+
+@solicitudes_bp.route('/aprobar_parcial/<int:solicitud_id>', methods=['POST'])
+@login_required
+@approval_required
+def aprobar_parcial_solicitud(solicitud_id):
+    """Aprobar parcialmente una solicitud"""
+    try:
+        if not can_approve_partial_solicitud():
+            return jsonify({'success': False, 'message': 'No tiene permisos para aprobar parcialmente'})
+        
+        data = request.get_json() if request.is_json else request.form
+        cantidad_aprobada = data.get('cantidad_aprobada')
+        
+        if not cantidad_aprobada:
+            return jsonify({'success': False, 'message': 'Debe especificar la cantidad a aprobar'})
+        
+        usuario_aprobador = session.get('usuario_id')
+        usuario_nombre = session.get('usuario_nombre', 'Sistema')
+        
+        # Obtener info antes de aprobar
+        solicitud_info = _obtener_info_solicitud_completa(solicitud_id)
+        estado_anterior = solicitud_info.get('estado', 'Pendiente') if solicitud_info else 'Pendiente'
+        
+        success, mensaje = SolicitudModel.aprobar_parcial(solicitud_id, int(cantidad_aprobada), usuario_aprobador)
+        
+        if success:
+            # ====== NOTIFICACIÓN: Entrega parcial ======
+            if NOTIFICACIONES_ACTIVAS and solicitud_info and solicitud_info.get('email_solicitante'):
+                try:
+                    NotificationService.notificar_cambio_estado_solicitud(
+                        solicitud_info, 
+                        estado_anterior, 
+                        'Entregada Parcial',
+                        usuario_nombre,
+                        f'Cantidad aprobada: {cantidad_aprobada}'
+                    )
+                    logger.info(f"📧 Notificación enviada: Solicitud #{solicitud_id} aprobada parcialmente")
+                except Exception as e:
+                    logger.error(f"Error enviando notificación de aprobación parcial: {e}")
+            # =============================================
+            
+            return jsonify({'success': True, 'message': f'Solicitud aprobada parcialmente ({cantidad_aprobada} unidades)'})
+        else:
+            return jsonify({'success': False, 'message': mensaje})
+        
+    except Exception as e:
+        logger.error("Error al aprobar parcial solicitud {solicitud_id}: %s", sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'message': 'Error al procesar la aprobación parcial'})
+
+
+@solicitudes_bp.route('/rechazar/<int:solicitud_id>', methods=['POST'])
+@login_required
+@approval_required
+def rechazar_solicitud(solicitud_id):
+    """Rechazar una solicitud"""
+    try:
+        if not can_reject_solicitud():
+            return jsonify({'success': False, 'message': 'No tiene permisos para rechazar solicitudes'})
+        
+        data = request.get_json() if request.is_json else request.form
+        observacion = data.get('observacion', 'Sin observación')
+        
+        usuario_rechaza = session.get('usuario_id')
+        usuario_nombre = session.get('usuario_nombre', 'Sistema')
+        
+        # Obtener info antes de rechazar
+        solicitud_info = _obtener_info_solicitud_completa(solicitud_id)
+        estado_anterior = solicitud_info.get('estado', 'Pendiente') if solicitud_info else 'Pendiente'
+        
+        success, mensaje = SolicitudModel.rechazar(solicitud_id, usuario_rechaza, observacion)
+        
+        if success:
+            # ====== NOTIFICACIÓN: Solicitud rechazada ======
+            if NOTIFICACIONES_ACTIVAS and solicitud_info and solicitud_info.get('email_solicitante'):
+                try:
+                    NotificationService.notificar_cambio_estado_solicitud(
+                        solicitud_info, 
+                        estado_anterior, 
+                        'Rechazada',
+                        usuario_nombre,
+                        observacion
+                    )
+                    logger.info(f"📧 Notificación enviada: Solicitud #{solicitud_id} rechazada")
+                except Exception as e:
+                    logger.error(f"Error enviando notificación de rechazo: {e}")
+            # =============================================
+            
+            return jsonify({'success': True, 'message': 'Solicitud rechazada exitosamente'})
+        else:
+            return jsonify({'success': False, 'message': mensaje})
+        
+    except Exception as e:
+        logger.error("Error al rechazar solicitud {solicitud_id}: %s", sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'message': 'Error al procesar el rechazo'})
+
+
+# ============================================================================
+# RUTAS DE DEVOLUCIÓN (CON FLUJO DE APROBACIÓN)
+# ============================================================================
+
+# Configuración para imágenes de devoluciones
+UPLOAD_FOLDER_DEVOLUCIONES = 'static/images/devoluciones'
+os.makedirs(UPLOAD_FOLDER_DEVOLUCIONES, exist_ok=True)
+
+
+@solicitudes_bp.route('/solicitar-devolucion/<int:solicitud_id>', methods=['POST'])
+@login_required
+def solicitar_devolucion(solicitud_id):
+    """Solicitar devolución de material (requiere aprobación)"""
+    try:
+        # Verificar permiso de solicitar devolución
+        if not can_return_solicitud():
+            return jsonify({'success': False, 'message': 'No tiene permisos para solicitar devoluciones'}), 403
+        
+        data = request.form if request.form else request.get_json()
+        cantidad_devuelta = data.get('cantidad_devuelta')
+        motivo = data.get('motivo', '')
+        
+        if not cantidad_devuelta:
+            return jsonify({'success': False, 'message': 'Debe especificar la cantidad a devolver'})
+        
+        usuario_solicita = session.get('usuario_nombre', 'Sistema')
+        usuario_id = session.get('usuario_id')
+        
+        # Procesar imagen si se envió
+        imagen = request.files.get('imagen_devolucion') if hasattr(request, 'files') else None
+        ruta_imagen = None
+        
+        if imagen and imagen.filename and allowed_file(imagen.filename):
+            filename = secure_filename(imagen.filename)
+            name, ext = os.path.splitext(filename)
+            filename = f"dev_{solicitud_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
+            filepath = os.path.join(UPLOAD_FOLDER_DEVOLUCIONES, filename)
+            imagen.save(filepath)
+            ruta_imagen = f"images/devoluciones/{filename}"
+            logger.info(f'Imagen guardada para devolución: {filename}')
+        
+        # Registrar solicitud de devolución (estado pendiente)
+        success, mensaje = SolicitudModel.solicitar_devolucion(
+            solicitud_id=solicitud_id,
+            cantidad_devuelta=int(cantidad_devuelta),
+            usuario_solicita=usuario_solicita,
+            motivo=motivo,
+            ruta_imagen=ruta_imagen
+        )
+        
+        if success:
+            logger.info(f'Devolución solicitada. Solicitud ID: {solicitud_id}, Cantidad: {cantidad_devuelta}, Usuario: {usuario_solicita}')
+            return jsonify({'success': True, 'message': 'Solicitud de devolución registrada. Pendiente de aprobación.'})
+        else:
+            return jsonify({'success': False, 'message': mensaje})
+        
+    except Exception as e:
+        logger.error("Error al solicitar devolución {solicitud_id}: %s", sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'message': 'Error al procesar la solicitud de devolución'})
+
+
+@solicitudes_bp.route('/aprobar-devolucion', methods=['POST'])
+@login_required
+def aprobar_devolucion():
+    """Aprobar una solicitud de devolución"""
+    try:
+        # Verificar permiso de aprobar devolución
+        if not can_manage_novedad():  # Usamos el mismo permiso de gestión
+            return jsonify({'success': False, 'message': 'No tiene permisos para aprobar devoluciones'}), 403
+        
+        data = request.get_json() if request.is_json else request.form
+        devolucion_id = data.get('devolucion_id')
+        observaciones = data.get('observaciones', '')
+        
+        if not devolucion_id:
+            return jsonify({'success': False, 'message': 'ID de devolución requerido'}), 400
+        
+        usuario_aprueba = session.get('usuario_nombre', 'Sistema')
+        
+        # Aprobar y procesar la devolución (actualiza stock)
+        success, mensaje = SolicitudModel.aprobar_devolucion(
+            devolucion_id=int(devolucion_id),
+            usuario_aprueba=usuario_aprueba,
+            observaciones=observaciones
+        )
+        
+        if success:
+            logger.info(f'Devolución aprobada. ID: {devolucion_id}, Usuario: {usuario_aprueba}')
+            return jsonify({'success': True, 'message': 'Devolución aprobada y procesada exitosamente'})
+        else:
+            return jsonify({'success': False, 'message': mensaje})
+        
+    except Exception as e:
+        logger.error("Error al aprobar devolución: %s", sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'message': 'Error al aprobar la devolución'})
+
+
+@solicitudes_bp.route('/rechazar-devolucion', methods=['POST'])
+@login_required
+def rechazar_devolucion():
+    """Rechazar una solicitud de devolución"""
+    try:
+        # Verificar permiso
+        if not can_manage_novedad():
+            return jsonify({'success': False, 'message': 'No tiene permisos para rechazar devoluciones'}), 403
+        
+        data = request.get_json() if request.is_json else request.form
+        devolucion_id = data.get('devolucion_id')
+        observaciones = data.get('observaciones', '')
+        
+        if not devolucion_id:
+            return jsonify({'success': False, 'message': 'ID de devolución requerido'}), 400
+        
+        usuario_rechaza = session.get('usuario_nombre', 'Sistema')
+        
+        success, mensaje = SolicitudModel.rechazar_devolucion(
+            devolucion_id=int(devolucion_id),
+            usuario_rechaza=usuario_rechaza,
+            observaciones=observaciones
+        )
+        
+        if success:
+            logger.info(f'Devolución rechazada. ID: {devolucion_id}, Usuario: {usuario_rechaza}')
+            return jsonify({'success': True, 'message': 'Devolución rechazada'})
+        else:
+            return jsonify({'success': False, 'message': mensaje})
+        
+    except Exception as e:
+        logger.error("Error al rechazar devolución: %s", sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'message': 'Error al rechazar la devolución'})
+
+
+@solicitudes_bp.route('/api/<int:solicitud_id>/devolucion-pendiente')
+@login_required
+def obtener_devolucion_pendiente(solicitud_id):
+    """Obtiene la devolución pendiente de una solicitud"""
+    try:
+        devolucion = SolicitudModel.obtener_devolucion_pendiente(solicitud_id)
+        
+        if devolucion:
             return jsonify({
                 'success': True,
-                'solicitud_id': row[0],
-                'cantidad_entregada': row[1] or 0,
-                'cantidad_ya_devuelta': cantidad_ya_devuelta,
-                'material_nombre': row[2] or 'No especificado',
-                'solicitante_nombre': row[3] or 'No especificado'
+                'devolucion': devolucion
             })
         else:
-            return jsonify({'success': False, 'error': 'Solicitud no encontrada'}), 404
+            return jsonify({
+                'success': False,
+                'error': 'No se encontró devolución pendiente para esta solicitud'
+            })
             
     except Exception as e:
-        logger.error(f"Error obteniendo info de devoluci�n: {e}", exc_info=True)
-        return jsonify({'success': False, 'error': str(e)}), 500
-    finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'conn' in locals():
-            conn.close()
+        logger.error("Error obteniendo devolución pendiente {solicitud_id}: %s", sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
 
-@solicitudes_bp.route('/api/<int:solicitud_id>/novedad')
+
+# Mantener ruta antigua por compatibilidad (redirige al nuevo flujo)
+@solicitudes_bp.route('/devolucion/<int:solicitud_id>', methods=['POST'])
 @login_required
-def obtener_novedad_solicitud(solicitud_id):
-    """Obtiene la novedad asociada a una solicitud"""
-    try:
-        conn = get_database_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT 
-                ns.NovedadId as novedad_id,
-                ns.SolicitudId,
-                ns.TipoNovedad,
-                ns.Descripcion,
-                ns.EstadoNovedad as estado,
-                ns.UsuarioRegistra,
-                ns.FechaRegistro,
-                ns.CantidadAfectada,
-                ns.RutaImagen as imagen_url
-            FROM NovedadesSolicitudes ns
-            WHERE ns.SolicitudId = ?
-            ORDER BY ns.FechaRegistro DESC
-        """, (solicitud_id,))
-        
-        row = cursor.fetchone()
-        
-        if row:
-            novedad = {
-                'novedad_id': row[0],
-                'solicitud_id': row[1],
-                'tipo_novedad': row[2],
-                'descripcion': row[3],
-                'estado_novedad': row[4],
-                'usuario_registra': row[5],
-                'fecha_registro': row[6].strftime('%Y-%m-%d %H:%M:%S') if row[6] else '',
-                'cantidad_afectada': row[7],
-                'imagen_url': row[8]
-            }
-            return jsonify({'success': True, 'novedad': novedad})
-        else:
-            return jsonify({'success': False, 'error': 'No se encontr� novedad'}), 404
-            
-    except Exception as e:
-        logger.error(f"Error obteniendo novedad: {e}", exc_info=True)
-        return jsonify({'success': False, 'error': str(e)}), 500
-    finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'conn' in locals():
-            conn.close()
+def registrar_devolucion(solicitud_id):
+    """Registrar devolución de material - REDIRIGE AL NUEVO FLUJO"""
+    return solicitar_devolucion(solicitud_id)
+
+
+# ============================================================================
+# RUTAS DE NOVEDADES
+# ============================================================================
 
 @solicitudes_bp.route('/registrar-novedad', methods=['POST'])
 @login_required
-@permission_required('novedades', 'create')
+@novedad_create_required
 def registrar_novedad():
-    """
-    Registra una nueva novedad asociada a una solicitud
-    Permite adjuntar una imagen como evidencia
-    """
+    """Registra una nueva novedad asociada a una solicitud"""
     try:
         solicitud_id = request.form.get('solicitud_id')
         tipo_novedad = request.form.get('tipo_novedad')
         descripcion = request.form.get('descripcion')
         cantidad_afectada = request.form.get('cantidad_afectada')
-        usuario_reporta = session.get('usuario_nombre') or session.get('nombre_usuario')
+        usuario_id = session.get('usuario_id')
+        usuario_nombre = session.get('usuario_nombre', 'Sistema')
         
-        # Validaci�n de campos obligatorios
-        if not all([solicitud_id, tipo_novedad, descripcion, cantidad_afectada]):
-            logger.warning(f'Intento de registro de novedad con datos incompletos')
+        if not all([solicitud_id, tipo_novedad, descripcion, cantidad_afectada, usuario_id]):
+            logger.warning(f'Intento de registro de novedad con datos incompletos. Usuario: {usuario_id}')
             return jsonify({'success': False, 'error': 'Faltan datos requeridos'}), 400
         
-        # Validar que la cantidad afectada sea un n�mero positivo
-        try:
-            cantidad_afectada = int(cantidad_afectada)
-            if cantidad_afectada <= 0:
-                return jsonify({'success': False, 'error': 'La cantidad afectada debe ser mayor que 0'}), 400
-        except ValueError:
-            return jsonify({'success': False, 'error': 'Cantidad afectada inv�lida'}), 400
-        
-        # Verificar que la solicitud est� en estado aprobada (2) o entregada parcial (4)
-        conn = get_database_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT EstadoId, CantidadEntregada 
-            FROM SolicitudesMaterial 
-            WHERE SolicitudId = ?
-        """, (solicitud_id,))
-        
-        row = cursor.fetchone()
-        if not row:
-            return jsonify({'success': False, 'error': 'Solicitud no encontrada'}), 404
-        
-        estado_actual = row[0]
-        cantidad_entregada = row[1] or 0
-        
-        # Solo se pueden registrar novedades en solicitudes aprobadas o entregadas parcialmente
-        if estado_actual not in [2, 4]:  # 2 = Aprobada, 4 = Entregada Parcial
-            return jsonify({'success': False, 'error': 'Solo se pueden registrar novedades en solicitudes aprobadas o entregadas parcialmente'}), 400
-        
-        # Validar que la cantidad afectada no supere la cantidad entregada
-        if cantidad_afectada > cantidad_entregada:
-            return jsonify({'success': False, 'error': f'La cantidad afectada ({cantidad_afectada}) no puede superar la cantidad entregada ({cantidad_entregada})'}), 400
-        
-        cursor.close()
-        conn.close()
-        
-        # Procesamiento de imagen adjunta
+        # ✅ VALIDAR IMAGEN OBLIGATORIA
         imagen = request.files.get('imagen_novedad')
+        if not imagen or not imagen.filename:
+            logger.warning(f'Intento de registro de novedad sin imagen. Usuario: {usuario_id}')
+            return jsonify({'success': False, 'error': 'La imagen de evidencia es obligatoria'}), 400
+        
+        # Obtener info de la solicitud
+        solicitud_info = _obtener_info_solicitud_completa(int(solicitud_id))
+        
         ruta_imagen = None
         
-        if imagen and imagen.filename:
-            if allowed_file(imagen.filename):
-                filename = secure_filename(imagen.filename)
-                name, ext = os.path.splitext(filename)
-                filename = f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
-                filepath = os.path.join(UPLOAD_FOLDER_NOVEDADES, filename)
-                imagen.save(filepath)
-                ruta_imagen = f"images/novedades/{filename}"
-                logger.info(f'Imagen guardada para novedad: {filename}')
-            else:
-                return jsonify({'success': False, 'error': 'Formato de imagen no permitido'}), 400
+        if allowed_file(imagen.filename):
+            filename = secure_filename(imagen.filename)
+            name, ext = os.path.splitext(filename)
+            filename = f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
+            filepath = os.path.join(UPLOAD_FOLDER_NOVEDADES, filename)
+            imagen.save(filepath)
+            ruta_imagen = f"images/novedades/{filename}"
+            logger.info(f'Imagen guardada para novedad: {filename}')
+        else:
+            return jsonify({'success': False, 'error': 'Tipo de archivo no permitido. Use: png, jpg, jpeg, gif, webp'}), 400
         
-        # Inserci�n en base de datos usando el modelo actualizado
-        success = NovedadModel.crear_con_imagen(
+        success = NovedadModel.crear(
             solicitud_id=int(solicitud_id),
             tipo_novedad=tipo_novedad,
             descripcion=descripcion,
-            cantidad_afectada=cantidad_afectada,
-            usuario_reporta=usuario_reporta,
+            usuario_reporta=usuario_nombre,  # ✅ Corregido: era usuario_id
+            cantidad_afectada=int(cantidad_afectada),
             ruta_imagen=ruta_imagen
         )
         
         if success:
-            # Actualizar estado de la solicitud a "Novedad Registrada" (EstadoId = 7)
-            conn = get_database_connection()
-            cursor = conn.cursor()
-            try:
-                cursor.execute("""
-                    UPDATE SolicitudesMaterial 
-                    SET EstadoId = 7, TieneNovedad = 1
-                    WHERE SolicitudId = ?
-                """, (solicitud_id,))
-                conn.commit()
-            finally:
-                cursor.close()
-                conn.close()
+            SolicitudModel.actualizar_estado_solicitud(int(solicitud_id), 7)
             
-            logger.info(f'Novedad registrada exitosamente. Solicitud ID: {solicitud_id}, Usuario: {usuario_reporta}')
+            # ====== NOTIFICACIÓN: Novedad registrada ======
+            if NOTIFICACIONES_ACTIVAS and solicitud_info:
+                try:
+                    novedad_info = {
+                        'tipo': tipo_novedad,
+                        'descripcion': descripcion,
+                        'cantidad_afectada': cantidad_afectada,
+                        'usuario_registra': usuario_nombre
+                    }
+                    NotificationService.notificar_novedad_registrada(solicitud_info, novedad_info)
+                    logger.info(f"📧 Notificación enviada: Novedad registrada para solicitud #{solicitud_id}")
+                except Exception as e:
+                    logger.error('Error enviando notificación de novedad: %s', sanitizar_log_text(str(e)))
+            # =============================================
+            
+            logger.info(f'Novedad registrada exitosamente. Solicitud ID: {solicitud_id}, Usuario: {usuario_id}')
             return jsonify({
                 'success': True, 
                 'message': 'Novedad registrada correctamente'
             })
         else:
-            return jsonify({'success': False, 'error': 'Error al registrar la novedad en la base de datos'}), 500
+            return jsonify({'success': False, 'error': 'Error al registrar novedad'}), 500
         
     except Exception as e:
-        logger.error(f'Error al registrar novedad: {str(e)}', exc_info=True)
+        logger.error('Error al registrar novedad: %s', sanitizar_log_text(str(e)))
         return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+
 
 @solicitudes_bp.route('/gestionar-novedad', methods=['POST'])
 @login_required
-@permission_required('novedades', 'manage')
+@novedad_manage_required
 def gestionar_novedad():
-    """
-    Gestiona una novedad existente (aceptar/rechazar)
-    Solo para roles: administrador, lider_inventario, aprobador
-    """
+    """Gestiona una novedad existente (aceptar/rechazar)"""
     try:
-        solicitud_id = request.form.get('solicitud_id')
-        accion = request.form.get('accion')
-        observaciones = request.form.get('observaciones', '')
-        usuario_gestion = session.get('usuario_nombre') or session.get('nombre_usuario')
+        if request.is_json:
+            data = request.get_json()
+            solicitud_id = data.get('solicitud_id')
+            accion = data.get('accion')
+            observaciones = data.get('observaciones', '')
+        else:
+            solicitud_id = request.form.get('solicitud_id')
+            accion = request.form.get('accion')
+            observaciones = request.form.get('observaciones', '')
         
-        if not all([solicitud_id, accion, usuario_gestion]):
-            logger.warning(f'Intento de gesti�n de novedad con datos incompletos')
+        if not all([solicitud_id, accion]):
+            logger.warning(f'Intento de gestión de novedad con datos incompletos')
             return jsonify({'success': False, 'message': 'Datos incompletos'}), 400
 
-        # Obtener la novedad m�s reciente de la solicitud
         novedades = NovedadModel.obtener_por_solicitud(int(solicitud_id))
+        
         if not novedades:
             logger.warning(f'No se encontraron novedades para la solicitud ID: {solicitud_id}')
-            return jsonify({'success': False, 'message': 'No se encontr� novedad para esta solicitud'}), 404
+            return jsonify({'success': False, 'message': 'No se encontró novedad para esta solicitud'}), 404
 
         novedad = novedades[0]
-        novedad_id = novedad.get('id') or novedad.get('novedad_id')
+        usuario_gestion = session.get('usuario_nombre')
+        
+        # Obtener info de la solicitud
+        solicitud_info = _obtener_info_solicitud_completa(int(solicitud_id))
 
-        # Determinar estados seg�n la acci�n
         if accion == 'aceptar':
             nuevo_estado_novedad = 'aceptada'
-            nuevo_estado_solicitud_id = 8  # EstadoId para "Novedad Aceptada"
+            nuevo_estado_solicitud = 8
             log_action = 'aceptada'
+            estado_nombre = 'Novedad Aceptada'
         else:
             nuevo_estado_novedad = 'rechazada'
-            nuevo_estado_solicitud_id = 9  # EstadoId para "Novedad Rechazada"
+            nuevo_estado_solicitud = 9
             log_action = 'rechazada'
+            estado_nombre = 'Novedad Rechazada'
 
-        # Actualizar estado de la novedad
+        novedad_id = novedad.get('novedad_id') or novedad.get('id')
         success_novedad = NovedadModel.actualizar_estado(
             novedad_id=novedad_id,
             nuevo_estado=nuevo_estado_novedad,
@@ -377,196 +873,204 @@ def gestionar_novedad():
             comentario=observaciones
         )
 
-        if success_novedad:
-            # Actualizar estado de la solicitud
-            conn = get_database_connection()
-            cursor = conn.cursor()
-            try:
-                cursor.execute("""
-                    UPDATE SolicitudesMaterial 
-                    SET EstadoId = ?
-                    WHERE SolicitudId = ?
-                """, (nuevo_estado_solicitud_id, solicitud_id))
-                conn.commit()
-                
-                logger.info(f'Novedad {log_action}. Solicitud ID: {solicitud_id}, Usuario: {usuario_gestion}')
-                return jsonify({
-                    'success': True, 
-                    'message': f'Novedad {nuevo_estado_novedad} exitosamente'
-                })
-            finally:
-                cursor.close()
-                conn.close()
+        success_solicitud = SolicitudModel.actualizar_estado_solicitud(int(solicitud_id), nuevo_estado_solicitud)
+
+        if success_novedad and success_solicitud:
+            # ====== NOTIFICACIÓN: Novedad gestionada ======
+            if NOTIFICACIONES_ACTIVAS and solicitud_info and solicitud_info.get('email_solicitante'):
+                try:
+                    NotificationService.notificar_cambio_estado_solicitud(
+                        solicitud_info, 
+                        'Novedad Registrada', 
+                        estado_nombre,
+                        usuario_gestion,
+                        observaciones
+                    )
+                    logger.info(f"📧 Notificación enviada: Novedad {log_action} para solicitud #{solicitud_id}")
+                except Exception as e:
+                    logger.error('Error enviando notificación de gestión novedad: %s', sanitizar_log_text(str(e)))
+            # =============================================
+            
+            logger.info(f'Novedad {log_action}. Solicitud ID: {solicitud_id}, Usuario: {usuario_gestion}')
+            return jsonify({
+                'success': True, 
+                'message': f'Novedad {nuevo_estado_novedad} exitosamente'
+            })
         else:
-            logger.error(f'Error al actualizar estado de novedad. Novedad ID: {novedad_id}')
+            logger.error(f'Error al procesar novedad. Solicitud ID: {solicitud_id}')
             return jsonify({'success': False, 'message': 'Error al procesar la novedad'}), 500
 
     except Exception as e:
-        logger.error(f'Error en gesti�n de novedad: {e}', exc_info=True)
+        logger.error('Error en gestión de novedad: %s', sanitizar_log_text(str(e)))
         return jsonify({'success': False, 'message': 'Error interno del servidor'}), 500
 
-@solicitudes_bp.route('/aprobar/<int:solicitud_id>', methods=['POST'])
-@login_required
-@permission_required('solicitudes', 'approve')
-def aprobar_solicitud(solicitud_id):
-    """Aprueba una solicitud completa"""
-    try:
-        # Obtener aprobador_id del usuario actual
-        aprobador_id = session.get('aprobador_id')
-        if not aprobador_id:
-            # Si no tiene aprobador_id asignado, usar el aprobador por defecto (1)
-            aprobador_id = 1
-        
-        # Llamar al stored procedure para aprobar la solicitud
-        conn = get_database_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("EXEC sp_AprobarSolicitud @SolicitudId = ?, @AprobadorId = ?", 
-                      (solicitud_id, aprobador_id))
-        
-        conn.commit()
-        
-        flash('Solicitud aprobada correctamente', 'success')
-        return redirect(url_for('solicitudes.ver_solicitudes'))
-        
-    except Exception as e:
-        logger.error(f'Error al aprobar solicitud: {e}', exc_info=True)
-        flash(f'Error al aprobar solicitud: {str(e)}', 'danger')
-        return redirect(url_for('solicitudes.ver_solicitudes'))
-    finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'conn' in locals():
-            conn.close()
 
-@solicitudes_bp.route('/aprobar_parcial/<int:solicitud_id>', methods=['POST'])
+@solicitudes_bp.route('/novedades')
 @login_required
-@permission_required('solicitudes', 'partial_approve')
-def aprobar_parcial_solicitud(solicitud_id):
-    """Aprueba parcialmente una solicitud"""
+@novedad_view_required
+def listar_novedades():
+    """Lista todas las novedades del sistema"""
     try:
-        cantidad_aprobada = request.form.get('cantidad_aprobada')
-        if not cantidad_aprobada:
-            flash('Debe especificar la cantidad a aprobar', 'danger')
-            return redirect(url_for('solicitudes.ver_solicitudes'))
+        novedades = NovedadModel.obtener_todas()
+        estadisticas = NovedadModel.obtener_estadisticas()
         
-        cantidad_aprobada = int(cantidad_aprobada)
-        if cantidad_aprobada <= 0:
-            flash('La cantidad debe ser mayor que 0', 'danger')
-            return redirect(url_for('solicitudes.ver_solicitudes'))
+        filtro_estado = request.args.get('estado', '')
+        if filtro_estado:
+            novedades = [n for n in novedades if n.get('estado') == filtro_estado]
         
-        # Obtener aprobador_id del usuario actual
-        aprobador_id = session.get('aprobador_id', 1)
+        tipos_novedad = NovedadModel.obtener_tipos_disponibles()
         
-        # Llamar al stored procedure para aprobar parcialmente
-        conn = get_database_connection()
-        cursor = conn.cursor()
+        logger.info(f"Usuario {session.get('usuario_id')} visualizando {len(novedades)} novedades")
         
-        cursor.execute("EXEC sp_AprobarParcialSolicitud @SolicitudId = ?, @AprobadorId = ?, @CantidadAprobada = ?", 
-                      (solicitud_id, aprobador_id, cantidad_aprobada))
-        
-        conn.commit()
-        
-        flash('Solicitud aprobada parcialmente correctamente', 'success')
-        return redirect(url_for('solicitudes.ver_solicitudes'))
+        return render_template(
+            'solicitudes/listar.html',
+            novedades=novedades,
+            estadisticas_novedades=estadisticas,
+            filtro_estado=filtro_estado,
+            tipos_novedad=tipos_novedad,
+            mostrar_todas_novedades=True
+        )
         
     except Exception as e:
-        logger.error(f'Error al aprobar parcialmente solicitud: {e}', exc_info=True)
-        flash(f'Error al aprobar parcialmente: {str(e)}', 'danger')
-        return redirect(url_for('solicitudes.ver_solicitudes'))
-    finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'conn' in locals():
-            conn.close()
+        logger.error("Error al listar novedades: %s", sanitizar_log_text(str(e)))
+        flash('Error al cargar novedades', 'danger')
+        return redirect('/solicitudes')
 
-@solicitudes_bp.route('/rechazar/<int:solicitud_id>', methods=['POST'])
-@login_required
-@permission_required('solicitudes', 'reject')
-def rechazar_solicitud(solicitud_id):
-    """Rechaza una solicitud"""
-    try:
-        observacion = request.form.get('observacion', '')
-        aprobador_id = session.get('aprobador_id', 1)
-        
-        conn = get_database_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("EXEC sp_RechazarSolicitud @SolicitudId = ?, @AprobadorId = ?, @Observacion = ?", 
-                      (solicitud_id, aprobador_id, observacion))
-        
-        conn.commit()
-        
-        flash('Solicitud rechazada correctamente', 'success')
-        return redirect(url_for('solicitudes.ver_solicitudes'))
-        
-    except Exception as e:
-        logger.error(f'Error al rechazar solicitud: {e}', exc_info=True)
-        flash(f'Error al rechazar solicitud: {str(e)}', 'danger')
-        return redirect(url_for('solicitudes.ver_solicitudes'))
-    finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'conn' in locals():
-            conn.close()
 
-@solicitudes_bp.route('/devolucion/<int:solicitud_id>', methods=['POST'])
-@login_required
-@permission_required('solicitudes', 'return')
-def registrar_devolucion(solicitud_id):
-    """Registra una devoluci�n"""
-    try:
-        cantidad_devuelta = request.form.get('cantidad_devuelta')
-        observacion = request.form.get('observacion', '')
-        usuario_id = session.get('usuario_id')
-        
-        if not cantidad_devuelta or not usuario_id:
-            flash('Datos incompletos', 'danger')
-            return redirect(url_for('solicitudes.ver_solicitudes'))
-        
-        cantidad_devuelta = int(cantidad_devuelta)
-        if cantidad_devuelta <= 0:
-            flash('La cantidad debe ser mayor que 0', 'danger')
-            return redirect(url_for('solicitudes.ver_solicitudes'))
-        
-        conn = get_database_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("EXEC sp_RegistrarDevolucion @SolicitudId = ?, @UsuarioId = ?, @CantidadDevuelta = ?, @Observacion = ?", 
-                      (solicitud_id, usuario_id, cantidad_devuelta, observacion))
-        
-        conn.commit()
-        
-        flash('Devoluci�n registrada correctamente', 'success')
-        return redirect(url_for('solicitudes.ver_solicitudes'))
-        
-    except Exception as e:
-        logger.error(f'Error al registrar devoluci�n: {e}', exc_info=True)
-        flash(f'Error al registrar devoluci�n: {str(e)}', 'danger')
-        return redirect(url_for('solicitudes.ver_solicitudes'))
-    finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'conn' in locals():
-            conn.close()
+# ============================================================================
+# APIs
+# ============================================================================
 
 @solicitudes_bp.route('/api/novedades/pendientes')
 @login_required
+@novedad_view_required
 def obtener_novedades_pendientes():
-    """
-    Obtiene todas las novedades en estado pendiente
-    Requiere permisos espec�ficos de gesti�n
-    """
-    from utils.permissions import can_manage_novedad
-    
-    if not can_manage_novedad():
-        logger.warning(f'Usuario sin permisos intent� acceder a novedades pendientes. Rol: {session.get("rol")}')
-        return jsonify({'success': False, 'message': 'No tiene permisos'}), 403
-
+    """Obtiene todas las novedades en estado pendiente"""
     try:
-        novedades = NovedadModel.obtener_todas(filtro_estado='registrada')
+        novedades = NovedadModel.obtener_novedades_pendientes()
         logger.info(f'Consulta de novedades pendientes. Usuario: {session.get("usuario_id")}')
         return jsonify({'success': True, 'novedades': novedades})
     except Exception as e:
-        logger.error(f'Error al obtener novedades pendientes: {e}', exc_info=True)
+        logger.error('Error al obtener novedades pendientes: %s', sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'message': 'Error interno del servidor'}), 500
+
+
+@solicitudes_bp.route('/api/<int:solicitud_id>/novedad')
+@login_required
+def obtener_novedad_por_solicitud(solicitud_id):
+    """Obtiene la novedad asociada a una solicitud"""
+    try:
+        novedades = NovedadModel.obtener_por_solicitud(solicitud_id)
+        
+        if novedades:
+            return jsonify({
+                'success': True,
+                'novedad': novedades[0]
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'No se encontró novedad para esta solicitud'
+            })
+            
+    except Exception as e:
+        logger.error("Error obteniendo novedad para solicitud {solicitud_id}: %s", sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+
+
+@solicitudes_bp.route('/api/<int:solicitud_id>/info-devolucion')
+@login_required
+def info_devolucion(solicitud_id):
+    """Obtiene información para devolución"""
+    try:
+        info = SolicitudModel.obtener_info_devolucion(solicitud_id)
+        
+        if not info:
+            return jsonify({'success': False, 'error': 'Solicitud no encontrada'}), 404
+        
+        return jsonify({
+            'success': True,
+            'cantidad_entregada': info.get('cantidad_entregada', 0),
+            'cantidad_ya_devuelta': info.get('cantidad_ya_devuelta', 0),
+            'material_nombre': info.get('material_nombre', ''),
+            'solicitante_nombre': info.get('solicitante_nombre', ''),
+            'material_imagen': info.get('material_imagen', '')
+        })
+        
+    except Exception as e:
+        logger.error("Error obteniendo info devolución {solicitud_id}: %s", sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+
+
+@solicitudes_bp.route('/api/<int:solicitud_id>/detalles')
+@login_required
+def detalle_solicitud_api(solicitud_id):
+    """Obtiene el detalle completo de una solicitud para el modal"""
+    try:
+        solicitud_raw = SolicitudModel.obtener_por_id(solicitud_id)
+        
+        if not solicitud_raw:
+            return jsonify({'success': False, 'error': 'Solicitud no encontrada'}), 404
+        
+        solicitud = mapear_solicitud(solicitud_raw)
+        novedades = NovedadModel.obtener_por_solicitud(solicitud_id)
+        
+        return jsonify({
+            'success': True,
+            'solicitud': solicitud,
+            'novedades': novedades
+        })
+        
+    except Exception as e:
+        logger.error("Error obteniendo detalle de solicitud {solicitud_id}: %s", sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+
+
+@solicitudes_bp.route('/api/novedades/estadisticas')
+@login_required
+@novedad_view_required
+def obtener_estadisticas_novedades():
+    """API para obtener estadísticas de novedades"""
+    try:
+        estadisticas = NovedadModel.obtener_estadisticas()
+        
+        return jsonify({
+            'success': True,
+            'estadisticas': estadisticas
+        })
+    except Exception as e:
+        logger.error("Error obteniendo estadísticas: %s", sanitizar_log_text(str(e)))
+        return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+
+
+@solicitudes_bp.route('/api/novedades/actualizar/<int:novedad_id>', methods=['POST'])
+@login_required
+@novedad_manage_required
+def actualizar_novedad(novedad_id):
+    """Actualizar estado de una novedad"""
+    try:
+        data = request.get_json()
+        nuevo_estado = data.get('estado')
+        observaciones = data.get('observaciones', '')
+        
+        if not nuevo_estado:
+            return jsonify({'success': False, 'message': 'Estado requerido'}), 400
+        
+        usuario_resuelve = session.get('usuario_nombre', 'Sistema')
+        
+        success = NovedadModel.actualizar_estado(
+            novedad_id=novedad_id,
+            estado=nuevo_estado,
+            usuario_resuelve=usuario_resuelve,
+            observaciones_resolucion=observaciones
+        )
+        
+        if success:
+            logger.info(f"Novedad {novedad_id} actualizada a {nuevo_estado} por {usuario_resuelve}")
+            return jsonify({'success': True, 'message': 'Novedad actualizada'})
+        else:
+            return jsonify({'success': False, 'message': 'Error al actualizar'}), 500
+            
+    except Exception as e:
+        logger.error("Error actualizando novedad: %s", sanitizar_log_text(str(e)))
         return jsonify({'success': False, 'message': 'Error interno del servidor'}), 500

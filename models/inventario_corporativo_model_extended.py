@@ -121,12 +121,12 @@ class InventarioCorporativoModelExtended:
             }
             
         except Exception as e:
-            logger.error(f"Error asignar_a_usuario_ad: {e}")
+            logger.error("Error asignar_a_usuario_ad: [error](%s)", type(e).__name__)
             try:
                 if conn: conn.rollback()
             except:
                 pass
-            return {'success': False, 'message': f'Error al asignar: {str(e)}'}
+            return {'success': False, 'message': 'Error al asignar: Error interno'}
         finally:
             if cursor: cursor.close()
             if conn: conn.close()
@@ -273,8 +273,7 @@ class InventarioCorporativoModelExtended:
                     logger.info(f"[TOKEN] Token generado exitosamente para asignación {asignacion_id}")
                     
                 except Exception as e:
-                    logger.error(f"[TOKEN] Error generando token: {e}")
-                    import traceback
+                    logger.error("[TOKEN] Error generando token: [error](%s)", type(e).__name__)
                     logger.error(f"[TOKEN] Traceback: {traceback.format_exc()}")
             
             return {
@@ -288,12 +287,12 @@ class InventarioCorporativoModelExtended:
             }
             
         except Exception as e:
-            logger.error(f"Error asignar_a_usuario_ad_con_confirmacion: {e}")
+            logger.error("Error asignar_a_usuario_ad_con_confirmacion: [error](%s)", type(e).__name__)
             try:
                 if conn: conn.rollback()
             except:
                 pass
-            return {'success': False, 'message': f'Error al asignar: {str(e)}'}
+            return {'success': False, 'message': 'Error al asignar: Error interno'}
         finally:
             if cursor: cursor.close()
             if conn: conn.close()
@@ -358,7 +357,7 @@ class InventarioCorporativoModelExtended:
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
             
         except Exception as e:
-            logger.error(f"Error obteniendo asignaciones con confirmaciÃ³n: {e}")
+            logger.error("Error obteniendo asignaciones con confirmaciÃ³n: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -422,7 +421,7 @@ class InventarioCorporativoModelExtended:
             return new_id[0] if new_id else None
             
         except Exception as e:
-            logger.error(f"Error obteniendo/creando usuario AD: {e}")
+            logger.error("Error obteniendo/creando usuario AD: [error](%s)", type(e).__name__)
             # Si falla, retornar el primer usuario activo como fallback
             cursor.execute(
                 "SELECT TOP 1 UsuarioId FROM Usuarios WHERE Activo = 1 ORDER BY UsuarioId"
@@ -473,7 +472,7 @@ class InventarioCorporativoModelExtended:
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
             
         except Exception as e:
-            logger.error(f"Error obteniendo asignaciones por usuario: {e}")
+            logger.error("Error obteniendo asignaciones por usuario: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -519,7 +518,7 @@ class InventarioCorporativoModelExtended:
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
             
         except Exception as e:
-            logger.error(f"Error historial_asignaciones_extendido: {e}")
+            logger.error("Error historial_asignaciones_extendido: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()

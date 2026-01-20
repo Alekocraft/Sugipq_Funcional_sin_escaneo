@@ -1,4 +1,4 @@
-﻿"""
+"""
 Autenticación con Active Directory Qualitas
 Versión segura - DÍA 5: Sanitización de usernames en logs
 """
@@ -26,7 +26,7 @@ class ADAuth:
             conn.unbind()
             return True
         except Exception as e:
-            logger.error(f"❌ Error conexión LDAP: {e}")
+            logger.error("❌ Error conexión LDAP: [error](%s)", type(e).__name__)
             return False
     
     def authenticate_user(self, username, password):
@@ -95,7 +95,7 @@ class ADAuth:
             
         except Exception as e:
             # ✅ DÍA 5 - Sanitizar username en log
-            logger.error(f"❌ LDAP: Error autenticando {sanitizar_username(username)}: {e}")
+            logger.error("❌ LDAP: Error autenticando {sanitizar_username(username)}: [error](%s)", type(e).__name__)
             return None
     
     def _get_user_details(self, connection, username):
@@ -141,7 +141,7 @@ class ADAuth:
                 
         except Exception as e:
             # ✅ DÍA 5 - Sanitizar username en log
-            logger.error(f"❌ LDAP: Error obteniendo detalles de {sanitizar_username(username)}: {e}")
+            logger.error("❌ LDAP: Error obteniendo detalles de {sanitizar_username(username)}: [error](%s)", type(e).__name__)
             return None
     
     def _assign_role(self, user_info):
@@ -216,7 +216,7 @@ class ADAuth:
             return users
             
         except Exception as e:
-            logger.error(f"❌ LDAP: Error buscando usuarios: {e}")
+            logger.error("❌ LDAP: Error buscando usuarios: [error](%s)", type(e).__name__)
             return []
     
     def search_user_by_email(self, email):
@@ -293,7 +293,7 @@ class ADAuth:
             return None
             
         except Exception as e:
-            logger.error(f"❌ LDAP: Error buscando usuario por email {email}: {e}")
+            logger.error("❌ LDAP: Error buscando usuario por email {email}: [error](%s)", type(e).__name__)
             return None
     
     def get_user_details(self, username):
@@ -346,7 +346,7 @@ class ADAuth:
                 return None
                 
         except Exception as e:
-            logger.error(f"❌ LDAP: Error obteniendo detalles de {username}: {e}")
+            logger.error("❌ LDAP: Error obteniendo detalles de {username}: [error](%s)", type(e).__name__)
             return None
 
 

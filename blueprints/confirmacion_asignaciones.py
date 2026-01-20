@@ -121,7 +121,7 @@ def safe_render_template(template_name: str, **context: Any):
     except UnicodeDecodeError as e:
         logger.error(
             "❌ UnicodeDecodeError al renderizar plantilla '%s': %s. Intentando convertir a UTF-8 y reintentar...",
-            template_name, str(e)
+            template_name, 'Error interno'
         )
 
         ok, msg = _ensure_template_utf8(template_name)
@@ -296,9 +296,8 @@ def verificar_token(token):
         return safe_render_template('confirmacion/error.html', error="Método no soportado.")
 
     except Exception as e:
-        error_msg = f"Error inesperado: {str(e)}"
+        error_msg = 'Error inesperado: Error interno'
         logger.error(f"❌ Error en verificar_token: {error_msg}")
-        import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
         return safe_render_template(
             'confirmacion/error.html',
@@ -323,7 +322,7 @@ def api_validar_cedula():
         })
 
     except Exception as e:
-        logger.error(f"Error validando cédula: {e}")
+        logger.error("Error validando cédula: [error](%s)", type(e).__name__)
         return jsonify({
             'es_valida': False,
             'mensaje': 'Error al validar cédula'
@@ -352,7 +351,7 @@ def mis_pendientes():
         )
 
     except Exception as e:
-        error_msg = f"Error obteniendo confirmaciones pendientes: {str(e)}"
+        error_msg = 'Error obteniendo confirmaciones pendientes: Error interno'
         logger.error(f"❌ Error en mis_pendientes: {error_msg}")
         flash('Error al cargar las confirmaciones pendientes', 'danger')
         return redirect('/dashboard')
@@ -379,11 +378,11 @@ def api_validar_token(token):
         return jsonify(respuesta)
 
     except Exception as e:
-        logger.error(f"❌ Error en api_validar_token: {str(e)}")
+        logger.error("❌ Error en api_validar_token: [error](%s)", type(e).__name__)
         return jsonify({
             'es_valido': False,
             'mensaje': 'Error al validar el token',
-            'error': str(e)
+            'error': 'Error interno'
         }), 500
 
 
@@ -411,7 +410,7 @@ def estadisticas():
         return safe_render_template('confirmacion/estadisticas.html', estadisticas=stats)
 
     except Exception as e:
-        error_msg = f"Error obteniendo estadísticas: {str(e)}"
+        error_msg = 'Error obteniendo estadísticas: Error interno'
         logger.error(f"❌ Error en estadisticas: {error_msg}")
         flash('Error al cargar estadísticas', 'danger')
         return redirect('/dashboard')

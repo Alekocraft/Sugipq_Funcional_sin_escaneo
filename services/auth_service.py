@@ -1,4 +1,4 @@
-﻿# services/auth_service.py
+# services/auth_service.py
 """
 Servicio de autenticación que integra LDAP con la base de datos local
 """
@@ -97,7 +97,7 @@ class AuthService:
         try:
             return self.ad_auth.test_connection()
         except Exception as e:
-            logger.error(f"❌ Error probando conexión LDAP: {e}")
+            logger.error("❌ Error probando conexión LDAP: [error](%s)", type(e).__name__)
             return False
     
     def search_ldap_users(self, search_term):
@@ -113,5 +113,5 @@ class AuthService:
         try:
             return self.ad_auth.search_user_by_name(search_term)
         except Exception as e:
-            logger.error(f"❌ Error buscando usuarios en LDAP: {e}")
+            logger.error("❌ Error buscando usuarios en LDAP: [error](%s)", type(e).__name__)
             return []

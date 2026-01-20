@@ -1,4 +1,6 @@
 # models/solicitudes_model.py
+import logging
+logger = logging.getLogger(__name__)
 from database import get_database_connection
 
 
@@ -282,7 +284,7 @@ class SolicitudModel:
                 "material_imagen": material_imagen,
             }
         except Exception as e:
-            print("âŒ ERROR en obtener_info_devolucion:", str(e))
+            logger.info("âŒ ERROR en obtener_info_devolucion:", str(e))
             return None
         finally:
             cursor.close()
@@ -495,7 +497,7 @@ class SolicitudModel:
             return solicitudes
             
         except Exception as e:
-            print(f"âŒ Error obteniendo solicitudes: {e}")
+            logger.info("âŒ Error obteniendo solicitudes: [error](%s)", type(e).__name__)
             import traceback
             traceback.print_exc()
             return []
@@ -728,13 +730,13 @@ class SolicitudModel:
                         return usuario_db  # Fallback al ID del usuario
         
             # Si no encuentra al usuario, retornar un valor por defecto
-            print(f"âš ï¸ Usuario {usuario_id} no encontrado. Usando aprobador por defecto.")
+            logger.info(f"âš ï¸ Usuario {usuario_id} no encontrado. Usando aprobador por defecto.")
             cursor.execute("SELECT TOP 1 AprobadorId FROM Aprobadores WHERE Activo = 1 ORDER BY AprobadorId")
             aprobador_default = cursor.fetchone()
             return aprobador_default[0] if aprobador_default else 1
         
         except Exception as e:
-            print(f"âŒ Error obteniendo aprobador_id: {e}")
+            logger.info("âŒ Error obteniendo aprobador_id: [error](%s)", type(e).__name__)
             import traceback
             traceback.print_exc()
             return usuario_id or 1  # Fallback seguro
@@ -810,7 +812,7 @@ class SolicitudModel:
             return [0, 0, 0, 0, 0, 0, 0]
             
         except Exception as e:
-            print(f"Error obteniendo estadÃ­sticas para material {material_id}: {e}")
+            logger.info("Error obteniendo estadÃ­sticas para material {material_id}: [error](%s)", type(e).__name__)
             return [0, 0, 0, 0, 0, 0, 0]
         finally:
             cursor.close()
@@ -844,7 +846,7 @@ class SolicitudModel:
                 }
             return None
         except Exception as e:
-            print(f"Error obteniendo oficina por nombre: {e}")
+            logger.info("Error obteniendo oficina por nombre: [error](%s)", type(e).__name__)
             return None
         finally:
             cursor.close()
@@ -914,7 +916,7 @@ class SolicitudModel:
             return solicitudes
             
         except Exception as e:
-            print(f"Error obteniendo solicitudes con detalle: {e}")
+            logger.info("Error obteniendo solicitudes con detalle: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor:
@@ -993,7 +995,7 @@ class SolicitudModel:
             
         except Exception as e:
             conn.rollback()
-            print(f"âŒ Error en solicitud de devoluciÃ³n: {e}")
+            logger.info("âŒ Error en solicitud de devoluciÃ³n: [error](%s)", type(e).__name__)
             import traceback
             traceback.print_exc()
             return False, f"âŒ Error: {str(e)}"
@@ -1073,7 +1075,7 @@ class SolicitudModel:
             
         except Exception as e:
             conn.rollback()
-            print(f"âŒ Error aprobando devoluciÃ³n: {e}")
+            logger.info("âŒ Error aprobando devoluciÃ³n: [error](%s)", type(e).__name__)
             import traceback
             traceback.print_exc()
             return False, f"âŒ Error: {str(e)}"
@@ -1119,7 +1121,7 @@ class SolicitudModel:
             
         except Exception as e:
             conn.rollback()
-            print(f"âŒ Error rechazando devoluciÃ³n: {e}")
+            logger.info("âŒ Error rechazando devoluciÃ³n: [error](%s)", type(e).__name__)
             return False, f"âŒ Error: {str(e)}"
         finally:
             cursor.close()
@@ -1173,7 +1175,7 @@ class SolicitudModel:
             return None
             
         except Exception as e:
-            print(f"âŒ Error obteniendo devoluciÃ³n pendiente: {e}")
+            logger.info("âŒ Error obteniendo devoluciÃ³n pendiente: [error](%s)", type(e).__name__)
             return None
         finally:
             cursor.close()

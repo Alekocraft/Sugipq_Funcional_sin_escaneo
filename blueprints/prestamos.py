@@ -1,4 +1,6 @@
-﻿"""
+import logging
+logger = logging.getLogger(__name__)
+"""
 Blueprint de Préstamos con Sistema de Notificaciones
 ====================================================
 Este archivo debe reemplazar: blueprints/prestamos.py
@@ -40,11 +42,10 @@ from database import get_database_connection
 try:
     from services.notification_service import NotificationService
     NOTIFICACIONES_ACTIVAS = True
-    print("✅ Servicio de notificaciones cargado para préstamos")
+    logger.info("✅ Servicio de notificaciones cargado para préstamos")
 except ImportError:
     NOTIFICACIONES_ACTIVAS = False
-    print("⚠️ Servicio de notificaciones no disponible para préstamos")
-
+    logger.info("⚠️ Servicio de notificaciones no disponible para préstamos")
 import logging
 logger = logging.getLogger(__name__)
 
@@ -133,7 +134,7 @@ def _obtener_info_prestamo_completa(prestamo_id):
             }
         return None
     except Exception as e:
-        logger.error(f"Error obteniendo info préstamo: {e}")
+        logger.error("Error obteniendo info préstamo: [error](%s)", type(e).__name__)
         return None
     finally:
         if cur: cur.close()
@@ -155,7 +156,7 @@ def _fetch_estados_distintos():
         """)
         return [row[0] for row in cur.fetchall() if row and row[0]]
     except Exception as e:
-        print("Error leyendo estados:", e)
+        logger.info("Error leyendo estados:", e)
         return []
     finally:
         try:
@@ -241,7 +242,7 @@ def _fetch_prestamos(estado=None, oficina_id=None):
                 'fecha_devolucion_real': r[16]
             })
     except Exception as e:
-        print("Error leyendo préstamos:", e)
+        logger.info("Error leyendo préstamos:", e)
         flash(f"Error leyendo préstamos: {e}", "danger")
     finally:
         try:
@@ -314,7 +315,7 @@ def _fetch_detalle(prestamo_id: int):
             'observaciones_aprobacion': row[18] or ''
         }
     except Exception as e:
-        print("Error leyendo detalle:", e)
+        logger.info("Error leyendo detalle:", e)
         return None
     finally:
         try:
@@ -461,8 +462,7 @@ def crear_prestamo():
             ))
 
             prestamo_id = cur.fetchone()[0]
-            print(f"✅ Préstamo creado con ID: {prestamo_id}")
-
+            logger.info(f"✅ Préstamo creado con ID: {prestamo_id}")
             # Descontar stock
             cur.execute("""
                 UPDATE dbo.ElementosPublicitarios
@@ -480,7 +480,7 @@ def crear_prestamo():
                         NotificationService.notificar_prestamo_creado(prestamo_info)
                         logger.info(f"📧 Notificación enviada: Nuevo préstamo #{prestamo_id}")
                 except Exception as e:
-                    logger.error(f"Error enviando notificación de préstamo creado: {e}")
+                    logger.error("Error enviando notificación de préstamo creado: [error](%s)", type(e).__name__)
             # =============================================
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -502,8 +502,7 @@ def crear_prestamo():
             except:
                 pass
             
-            print(f"❌ Error en crear_prestamo: {e}")
-            
+            logger.info("❌ Error en crear_prestamo: [error](%s)", type(e).__name__)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({'success': False, 'message': f'Error al crear préstamo: {str(e)}'})
             flash(f'Error al crear préstamo: {e}', 'danger')
@@ -563,7 +562,7 @@ def crear_prestamo():
                     'imagen': None
                 })
     except Exception as e:
-        print("Error cargando elementos:", e)
+        logger.info("Error cargando elementos:", e)
         flash(f"Error al cargar elementos: {e}", "danger")
     finally:
         try:
@@ -644,7 +643,7 @@ def aprobar_prestamo(prestamo_id):
                 )
                 logger.info(f"📧 Notificación enviada: Préstamo #{prestamo_id} aprobado")
             except Exception as e:
-                logger.error(f"Error enviando notificación de aprobación préstamo: {e}")
+                logger.error("Error enviando notificación de aprobación préstamo: [error](%s)", type(e).__name__)
         # =============================================
         
         return jsonify({
@@ -662,7 +661,7 @@ def aprobar_prestamo(prestamo_id):
         except:
             pass
         
-        print(f"❌ Error aprobando préstamo {prestamo_id}: {e}")
+        logger.info("❌ Error aprobando préstamo {prestamo_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': f'Error al aprobar préstamo: {str(e)}'}), 500
     finally:
         try:
@@ -784,7 +783,7 @@ def aprobar_parcial_prestamo(prestamo_id):
                 )
                 logger.info(f"📧 Notificación enviada: Préstamo #{prestamo_id} aprobado parcialmente")
             except Exception as e:
-                logger.error(f"Error enviando notificación de aprobación parcial préstamo: {e}")
+                logger.error("Error enviando notificación de aprobación parcial préstamo: [error](%s)", type(e).__name__)
         # =============================================
         
         return jsonify({
@@ -804,7 +803,7 @@ def aprobar_parcial_prestamo(prestamo_id):
         except:
             pass
         
-        print(f"❌ Error aprobando parcialmente préstamo {prestamo_id}: {e}")
+        logger.info("❌ Error aprobando parcialmente préstamo {prestamo_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': f'Error al aprobar parcialmente: {str(e)}'}), 500
     finally:
         try:
@@ -888,7 +887,7 @@ def rechazar_prestamo(prestamo_id):
                 )
                 logger.info(f"📧 Notificación enviada: Préstamo #{prestamo_id} rechazado")
             except Exception as e:
-                logger.error(f"Error enviando notificación de rechazo préstamo: {e}")
+                logger.error("Error enviando notificación de rechazo préstamo: [error](%s)", type(e).__name__)
         # =============================================
         
         return jsonify({
@@ -907,7 +906,7 @@ def rechazar_prestamo(prestamo_id):
         except:
             pass
         
-        print(f"❌ Error rechazando préstamo {prestamo_id}: {e}")
+        logger.info("❌ Error rechazando préstamo {prestamo_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': f'Error al rechazar préstamo: {str(e)}'}), 500
     finally:
         try:
@@ -987,7 +986,7 @@ def registrar_devolucion_prestamo(prestamo_id):
                 )
                 logger.info(f"📧 Notificación enviada: Devolución préstamo #{prestamo_id}")
             except Exception as e:
-                logger.error(f"Error enviando notificación de devolución préstamo: {e}")
+                logger.error("Error enviando notificación de devolución préstamo: [error](%s)", type(e).__name__)
         # =============================================
         
         return jsonify({
@@ -1006,7 +1005,7 @@ def registrar_devolucion_prestamo(prestamo_id):
         except:
             pass
         
-        print(f"❌ Error registrando devolución préstamo {prestamo_id}: {e}")
+        logger.info("❌ Error registrando devolución préstamo {prestamo_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': f'Error al registrar devolución: {str(e)}'}), 500
     finally:
         try:
@@ -1162,9 +1161,8 @@ def crear_material_prestamo():
             VALUES ({", ".join(["?"] * len(columnas))})
         """
 
-        print(f"🔍 Ejecutando SQL: {sql}")
-        print(f"🔍 Valores: {valores}")
-
+        logger.info(f"🔍 Ejecutando SQL: {sql}")
+        logger.info(f"🔍 Valores: {valores}")
         cur.execute(sql, tuple(valores))
         conn.commit()
 
@@ -1191,8 +1189,7 @@ def crear_material_prestamo():
         error_str = str(e)
         error_message = f'Error al crear material: {error_str}'
 
-        print(f"❌ Error en crear_material_prestamo: {error_str}")
-
+        logger.info(f"❌ Error en crear_material_prestamo: {error_str}")
         # Si es error de duplicado, mensaje más específico
         if 'duplicate' in error_str.lower() or 'unique' in error_str.lower():
             error_message = f'Ya existe un material con el nombre "{nombre_elemento}" en esta oficina'
@@ -1295,7 +1292,7 @@ def exportar_prestamos_excel():
         )
 
     except Exception as e:
-        print(f"❌ Error exportando préstamos a Excel: {e}")
+        logger.info("❌ Error exportando préstamos a Excel: [error](%s)", type(e).__name__)
         flash('Error al exportar el reporte de préstamos a Excel', 'danger')
         return redirect('/prestamos')
 
@@ -1405,7 +1402,7 @@ def exportar_prestamos_pdf():
         )
 
     except Exception as e:
-        print(f"❌ Error exportando préstamos a PDF: {e}")
+        logger.info("❌ Error exportando préstamos a PDF: [error](%s)", type(e).__name__)
         flash('Error al exportar el reporte de préstamos a PDF', 'danger')
         return redirect('/prestamos')
 
@@ -1456,7 +1453,7 @@ def api_elemento_info(elemento_id: int):
             return jsonify({'ok': False, 'error': 'Elemento no encontrado'}), 404
             
     except Exception as e:
-        print(f"Error en api_elemento_info: {e}")
+        logger.info("Error en api_elemento_info: [error](%s)", type(e).__name__)
         return jsonify({'ok': False, 'error': str(e)}), 500
     finally:
         try:

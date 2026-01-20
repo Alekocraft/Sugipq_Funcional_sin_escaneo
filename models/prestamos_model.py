@@ -1,4 +1,6 @@
 # models/prestamos_model.py
+import logging
+logger = logging.getLogger(__name__)
 from database import get_database_connection
 
 class PrestamosModel:
@@ -36,7 +38,7 @@ class PrestamosModel:
             prestamos = [dict(zip(columns, row)) for row in cursor.fetchall()]
             return prestamos
         except Exception as e:
-            print(f"Error obteniendo prestamos: {e}")
+            logger.info("Error obteniendo prestamos: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor:
@@ -66,7 +68,7 @@ class PrestamosModel:
             conn.commit()
             return cursor.lastrowid
         except Exception as e:
-            print(f"Error creando prestamo: {e}")
+            logger.info("Error creando prestamo: [error](%s)", type(e).__name__)
             conn.rollback()
             return None
         finally:
@@ -99,7 +101,7 @@ class PrestamosModel:
             
             estado_actual = row[0]
             if estado_actual not in ['APROBADO', 'APROBADO_PARCIAL']:
-                print(f"No se puede devolver prestamo en estado: {estado_actual}")
+                logger.info(f"No se puede devolver prestamo en estado: {estado_actual}")
                 return False
             
             # Registrar devolucion
@@ -114,7 +116,7 @@ class PrestamosModel:
             conn.commit()
             return cursor.rowcount > 0
         except Exception as e:
-            print(f"Error registrando devolucion: {e}")
+            logger.info("Error registrando devolucion: [error](%s)", type(e).__name__)
             conn.rollback()
             return False
         finally:
@@ -139,7 +141,7 @@ class PrestamosModel:
             cursor.execute(query)
             return [{'id': row[0], 'nombre': row[1]} for row in cursor.fetchall()]
         except Exception as e:
-            print(f"Error obteniendo usuarios: {e}")
+            logger.info("Error obteniendo usuarios: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor:
@@ -179,7 +181,7 @@ class PrestamosModel:
             conn.commit()
             return cursor.rowcount > 0
         except Exception as e:
-            print(f"Error aprobando prestamo: {e}")
+            logger.info("Error aprobando prestamo: [error](%s)", type(e).__name__)
             if conn:
                 conn.rollback()
             return False
@@ -221,7 +223,7 @@ class PrestamosModel:
             conn.commit()
             return cursor.rowcount > 0
         except Exception as e:
-            print(f"Error rechazando prestamo: {e}")
+            logger.info("Error rechazando prestamo: [error](%s)", type(e).__name__)
             if conn:
                 conn.rollback()
             return False
@@ -275,7 +277,7 @@ class PrestamosModel:
             conn.commit()
             return cursor.rowcount > 0
         except Exception as e:
-            print(f"Error aprobando parcialmente prestamo: {e}")
+            logger.info("Error aprobando parcialmente prestamo: [error](%s)", type(e).__name__)
             if conn:
                 conn.rollback()
             return False

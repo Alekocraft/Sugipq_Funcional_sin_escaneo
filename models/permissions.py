@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 # config/permissions.py
 """
 Sistema centralizado de permisos basado en roles y oficinas

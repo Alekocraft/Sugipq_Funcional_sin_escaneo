@@ -1,4 +1,6 @@
 # models/inventario_corporativo_model.py.
+import logging
+logger = logging.getLogger(__name__)
 from database import get_database_connection
 
 
@@ -57,7 +59,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error obteniendo productos corporativos: {e}")
+            logger.info("Error obteniendo productos corporativos: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -101,7 +103,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error obteniendo productos corporativos con oficina: {e}")
+            logger.info("Error obteniendo productos corporativos con oficina: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -171,7 +173,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error obteniendo productos corporativos por oficina: {e}")
+            logger.info("Error obteniendo productos corporativos por oficina: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -215,7 +217,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return dict(zip(cols, row))
         except Exception as e:
-            print(f"Error obteniendo producto corporativo: {e}")
+            logger.info("Error obteniendo producto corporativo: [error](%s)", type(e).__name__)
             return None
         finally:
             if cursor: cursor.close()
@@ -252,7 +254,7 @@ class InventarioCorporativoModel:
             conn.commit()
             return new_id
         except Exception as e:
-            print(f"Error creando producto corporativo: {e}")
+            logger.info("Error creando producto corporativo: [error](%s)", type(e).__name__)
             try:
                 if conn: conn.rollback()
             except:
@@ -307,7 +309,7 @@ class InventarioCorporativoModel:
             conn.commit()
             return cursor.rowcount > 0
         except Exception as e:
-            print(f"Error actualizando producto corporativo: {e}")
+            logger.info("Error actualizando producto corporativo: [error](%s)", type(e).__name__)
             try:
                 if conn: conn.rollback()
             except:
@@ -340,7 +342,7 @@ class InventarioCorporativoModel:
             conn.commit()
             return cursor.rowcount > 0
         except Exception as e:
-            print(f"Error eliminando producto corporativo: {e}")
+            logger.info("Error eliminando producto corporativo: [error](%s)", type(e).__name__)
             try:
                 if conn: conn.rollback()
             except:
@@ -373,7 +375,7 @@ class InventarioCorporativoModel:
             """)
             return [{'id': r[0], 'nombre': r[1]} for r in cursor.fetchall()]
         except Exception as e:
-            print(f"rror obteniendo categorías activas: {e}")
+            logger.info("rror obteniendo categorías activas: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -395,7 +397,7 @@ class InventarioCorporativoModel:
             """)
             return [{'id': r[0], 'nombre': r[1]} for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error obtener_proveedores: {e}")
+            logger.info("Error obtener_proveedores: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -420,7 +422,7 @@ class InventarioCorporativoModel:
             """)
             return [{'id': r[0], 'nombre': r[1]} for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error obtener_oficinas: {e}")
+            logger.info("Error obtener_oficinas: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -446,7 +448,7 @@ class InventarioCorporativoModel:
             )
             usuario_row = cursor.fetchone()
             if not usuario_row:
-                print("Error: No hay usuarios activos en la base de datos")
+                logger.info("Error: No hay usuarios activos en la base de datos")
                 return False
             usuario_asignado_id = usuario_row[0]
 
@@ -490,7 +492,7 @@ class InventarioCorporativoModel:
             conn.commit()
             return True
         except Exception as e:
-            print(f"Error asignar_a_oficina: {e}")
+            logger.info("Error asignar_a_oficina: [error](%s)", type(e).__name__)
             try:
                 if conn: conn.rollback()
             except:
@@ -530,7 +532,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error historial_asignaciones: {e}")
+            logger.info("Error historial_asignaciones: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -560,7 +562,7 @@ class InventarioCorporativoModel:
                 for r in cursor.fetchall()
             ]
         except Exception as e:
-            print(f"Error reporte_stock_por_categoria: {e}")
+            logger.info("Error reporte_stock_por_categoria: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -582,7 +584,7 @@ class InventarioCorporativoModel:
             row = cursor.fetchone()
             return {'valor_total': float(row[0] or 0.0)}
         except Exception as e:
-            print(f"Error reporte_valor_inventario: {e}")
+            logger.info("Error reporte_valor_inventario: [error](%s)", type(e).__name__)
             return {'valor_total': 0}
         finally:
             if cursor: cursor.close()
@@ -614,7 +616,7 @@ class InventarioCorporativoModel:
                 for r in cursor.fetchall()
             ]
         except Exception as e:
-            print(f"Error reporte_asignaciones_por_oficina: {e}")
+            logger.info("Error reporte_asignaciones_por_oficina: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -646,7 +648,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error reporte_productos_por_oficina: {e}")
+            logger.info("Error reporte_productos_por_oficina: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -685,7 +687,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error reporte_stock_bajo: {e}")
+            logger.info("Error reporte_stock_bajo: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -717,7 +719,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error reporte_movimientos_recientes: {e}")
+            logger.info("Error reporte_movimientos_recientes: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -780,7 +782,7 @@ class InventarioCorporativoModel:
                 'total_categorias': total_categorias
             }
         except Exception as e:
-            print(f"Error obtener_estadisticas_generales: {e}")
+            logger.info("Error obtener_estadisticas_generales: [error](%s)", type(e).__name__)
             return {}
         finally:
             if cursor: cursor.close()
@@ -827,7 +829,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error obteniendo sede principal: {e}")
+            logger.info("Error obteniendo sede principal: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -870,7 +872,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error obteniendo oficinas servicio: {e}")
+            logger.info("Error obteniendo oficinas servicio: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor: cursor.close()
@@ -927,7 +929,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error obtener_asignaciones_por_oficina: {e}")
+            logger.info("Error obtener_asignaciones_por_oficina: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor:
@@ -985,7 +987,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return dict(zip(cols, row))
         except Exception as e:
-            print(f"Error obtener_asignacion_por_id: {e}")
+            logger.info("Error obtener_asignacion_por_id: [error](%s)", type(e).__name__)
             return None
         finally:
             if cursor:
@@ -1040,7 +1042,7 @@ class InventarioCorporativoModel:
             conn.commit()
             return (True, 'Solicitud de devolución creada y enviada para aprobación')
         except Exception as e:
-            print(f"Error crear_solicitud_devolucion: {e}")
+            logger.info("Error crear_solicitud_devolucion: [error](%s)", type(e).__name__)
             try:
                 conn.rollback()
             except Exception:
@@ -1105,7 +1107,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error listar_devoluciones: {e}")
+            logger.info("Error listar_devoluciones: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor:
@@ -1193,7 +1195,7 @@ class InventarioCorporativoModel:
             conn.commit()
             return (True, 'Devolución aprobada y aplicada al inventario')
         except Exception as e:
-            print(f"Error aprobar_devolucion: {e}")
+            logger.info("Error aprobar_devolucion: [error](%s)", type(e).__name__)
             try:
                 conn.rollback()
             except Exception:
@@ -1232,7 +1234,7 @@ class InventarioCorporativoModel:
             conn.commit()
             return (True, 'Devolución rechazada')
         except Exception as e:
-            print(f"Error rechazar_devolucion: {e}")
+            logger.info("Error rechazar_devolucion: [error](%s)", type(e).__name__)
             try:
                 conn.rollback()
             except Exception:
@@ -1287,7 +1289,7 @@ class InventarioCorporativoModel:
             conn.commit()
             return (True, 'Solicitud de traslado creada y enviada para aprobación')
         except Exception as e:
-            print(f"Error crear_solicitud_traspaso: {e}")
+            logger.info("Error crear_solicitud_traspaso: [error](%s)", type(e).__name__)
             try:
                 conn.rollback()
             except Exception:
@@ -1351,7 +1353,7 @@ class InventarioCorporativoModel:
             cols = [c[0] for c in cursor.description]
             return [dict(zip(cols, r)) for r in cursor.fetchall()]
         except Exception as e:
-            print(f"Error listar_traspasos: {e}")
+            logger.info("Error listar_traspasos: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor:
@@ -1460,7 +1462,7 @@ class InventarioCorporativoModel:
             conn.commit()
             return (True, 'Traslado aprobado y aplicado')
         except Exception as e:
-            print(f"Error aprobar_traspaso: {e}")
+            logger.info("Error aprobar_traspaso: [error](%s)", type(e).__name__)
             try:
                 conn.rollback()
             except Exception:
@@ -1499,7 +1501,7 @@ class InventarioCorporativoModel:
             conn.commit()
             return (True, 'Traslado rechazado')
         except Exception as e:
-            print(f"Error rechazar_traspaso: {e}")
+            logger.info("Error rechazar_traspaso: [error](%s)", type(e).__name__)
             try:
                 conn.rollback()
             except Exception:

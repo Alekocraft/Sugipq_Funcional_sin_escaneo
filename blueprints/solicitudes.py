@@ -1,4 +1,6 @@
 # blueprints/solicitudes.py
+import logging
+logger = logging.getLogger(__name__)
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from functools import wraps
 import logging
@@ -24,8 +26,7 @@ try:
     NOTIFICACIONES_ACTIVAS = True
 except ImportError:
     NOTIFICACIONES_ACTIVAS = False
-    print("⚠️ Servicio de notificaciones no disponible")
-
+    logger.info("⚠️ Servicio de notificaciones no disponible")
 # Configuración de logging
 logger = logging.getLogger(__name__)
 
@@ -251,7 +252,7 @@ def _obtener_email_solicitante(usuario_id):
         row = cursor.fetchone()
         return row[0] if row else None
     except Exception as e:
-        logger.error(f"Error obteniendo email: {e}")
+        logger.error("Error obteniendo email: [error](%s)", type(e).__name__)
         return None
     finally:
         cursor.close()
@@ -296,7 +297,7 @@ def _obtener_info_solicitud_completa(solicitud_id):
             }
         return None
     except Exception as e:
-        logger.error(f"Error obteniendo info solicitud: {e}")
+        logger.error("Error obteniendo info solicitud: [error](%s)", type(e).__name__)
         return None
     finally:
         cursor.close()
@@ -372,7 +373,7 @@ def listar():
         )
         
     except Exception as e:
-        logger.error(f"Error al listar solicitudes: {str(e)}", exc_info=True)
+        logger.error("Error al listar solicitudes: [error](%s)", type(e).__name__)
         flash('Error al cargar las solicitudes', 'danger')
         return redirect('/dashboard')
 
@@ -417,7 +418,7 @@ def crear():
                             NotificationService.notificar_solicitud_creada(solicitud_info)
                             logger.info(f"📧 Notificación enviada: Nueva solicitud #{solicitud_id}")
                     except Exception as e:
-                        logger.error(f"Error enviando notificación de solicitud creada: {e}")
+                        logger.error("Error enviando notificación de solicitud creada: [error](%s)", type(e).__name__)
                 # =============================================
                 
                 flash('Solicitud creada exitosamente', 'success')
@@ -430,7 +431,7 @@ def crear():
         return render_template('solicitudes/crear.html', materiales=materiales)
         
     except Exception as e:
-        logger.error(f"Error al crear solicitud: {str(e)}", exc_info=True)
+        logger.error("Error al crear solicitud: [error](%s)", type(e).__name__)
         flash('Error al crear la solicitud', 'danger')
         return redirect('/solicitudes/crear')
 
@@ -466,7 +467,7 @@ def aprobar_solicitud(solicitud_id):
                     )
                     logger.info(f"📧 Notificación enviada: Solicitud #{solicitud_id} aprobada")
                 except Exception as e:
-                    logger.error(f"Error enviando notificación de aprobación: {e}")
+                    logger.error("Error enviando notificación de aprobación: [error](%s)", type(e).__name__)
             # =============================================
             
             flash('Solicitud aprobada exitosamente', 'success')
@@ -476,7 +477,7 @@ def aprobar_solicitud(solicitud_id):
             return jsonify({'success': False, 'message': mensaje})
         
     except Exception as e:
-        logger.error(f"Error al aprobar solicitud {solicitud_id}: {str(e)}")
+        logger.error("Error al aprobar solicitud {solicitud_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': 'Error al procesar la aprobación'})
 
 
@@ -517,7 +518,7 @@ def aprobar_parcial_solicitud(solicitud_id):
                     )
                     logger.info(f"📧 Notificación enviada: Solicitud #{solicitud_id} aprobada parcialmente")
                 except Exception as e:
-                    logger.error(f"Error enviando notificación de aprobación parcial: {e}")
+                    logger.error("Error enviando notificación de aprobación parcial: [error](%s)", type(e).__name__)
             # =============================================
             
             return jsonify({'success': True, 'message': f'Solicitud aprobada parcialmente ({cantidad_aprobada} unidades)'})
@@ -525,7 +526,7 @@ def aprobar_parcial_solicitud(solicitud_id):
             return jsonify({'success': False, 'message': mensaje})
         
     except Exception as e:
-        logger.error(f"Error al aprobar parcial solicitud {solicitud_id}: {str(e)}")
+        logger.error("Error al aprobar parcial solicitud {solicitud_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': 'Error al procesar la aprobación parcial'})
 
 
@@ -563,7 +564,7 @@ def rechazar_solicitud(solicitud_id):
                     )
                     logger.info(f"📧 Notificación enviada: Solicitud #{solicitud_id} rechazada")
                 except Exception as e:
-                    logger.error(f"Error enviando notificación de rechazo: {e}")
+                    logger.error("Error enviando notificación de rechazo: [error](%s)", type(e).__name__)
             # =============================================
             
             return jsonify({'success': True, 'message': 'Solicitud rechazada exitosamente'})
@@ -571,7 +572,7 @@ def rechazar_solicitud(solicitud_id):
             return jsonify({'success': False, 'message': mensaje})
         
     except Exception as e:
-        logger.error(f"Error al rechazar solicitud {solicitud_id}: {str(e)}")
+        logger.error("Error al rechazar solicitud {solicitud_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': 'Error al procesar el rechazo'})
 
 
@@ -632,7 +633,7 @@ def solicitar_devolucion(solicitud_id):
             return jsonify({'success': False, 'message': mensaje})
         
     except Exception as e:
-        logger.error(f"Error al solicitar devolución {solicitud_id}: {str(e)}", exc_info=True)
+        logger.error("Error al solicitar devolución {solicitud_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': 'Error al procesar la solicitud de devolución'})
 
 
@@ -668,7 +669,7 @@ def aprobar_devolucion():
             return jsonify({'success': False, 'message': mensaje})
         
     except Exception as e:
-        logger.error(f"Error al aprobar devolución: {str(e)}", exc_info=True)
+        logger.error("Error al aprobar devolución: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': 'Error al aprobar la devolución'})
 
 
@@ -703,7 +704,7 @@ def rechazar_devolucion():
             return jsonify({'success': False, 'message': mensaje})
         
     except Exception as e:
-        logger.error(f"Error al rechazar devolución: {str(e)}", exc_info=True)
+        logger.error("Error al rechazar devolución: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': 'Error al rechazar la devolución'})
 
 
@@ -726,7 +727,7 @@ def obtener_devolucion_pendiente(solicitud_id):
             })
             
     except Exception as e:
-        logger.error(f"Error obteniendo devolución pendiente {solicitud_id}: {str(e)}")
+        logger.error("Error obteniendo devolución pendiente {solicitud_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -805,7 +806,7 @@ def registrar_novedad():
                     NotificationService.notificar_novedad_registrada(solicitud_info, novedad_info)
                     logger.info(f"📧 Notificación enviada: Novedad registrada para solicitud #{solicitud_id}")
                 except Exception as e:
-                    logger.error(f"Error enviando notificación de novedad: {e}")
+                    logger.error("Error enviando notificación de novedad: [error](%s)", type(e).__name__)
             # =============================================
             
             logger.info(f'Novedad registrada exitosamente. Solicitud ID: {solicitud_id}, Usuario: {usuario_id}')
@@ -817,7 +818,7 @@ def registrar_novedad():
             return jsonify({'success': False, 'error': 'Error al registrar novedad'}), 500
         
     except Exception as e:
-        logger.error(f'Error al registrar novedad: {str(e)}', exc_info=True)
+        logger.error("Error al registrar novedad: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
 
 
@@ -887,7 +888,7 @@ def gestionar_novedad():
                     )
                     logger.info(f"📧 Notificación enviada: Novedad {log_action} para solicitud #{solicitud_id}")
                 except Exception as e:
-                    logger.error(f"Error enviando notificación de gestión novedad: {e}")
+                    logger.error("Error enviando notificación de gestión novedad: [error](%s)", type(e).__name__)
             # =============================================
             
             logger.info(f'Novedad {log_action}. Solicitud ID: {solicitud_id}, Usuario: {usuario_gestion}')
@@ -900,7 +901,7 @@ def gestionar_novedad():
             return jsonify({'success': False, 'message': 'Error al procesar la novedad'}), 500
 
     except Exception as e:
-        logger.error(f'Error en gestión de novedad: {e}', exc_info=True)
+        logger.error("Error en gestión de novedad: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': 'Error interno del servidor'}), 500
 
 
@@ -931,7 +932,7 @@ def listar_novedades():
         )
         
     except Exception as e:
-        logger.error(f"Error al listar novedades: {str(e)}", exc_info=True)
+        logger.error("Error al listar novedades: [error](%s)", type(e).__name__)
         flash('Error al cargar novedades', 'danger')
         return redirect('/solicitudes')
 
@@ -950,7 +951,7 @@ def obtener_novedades_pendientes():
         logger.info(f'Consulta de novedades pendientes. Usuario: {session.get("usuario_id")}')
         return jsonify({'success': True, 'novedades': novedades})
     except Exception as e:
-        logger.error(f'Error al obtener novedades pendientes: {e}', exc_info=True)
+        logger.error("Error al obtener novedades pendientes: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': 'Error interno del servidor'}), 500
 
 
@@ -973,7 +974,7 @@ def obtener_novedad_por_solicitud(solicitud_id):
             })
             
     except Exception as e:
-        logger.error(f"Error obteniendo novedad para solicitud {solicitud_id}: {str(e)}")
+        logger.error("Error obteniendo novedad para solicitud {solicitud_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -997,7 +998,7 @@ def info_devolucion(solicitud_id):
         })
         
     except Exception as e:
-        logger.error(f"Error obteniendo info devolución {solicitud_id}: {str(e)}")
+        logger.error("Error obteniendo info devolución {solicitud_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1021,7 +1022,7 @@ def detalle_solicitud_api(solicitud_id):
         })
         
     except Exception as e:
-        logger.error(f"Error obteniendo detalle de solicitud {solicitud_id}: {str(e)}")
+        logger.error("Error obteniendo detalle de solicitud {solicitud_id}: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1038,7 +1039,7 @@ def obtener_estadisticas_novedades():
             'estadisticas': estadisticas
         })
     except Exception as e:
-        logger.error(f"Error obteniendo estadísticas: {str(e)}")
+        logger.error("Error obteniendo estadísticas: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1071,5 +1072,5 @@ def actualizar_novedad(novedad_id):
             return jsonify({'success': False, 'message': 'Error al actualizar'}), 500
             
     except Exception as e:
-        logger.error(f"Error actualizando novedad: {str(e)}")
+        logger.error("Error actualizando novedad: [error](%s)", type(e).__name__)
         return jsonify({'success': False, 'message': str(e)}), 500

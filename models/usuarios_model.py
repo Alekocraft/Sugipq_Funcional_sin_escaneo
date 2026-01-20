@@ -85,7 +85,7 @@ class UsuarioModel:
                             return None
             
             except Exception as e:
-                logger.error(f"❌ Error verificando usuario LDAP: {e}")
+                logger.error("❌ Error verificando usuario LDAP: [error](%s)", type(e).__name__)
                 if conn:
                     conn.close()
         
@@ -155,7 +155,7 @@ class UsuarioModel:
             return None
                 
         except Exception as e:
-            logger.error(f"❌ Error obteniendo info usuario: {e}")
+            logger.error("❌ Error obteniendo info usuario: [error](%s)", type(e).__name__)
             return None
         finally:
             if conn:
@@ -237,9 +237,7 @@ class UsuarioModel:
                 return None
                 
         except Exception as e:
-            logger.error(f"❌ Error en _verificar_localmente_corregido: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error("❌ Error en _verificar_localmente_corregido: [error](%s)", type(e).__name__)
             return None
         finally:
             if conn:
@@ -347,9 +345,7 @@ class UsuarioModel:
                 logger.info(f"✅ Nuevo usuario sincronizado desde AD: {sanitizar_username(ad_user['username'])}")  # ✅ CORRECCIÓN
                 return usuario_info
         except Exception as e:
-            logger.error(f"❌ Error sincronizando usuario AD: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error("❌ Error sincronizando usuario AD: [error](%s)", type(e).__name__)
             if conn:
                 conn.rollback()
             return None
@@ -419,7 +415,7 @@ class UsuarioModel:
             return default_office[0] if default_office else 1
             
         except Exception as e:
-            logger.error(f"❌ Error obteniendo oficina por defecto: {e}")
+            logger.error("❌ Error obteniendo oficina por defecto: [error](%s)", type(e).__name__)
             return 1
         finally:
             if conn:
@@ -459,7 +455,7 @@ class UsuarioModel:
             return aprobadores
             
         except Exception as e:
-            logger.error(f"❌ Error obteniendo aprobadores: {e}")
+            logger.error("❌ Error obteniendo aprobadores: [error](%s)", type(e).__name__)
             return []
         finally:
             if conn:
@@ -513,7 +509,7 @@ class UsuarioModel:
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error creando usuario manual: {e}")
+            logger.error("❌ Error creando usuario manual: [error](%s)", type(e).__name__)
             conn.rollback()
             return False
         finally:
@@ -585,7 +581,7 @@ class UsuarioModel:
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error creando usuario admin: {e}")
+            logger.error("❌ Error creando usuario admin: [error](%s)", type(e).__name__)
             if conn:
                 conn.rollback()
             return False
@@ -631,7 +627,7 @@ class UsuarioModel:
             return None
             
         except Exception as e:
-            logger.error(f"❌ Error obteniendo usuario por ID: {e}")
+            logger.error("❌ Error obteniendo usuario por ID: [error](%s)", type(e).__name__)
             return None
         finally:
             if conn:
@@ -680,7 +676,7 @@ class UsuarioModel:
             return usuarios
             
         except Exception as e:
-            logger.error(f"❌ Error obteniendo todos los usuarios: {e}")
+            logger.error("❌ Error obteniendo todos los usuarios: [error](%s)", type(e).__name__)
             return []
         finally:
             if conn:
@@ -814,7 +810,7 @@ class UsuarioModel:
             return usuario_info
                 
         except Exception as e:
-            logger.error(f"❌ Error creando usuario LDAP manual: {e}")
+            logger.error("❌ Error creando usuario LDAP manual: [error](%s)", type(e).__name__)
             if conn:
                 conn.rollback()
             return None
@@ -872,7 +868,7 @@ class UsuarioModel:
             return True
                 
         except Exception as e:
-            logger.error(f"❌ Error completando sincronización LDAP: {e}")
+            logger.error("❌ Error completando sincronización LDAP: [error](%s)", type(e).__name__)
             if conn:
                 conn.rollback()
             return False
@@ -917,7 +913,7 @@ class UsuarioModel:
             return aprobadores
             
         except Exception as e:
-            logger.error(f"❌ Error obteniendo aprobadores desde tabla: {e}")
+            logger.error("❌ Error obteniendo aprobadores desde tabla: [error](%s)", type(e).__name__)
             return []
         finally:
             if conn:

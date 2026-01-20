@@ -165,129 +165,61 @@
     </div>
 
     <div class="row g-4 mb-4">
-        {% if can_access('material_pop') %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card card-modulo card-modulo-pop text-white text-center p-4"
-                 data-bs-toggle="modal" data-bs-target="#modalMaterialPOP">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <i class="fas fa-bullhorn fa-3x mb-3"></i>
-                    </div>
-                    <h4 class="fw-bold mb-2">Material POP</h4>
-                    <p class="mb-0 opacity-90">Gestión de materiales POP</p>
-                </div>
+    {# Acceso completo: ver todo + sede + oficinas #}
+    {% if can_access('inventario_corporativo', 'view') %}
+    <div class="col-xl-4 col-md-6">
+        <div class="card stats-card border-0 shadow-sm text-center p-4 bg-white h-100 text-dark">
+            <div class="stats-icon mb-3" style="color: #0098B1;">
+                <i class="fas fa-boxes fa-3x"></i>
             </div>
+            <h5 class="fw-semibold mb-2 text-dark">Productos Totales</h5>
+            <div class="stats-number" style="color: #0098B1;" id="total-productos">0</div>
+            <p class="stats-label">Total de productos en inventario</p>
+            <a href="{{ url_for('inventario_corporativo.listar_inventario_corporativo') }}" class="btn btn-primary btn-sm w-100 btn-modulo">
+                <i class="fas fa-list me-2"></i>Ver Todos
+            </a>
         </div>
-        {% endif %}
-
-        {% if can_access('inventario_corporativo') %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card card-modulo card-modulo-inventario text-white text-center p-4"
-                 data-bs-toggle="modal" data-bs-target="#modalInventarioCorporativo">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <i class="fas fa-warehouse fa-3x mb-3"></i>
-                    </div>
-                    <h4 class="fw-bold mb-2">Inventario Corporativo</h4>
-                    <p class="mb-0 opacity-90">Gestión de productos corporativos</p>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if can_access('prestamo_material') %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card card-modulo card-modulo-prestamos text-center p-4"
-                 data-bs-toggle="modal" data-bs-target="#modalPrestamos">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <i class="fas fa-exchange-alt fa-3x mb-3" style="color:#A73493;"></i>
-                    </div>
-                    <h4 class="fw-bold mb-2">Préstamo de Material</h4>
-                    <p class="mb-0 opacity-90">Control y seguimiento de préstamos</p>
-                </div>
-            </div>
-        </div>
-        {% endif %}
     </div>
+
+    <div class="col-xl-4 col-md-6">
+        <div class="card stats-card border-0 shadow-sm text-center p-4 bg-white h-100 text-dark">
+            <div class="stats-icon mb-3" style="color: #A73493;">
+                <i class="fas fa-building fa-3x"></i>
+            </div>
+            <h5 class="fw-semibold mb-2 text-dark">Sede Principal</h5>
+            <div class="stats-number" style="color: #A73493;" id="productos-sede">0</div>
+            <p class="stats-label">Productos en COQ</p>
+            <a href="{{ url_for('inventario_corporativo.listar_sede_principal') }}" class="btn btn-primary btn-sm w-100 btn-modulo">
+                <i class="fas fa-eye me-2"></i>Ver
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Acceso mínimo para oficinas: solo oficinas-servicio #}
+    {% if can_access('inventario_corporativo', 'view') or can_access('inventario_corporativo', 'view_oficinas_servicio') %}
+    <div class="col-xl-4 col-md-6">
+        <div class="card stats-card border-0 shadow-sm text-center p-4 bg-white h-100 text-dark">
+            <div class="stats-icon mb-3" style="color: #28a745;">
+                <i class="fas fa-map-marker-alt fa-3x"></i>
+            </div>
+            <h5 class="fw-semibold mb-2 text-dark">Oficinas de Servicio</h5>
+            <div class="stats-number" style="color: #28a745;" id="productos-oficinas">0</div>
+            <p class="stats-label">
+                {% if can_access('inventario_corporativo', 'view') %}
+                    Productos en oficinas de servicio
+                {% else %}
+                    Productos de mi oficina
+                {% endif %}
+            </p>
+            <a href="{{ url_for('inventario_corporativo.listar_oficinas_servicio') }}" class="btn btn-primary btn-sm w-100 btn-modulo">
+                <i class="fas fa-location-arrow me-2"></i>Ver
+            </a>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
-<div class="modal fade" id="modalMaterialPOP" tabindex="-1" aria-labelledby="modalMaterialPOPLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header" style="background-color: #A73493; color: #fff;">
-                <h4 class="modal-title fw-bold d-flex align-items-center" id="modalMaterialPOPLabel">
-                    <i class="fas fa-bullhorn me-3"></i> Material POP
-                </h4>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body text-dark" style="background-color: #F8F9FA;">
-                <div class="row g-4 mb-4">
-                    {% if can_access('materiales', 'view') %}
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card stats-card border-0 shadow-sm text-center p-4 bg-white h-100 text-dark">
-                            <div class="stats-icon mb-3" style="color: #A73493;">
-                                <i class="fas fa-box fa-3x"></i>
-                            </div>
-                            <h5 class="fw-semibold mb-2 text-dark">Materiales</h5>
-                            <div class="stats-number" style="color: #A73493;">{{ materiales|length }}</div>
-                            <p class="stats-label">Materiales registrados</p>
-                            <a href="{{ url_for('materiales.listar_materiales') }}" class="btn btn-primary btn-sm w-100 btn-modulo">
-                                <i class="fas fa-cog me-2"></i>Gestionar
-                            </a>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if can_access('oficinas', 'view') %}
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card stats-card border-0 shadow-sm text-center p-4 bg-white h-100 text-dark">
-                            <div class="stats-icon mb-3" style="color: #0098B1;">
-                                <i class="fas fa-building fa-3x"></i>
-                            </div>
-                            <h5 class="fw-semibold mb-2 text-dark">Oficinas</h5>
-                            <div class="stats-number" style="color: #0098B1;">{{ oficinas|length }}</div>
-                            <p class="stats-label">Oficinas registradas</p>
-                            <a href="/oficinas" class="btn btn-primary btn-sm w-100 btn-modulo">
-                                <i class="fas fa-eye me-2"></i>Ver
-                            </a>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if can_access('solicitudes', 'view') %}
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card stats-card border-0 shadow-sm text-center p-4 bg-white h-100 text-dark">
-                            <div class="stats-icon mb-3" style="color: #28a745;">
-                                <i class="fas fa-clipboard-list fa-3x"></i>
-                            </div>
-                            <h5 class="fw-semibold mb-2 text-dark">Solicitudes</h5>
-                            <div class="stats-number" style="color: #28a745;">{{ solicitudes|length }}</div>
-                            <p class="stats-label">Solicitudes activas</p>
-                            <a href="/solicitudes" class="btn btn-primary btn-sm w-100 btn-modulo">
-                                <i class="fas fa-tasks me-2"></i>Gestionar
-                            </a>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if can_access('aprobadores', 'view') %}
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card stats-card border-0 shadow-sm text-center p-4 bg-white h-100 text-dark">
-                            <div class="stats-icon mb-3" style="color: #ffc107;">
-                                <i class="fas fa-user-check fa-3x"></i>
-                            </div>
-                            <h5 class="fw-semibold mb-2 text-dark">Aprobadores</h5>
-                            <div class="stats-number" style="color: #ffc107;">{{ aprobadores|length }}</div>
-                            <p class="stats-label">Aprobadores activos</p>
-                            <a href="/aprobadores" class="btn btn-primary btn-sm w-100 btn-modulo">
-                                <i class="fas fa-list me-2"></i>Ver
-                            </a>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-dark">
@@ -401,9 +333,16 @@
                             </a>
                             {% endif %}
 
-                            <a href="{{ url_for('inventario_corporativo.listar_inventario_corporativo') }}" class="btn btn-success btn-lg">
-                                <i class="fas fa-search me-2"></i> Buscar Productos
-                            </a>
+                            {% if can_access('inventario_corporativo', 'view') %}
+<a href="{{ url_for('inventario_corporativo.listar_inventario_corporativo') }}" class="btn btn-success btn-lg">
+    <i class="fas fa-search me-2"></i> Buscar Productos
+</a>
+{% elif can_access('inventario_corporativo', 'view_oficinas_servicio') %}
+<a href="{{ url_for('inventario_corporativo.listar_oficinas_servicio') }}" class="btn btn-success btn-lg">
+    <i class="fas fa-search me-2"></i> Ver Inventario de mi Oficina
+</a>
+{% endif %}
+
 
                             {% if can_access('reportes', 'view_all') or can_access('reportes', 'view_own') %}
                             <a href="/reportes" class="btn btn-info btn-lg">

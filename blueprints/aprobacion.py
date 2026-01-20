@@ -2,6 +2,10 @@
 from flask import Blueprint, request, session, flash, redirect
 from models.solicitudes_model import SolicitudModel
 from utils.filters import verificar_acceso_oficina
+import logging
+from utils.helpers import sanitizar_log_text
+
+logger = logging.getLogger(__name__)
 
 aprobacion_bp = Blueprint('aprobacion', __name__)
 
@@ -28,7 +32,7 @@ def aprobar_solicitud(solicitud_id):
         else:
             flash(message, 'danger')
     except Exception as e:
-        print(f"❌ Error aprobando solicitud: {e}")
+        logger.error("❌ Error aprobando solicitud: %s", sanitizar_log_text('Error interno'))
         flash('Error al aprobar la solicitud.', 'danger')
     return redirect('/solicitudes')
 
@@ -63,7 +67,7 @@ def aprobar_parcial_solicitud(solicitud_id):
     except ValueError:
         flash('La cantidad aprobada debe ser un número válido.', 'danger')
     except Exception as e:
-        print(f"❌ Error aprobando parcialmente la solicitud: {e}")
+        logger.error("❌ Error aprobando parcialmente la solicitud: %s", sanitizar_log_text('Error interno'))
         flash('Error al aprobar parcialmente la solicitud.', 'danger')
     return redirect('/solicitudes')
 
@@ -90,6 +94,6 @@ def rechazar_solicitud(solicitud_id):
         else:
             flash('Error al rechazar la solicitud.', 'danger')
     except Exception as e:
-        print(f"❌ Error rechazando solicitud: {e}")
+        logger.error("❌ Error rechazando solicitud: %s", sanitizar_log_text('Error interno'))
         flash('Error al rechazar la solicitud.', 'danger')
     return redirect('/solicitudes')

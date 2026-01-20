@@ -1,4 +1,6 @@
 # models/novedades_model.py
+import logging
+logger = logging.getLogger(__name__)
 from database import get_database_connection
 from datetime import datetime
 
@@ -9,7 +11,7 @@ class NovedadModel:
         """Obtiene todas las novedades, opcionalmente filtradas por estado"""
         conn = get_database_connection()
         if conn is None:
-            print("❌ No se pudo conectar a la base de datos")
+            logger.info("❌ No se pudo conectar a la base de datos")
             return []
         
         cursor = conn.cursor()
@@ -82,11 +84,11 @@ class NovedadModel:
                     "prioridad": row[16] if len(row) > 16 else "media"
                 })
             
-            print(f"✅ Novedades obtenidas: {len(novedades)}")
+            logger.info(f"✅ Novedades obtenidas: {len(novedades)}")
             return novedades
             
         except Exception as e:
-            print(f"❌ Error obteniendo novedades: {e}")
+            logger.info("❌ Error obteniendo novedades: [error](%s)", type(e).__name__)
             import traceback
             traceback.print_exc()
             
@@ -125,11 +127,11 @@ class NovedadModel:
                         "prioridad": "media"
                     })
                 
-                print(f"⚠️ Novedades obtenidas (consulta alternativa): {len(novedades)}")
+                logger.info(f"⚠️ Novedades obtenidas (consulta alternativa): {len(novedades)}")
                 return novedades
                 
             except Exception as e2:
-                print(f"❌ Error en consulta alternativa: {e2}")
+                logger.info(f"❌ Error en consulta alternativa: {e2}")
                 return []
         finally:
             try:
@@ -197,7 +199,7 @@ class NovedadModel:
             return None
             
         except Exception as e:
-            print(f"❌ Error obteniendo novedad por ID: {e}")
+            logger.info("❌ Error obteniendo novedad por ID: [error](%s)", type(e).__name__)
             import traceback
             traceback.print_exc()
             return None
@@ -226,12 +228,12 @@ class NovedadModel:
             """, (solicitud_id, tipo_novedad, descripcion, cantidad_afectada, usuario_reporta, ruta_imagen))
         
             conn.commit()
-            print(f"✅ Novedad creada para solicitud {solicitud_id}. Imagen: {ruta_imagen}")
+            logger.info(f"✅ Novedad creada para solicitud {solicitud_id}. Imagen: {ruta_imagen}")
             return cursor.rowcount > 0
         
         except Exception as e:
             conn.rollback()
-            print(f"❌ Error creando novedad: {e}")
+            logger.info("❌ Error creando novedad: [error](%s)", type(e).__name__)
             import traceback
             traceback.print_exc()
             return None
@@ -265,7 +267,7 @@ class NovedadModel:
                 conn.rollback()
             except:
                 pass
-            print(f"❌ Error actualizando novedad: {e}")
+            logger.info("❌ Error actualizando novedad: [error](%s)", type(e).__name__)
             import traceback
             traceback.print_exc()
             return False
@@ -305,7 +307,7 @@ class NovedadModel:
             return {"total": 0, "pendientes": 0, "resueltas": 0, "en_proceso": 0}
             
         except Exception as e:
-            print(f"❌ Error obteniendo estadísticas de novedades: {e}")
+            logger.info("❌ Error obteniendo estadísticas de novedades: [error](%s)", type(e).__name__)
             import traceback
             traceback.print_exc()
             return {"total": 0, "pendientes": 0, "resueltas": 0, "en_proceso": 0}
@@ -372,7 +374,7 @@ class NovedadModel:
             return novedades
             
         except Exception as e:
-            print(f"❌ Error obteniendo novedades por solicitud: {e}")
+            logger.info("❌ Error obteniendo novedades por solicitud: [error](%s)", type(e).__name__)
             import traceback
             traceback.print_exc()
             return []
@@ -408,7 +410,7 @@ class NovedadModel:
             return tipos
             
         except Exception as e:
-            print(f"❌ Error obteniendo tipos de novedad: {e}")
+            logger.info("❌ Error obteniendo tipos de novedad: [error](%s)", type(e).__name__)
             return ['Daño', 'Faltante', 'Error en cantidad', 'Otro']
         finally:
             try:

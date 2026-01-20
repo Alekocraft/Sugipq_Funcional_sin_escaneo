@@ -127,7 +127,7 @@ class ConfirmacionAsignacionesModel:
                 }
                 
         except Exception as e:
-            logger.error(f"Error autenticando usuario AD: {e}")
+            logger.error("Error autenticando usuario AD: [error](%s)", type(e).__name__)
             return {
                 'success': False,
                 'message': f'Error de autenticación: {str(e)}'
@@ -180,7 +180,7 @@ class ConfirmacionAsignacionesModel:
             return token_raw
             
         except Exception as e:
-            logger.error(f"Error generando token: {e}")
+            logger.error("Error generando token: [error](%s)", type(e).__name__)
             if conn:
                 try:
                     conn.rollback()
@@ -299,7 +299,7 @@ class ConfirmacionAsignacionesModel:
             }
             
         except Exception as e:
-            logger.error(f"Error validando token: {e}")
+            logger.error("Error validando token: [error](%s)", type(e).__name__)
             return {'es_valido': False, 'mensaje_error': f'Error al validar: {str(e)}'}
         finally:
             if cursor:
@@ -369,7 +369,7 @@ class ConfirmacionAsignacionesModel:
             }
             
         except Exception as e:
-            logger.error(f"Error verificando usuario de asignación: {e}")
+            logger.error("Error verificando usuario de asignación: [error](%s)", type(e).__name__)
             return {'coincide': False, 'message': f'Error de verificación: {str(e)}'}
         finally:
             if cursor:
@@ -497,7 +497,7 @@ class ConfirmacionAsignacionesModel:
             }
             
         except Exception as e:
-            logger.error(f"Error confirmando asignación: {e}")
+            logger.error("Error confirmando asignación: [error](%s)", type(e).__name__)
             if conn:
                 try:
                     conn.rollback()
@@ -574,7 +574,7 @@ class ConfirmacionAsignacionesModel:
             return resultados
             
         except Exception as e:
-            logger.error(f"Error obteniendo confirmaciones pendientes: {e}")
+            logger.error("Error obteniendo confirmaciones pendientes: [error](%s)", type(e).__name__)
             return []
         finally:
             if cursor:
@@ -613,7 +613,7 @@ class ConfirmacionAsignacionesModel:
             return eliminados
             
         except Exception as e:
-            logger.error(f"Error limpiando tokens expirados: {e}")
+            logger.error("Error limpiando tokens expirados: [error](%s)", type(e).__name__)
             return 0
         finally:
             if cursor:

@@ -1,4 +1,6 @@
-﻿from database import get_database_connection
+import logging
+logger = logging.getLogger(__name__)
+from database import get_database_connection
 
 class OficinaModel:
     # ---------- Helper interno ----------
@@ -21,7 +23,7 @@ class OficinaModel:
     def obtener_todas():
         conn = get_database_connection()
         if conn is None:
-            print("❌ No se pudo establecer conexión a la base de datos")
+            logger.info("❌ No se pudo establecer conexión a la base de datos")
             return []
         cursor = conn.cursor()
         try:
@@ -33,7 +35,7 @@ class OficinaModel:
             """)
             return [OficinaModel._row_a_dict(row) for row in cursor.fetchall()]
         except Exception as e:
-            print(f"❌ Error al obtener oficinas: {e}")
+            logger.info("❌ Error al obtener oficinas: [error](%s)", type(e).__name__)
             return []
         finally:
             cursor.close()
@@ -43,7 +45,7 @@ class OficinaModel:
     def obtener_por_id(oficina_id):
         conn = get_database_connection()
         if conn is None:
-            print("❌ No se pudo establecer conexión a la base de datos")
+            logger.info("❌ No se pudo establecer conexión a la base de datos")
             return None
         cursor = conn.cursor()
         try:
@@ -56,7 +58,7 @@ class OficinaModel:
             row = cursor.fetchone()
             return OficinaModel._row_a_dict(row) if row else None
         except Exception as e:
-            print(f"❌ Error al obtener oficina por ID: {e}")
+            logger.info("❌ Error al obtener oficina por ID: [error](%s)", type(e).__name__)
             return None
         finally:
             cursor.close()
@@ -71,7 +73,7 @@ class OficinaModel:
         """
         conn = get_database_connection()
         if conn is None:
-            print("❌ No se pudo establecer conexión a la base de datos")
+            logger.info("❌ No se pudo establecer conexión a la base de datos")
             return None
         cursor = conn.cursor()
         try:
@@ -83,7 +85,7 @@ class OficinaModel:
             row = cursor.fetchone()
             return {'id': row[0]} if row else None
         except Exception as e:
-            print(f"❌ Error al obtener id por nombre: {e}")
+            logger.info("❌ Error al obtener id por nombre: [error](%s)", type(e).__name__)
             return None
         finally:
             cursor.close()
@@ -97,7 +99,7 @@ class OficinaModel:
         """
         conn = get_database_connection()
         if conn is None:
-            print("❌ No se pudo establecer conexión a la base de datos")
+            logger.info("❌ No se pudo establecer conexión a la base de datos")
             return None
         cursor = conn.cursor()
         try:
@@ -114,7 +116,7 @@ class OficinaModel:
             row = cursor.fetchone()
             return OficinaModel._row_a_dict(row) if row else None
         except Exception as e:
-            print(f"❌ Error obteniendo oficina por nombre: {e}")
+            logger.info("❌ Error obteniendo oficina por nombre: [error](%s)", type(e).__name__)
             return None
         finally:
             cursor.close()
@@ -128,7 +130,7 @@ class OficinaModel:
         """
         conn = get_database_connection()
         if conn is None:
-            print("❌ No se pudo establecer conexión a la base de datos")
+            logger.info("❌ No se pudo establecer conexión a la base de datos")
             return None
         cursor = conn.cursor()
         try:
@@ -144,7 +146,7 @@ class OficinaModel:
             row = cursor.fetchone()
             return OficinaModel._row_a_dict(row) if row else None
         except Exception as e:
-            print(f"❌ Error obteniendo oficina principal: {e}")
+            logger.info("❌ Error obteniendo oficina principal: [error](%s)", type(e).__name__)
             return None
         finally:
             cursor.close()

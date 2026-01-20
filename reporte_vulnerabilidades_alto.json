@@ -1,5 +1,5 @@
 {
-  "fecha_validacion": "2026-01-20T13:26:35.543461",
+  "fecha_validacion": "2026-01-20T16:58:09.415479",
   "ruta_raiz": "C:\\Users\\sinventarios\\source\\repos\\sugipq",
   "configuracion": {
     "carpetas_excluidas": [
@@ -32,110 +32,15 @@
     ]
   },
   "resumen": {
-    "total_vulnerabilidades_encontradas": 162,
-    "total_vulnerabilidades_corregidas": 24,
-    "total_validaciones": 332,
-    "archivos_afectados": 36,
+    "total_vulnerabilidades_encontradas": 41,
+    "total_vulnerabilidades_corregidas": 101,
+    "total_validaciones": 190,
+    "archivos_afectados": 16,
     "archivos_seguros": 5,
     "archivos_excluidos": 6,
     "carpetas_excluidas": 16
   },
   "archivos_problematicos": [
-    {
-      "archivo": "models\\inventario_corporativo_model.py",
-      "total_vulnerabilidades": 31,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 31
-      },
-      "lineas_afectadas": [
-        60,
-        104,
-        174,
-        218,
-        255,
-        310,
-        343,
-        376,
-        398,
-        423,
-        493,
-        533,
-        563,
-        585,
-        617,
-        649,
-        688,
-        720,
-        783,
-        830,
-        873,
-        930,
-        988,
-        1043,
-        1108,
-        1196,
-        1235,
-        1290,
-        1354,
-        1463,
-        1502
-      ]
-    },
-    {
-      "archivo": "solicitudes.py",
-      "total_vulnerabilidades": 10,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 10
-      },
-      "lineas_afectadas": [
-        119,
-        168,
-        219,
-        332,
-        405,
-        433,
-        474,
-        504,
-        544,
-        571
-      ]
-    },
-    {
-      "archivo": "blueprints\\solicitudes.py",
-      "total_vulnerabilidades": 9,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 9
-      },
-      "lineas_afectadas": [
-        375,
-        433,
-        635,
-        671,
-        706,
-        820,
-        903,
-        934,
-        953
-      ]
-    },
-    {
-      "archivo": "models\\solicitudes_model.py",
-      "total_vulnerabilidades": 9,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 9
-      },
-      "lineas_afectadas": [
-        498,
-        737,
-        813,
-        847,
-        917,
-        996,
-        1076,
-        1122,
-        1176
-      ]
-    },
     {
       "archivo": "blueprints\\usuarios.py",
       "total_vulnerabilidades": 8,
@@ -171,115 +76,6 @@
       ]
     },
     {
-      "archivo": "blueprints\\prestamos.py",
-      "total_vulnerabilidades": 8,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 8
-      },
-      "lineas_afectadas": [
-        505,
-        665,
-        807,
-        910,
-        1009,
-        1298,
-        1408,
-        1459
-      ]
-    },
-    {
-      "archivo": "blueprints\\materiales.py",
-      "total_vulnerabilidades": 7,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 7
-      },
-      "lineas_afectadas": [
-        46,
-        77,
-        106,
-        111,
-        221,
-        319,
-        357
-      ]
-    },
-    {
-      "archivo": "blueprints\\oficinas.py",
-      "total_vulnerabilidades": 7,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 7
-      },
-      "lineas_afectadas": [
-        56,
-        101,
-        147,
-        159,
-        181,
-        203,
-        224
-      ]
-    },
-    {
-      "archivo": "models\\novedades_model.py",
-      "total_vulnerabilidades": 7,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 7
-      },
-      "lineas_afectadas": [
-        89,
-        200,
-        234,
-        268,
-        308,
-        375,
-        411
-      ]
-    },
-    {
-      "archivo": "models\\prestamos_model.py",
-      "total_vulnerabilidades": 7,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 7
-      },
-      "lineas_afectadas": [
-        39,
-        69,
-        117,
-        142,
-        182,
-        224,
-        278
-      ]
-    },
-    {
-      "archivo": "models\\materiales_model.py",
-      "total_vulnerabilidades": 5,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 5
-      },
-      "lineas_afectadas": [
-        60,
-        112,
-        226,
-        251,
-        270
-      ]
-    },
-    {
-      "archivo": "models\\oficinas_model.py",
-      "total_vulnerabilidades": 5,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 5
-      },
-      "lineas_afectadas": [
-        36,
-        59,
-        86,
-        117,
-        147
-      ]
-    },
-    {
       "archivo": "templates\\usuarios\\gestionar.html",
       "total_vulnerabilidades": 5,
       "vulnerabilidades_por_categoria": {
@@ -294,42 +90,6 @@
       ]
     },
     {
-      "archivo": "blueprints\\api.py",
-      "total_vulnerabilidades": 3,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 3
-      },
-      "lineas_afectadas": [
-        18,
-        35,
-        50
-      ]
-    },
-    {
-      "archivo": "blueprints\\aprobacion.py",
-      "total_vulnerabilidades": 3,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 3
-      },
-      "lineas_afectadas": [
-        31,
-        66,
-        93
-      ]
-    },
-    {
-      "archivo": "blueprints\\auth.py",
-      "total_vulnerabilidades": 3,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 3
-      },
-      "lineas_afectadas": [
-        53,
-        66,
-        160
-      ]
-    },
-    {
       "archivo": "models\\confirmacion_asignaciones_model.py",
       "total_vulnerabilidades": 2,
       "vulnerabilidades_por_categoria": {
@@ -338,17 +98,6 @@
       "lineas_afectadas": [
         111,
         123
-      ]
-    },
-    {
-      "archivo": "utils\\ldap_auth.py",
-      "total_vulnerabilidades": 2,
-      "vulnerabilidades_por_categoria": {
-        "CWE-117": 2
-      },
-      "lineas_afectadas": [
-        296,
-        349
       ]
     },
     {
@@ -415,56 +164,6 @@
       "lineas_afectadas": [
         594,
         605
-      ]
-    },
-    {
-      "archivo": "certificado_route.py",
-      "total_vulnerabilidades": 1,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 1
-      },
-      "lineas_afectadas": [
-        58
-      ]
-    },
-    {
-      "archivo": "database.py",
-      "total_vulnerabilidades": 1,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 1
-      },
-      "lineas_afectadas": [
-        62
-      ]
-    },
-    {
-      "archivo": "utf8.py",
-      "total_vulnerabilidades": 1,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 1
-      },
-      "lineas_afectadas": [
-        156
-      ]
-    },
-    {
-      "archivo": "blueprints\\aprobadores.py",
-      "total_vulnerabilidades": 1,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 1
-      },
-      "lineas_afectadas": [
-        40
-      ]
-    },
-    {
-      "archivo": "utils\\initialization.py",
-      "total_vulnerabilidades": 1,
-      "vulnerabilidades_por_categoria": {
-        "CWE-209": 1
-      },
-      "lineas_afectadas": [
-        94
       ]
     },
     {
@@ -535,7 +234,7 @@
       "linea": 506,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.512957"
+      "timestamp": "2026-01-20T16:58:06.397392"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -543,7 +242,7 @@
       "linea": 531,
       "estado": "CORREGIDO",
       "detalle": "Usa sanitización: Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.512957"
+      "timestamp": "2026-01-20T16:58:06.397392"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -551,7 +250,7 @@
       "linea": 610,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.512957"
+      "timestamp": "2026-01-20T16:58:06.397392"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -559,7 +258,7 @@
       "linea": 662,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.512957"
+      "timestamp": "2026-01-20T16:58:06.397392"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -567,7 +266,7 @@
       "linea": 676,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.512957"
+      "timestamp": "2026-01-20T16:58:06.397392"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -575,7 +274,7 @@
       "linea": 729,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.512957"
+      "timestamp": "2026-01-20T16:58:06.397392"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -583,7 +282,7 @@
       "linea": 787,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.512957"
+      "timestamp": "2026-01-20T16:58:06.397392"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -591,7 +290,7 @@
       "linea": 797,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.512957"
+      "timestamp": "2026-01-20T16:58:06.397392"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -599,7 +298,7 @@
       "linea": 877,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.512957"
+      "timestamp": "2026-01-20T16:58:06.397392"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -607,7 +306,7 @@
       "linea": 111,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.512957"
+      "timestamp": "2026-01-20T16:58:06.413419"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -615,7 +314,7 @@
       "linea": 123,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.512957"
+      "timestamp": "2026-01-20T16:58:06.413419"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -623,7 +322,7 @@
       "linea": 35,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.526970"
+      "timestamp": "2026-01-20T16:58:06.429224"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -631,7 +330,7 @@
       "linea": 41,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.526970"
+      "timestamp": "2026-01-20T16:58:06.429224"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -639,7 +338,7 @@
       "linea": 47,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.526970"
+      "timestamp": "2026-01-20T16:58:06.429224"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -647,7 +346,7 @@
       "linea": 51,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.526970"
+      "timestamp": "2026-01-20T16:58:06.429224"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -655,7 +354,7 @@
       "linea": 64,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.526970"
+      "timestamp": "2026-01-20T16:58:06.429224"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -663,7 +362,7 @@
       "linea": 67,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.526970"
+      "timestamp": "2026-01-20T16:58:06.429224"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -671,7 +370,7 @@
       "linea": 73,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.526970"
+      "timestamp": "2026-01-20T16:58:06.429224"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -679,23 +378,7 @@
       "linea": 87,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.526970"
-    },
-    {
-      "categoria": "CWE-117: Log Injection",
-      "archivo": "utils\\ldap_auth.py",
-      "linea": 296,
-      "estado": "VULNERABLE",
-      "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.526970"
-    },
-    {
-      "categoria": "CWE-117: Log Injection",
-      "archivo": "utils\\ldap_auth.py",
-      "linea": 349,
-      "estado": "VULNERABLE",
-      "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T13:26:32.526970"
+      "timestamp": "2026-01-20T16:58:06.429224"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -703,7 +386,7 @@
       "linea": 106,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.887862"
+      "timestamp": "2026-01-20T16:58:06.780938"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -711,7 +394,7 @@
       "linea": 261,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.780938"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -719,7 +402,7 @@
       "linea": 297,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.780938"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -727,7 +410,7 @@
       "linea": 319,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.780938"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -735,7 +418,7 @@
       "linea": 339,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.780938"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -743,7 +426,7 @@
       "linea": 357,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.780938"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -751,7 +434,7 @@
       "linea": 371,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.780938"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -759,7 +442,7 @@
       "linea": 390,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.780938"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -767,7 +450,7 @@
       "linea": 428,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.780938"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -775,7 +458,7 @@
       "linea": 553,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.781935"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -783,7 +466,7 @@
       "linea": 656,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.781935"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -791,7 +474,7 @@
       "linea": 746,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.781935"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -799,7 +482,7 @@
       "linea": 769,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.781935"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -807,7 +490,7 @@
       "linea": 802,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.781935"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -815,7 +498,7 @@
       "linea": 838,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.781935"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -823,7 +506,7 @@
       "linea": 975,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.781935"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -831,1783 +514,223 @@
       "linea": 1003,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.781935"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "certificado_route.py",
-      "linea": 58,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "certificado_route.py",
-      "linea": 470,
+      "linea": 468,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.783937"
     },
     {
       "categoria": "CWE-209: Information Exposure",
-      "archivo": "database.py",
-      "linea": 41,
+      "archivo": "solicitudes.py",
+      "linea": 255,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.785936"
     },
     {
       "categoria": "CWE-209: Information Exposure",
-      "archivo": "database.py",
-      "linea": 44,
+      "archivo": "solicitudes.py",
+      "linea": 300,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "database.py",
-      "linea": 62,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.785936"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "solicitudes.py",
-      "linea": 119,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "linea": 421,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-20T16:58:06.785936"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "solicitudes.py",
-      "linea": 168,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "linea": 470,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-20T16:58:06.785936"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "solicitudes.py",
-      "linea": 219,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "linea": 521,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-20T16:58:06.785936"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "solicitudes.py",
-      "linea": 332,
-      "estado": "VULNERABLE",
-      "detalle": "str(e) en log - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "solicitudes.py",
-      "linea": 405,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "solicitudes.py",
-      "linea": 433,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "solicitudes.py",
-      "linea": 474,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "solicitudes.py",
-      "linea": 504,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "solicitudes.py",
-      "linea": 544,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "solicitudes.py",
-      "linea": 571,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utf8.py",
-      "linea": 156,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\api.py",
-      "linea": 18,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\api.py",
-      "linea": 35,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\api.py",
-      "linea": 50,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\aprobacion.py",
-      "linea": 31,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\aprobacion.py",
-      "linea": 66,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\aprobacion.py",
-      "linea": 93,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\aprobadores.py",
-      "linea": 40,
-      "estado": "VULNERABLE",
-      "detalle": "str(e) en log - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\auth.py",
-      "linea": 53,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\auth.py",
-      "linea": 66,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "linea": 567,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-20T16:58:06.785936"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "blueprints\\auth.py",
       "linea": 160,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\auth.py",
-      "linea": 162,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.787975"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "blueprints\\confirmacion_asignaciones.py",
-      "linea": 302,
+      "linea": 301,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\confirmacion_asignaciones.py",
-      "linea": 326,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\confirmacion_asignaciones.py",
-      "linea": 382,
-      "estado": "REVISAR",
-      "detalle": "str(e) en log",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\inventario_corporativo.py",
-      "linea": 280,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\inventario_corporativo.py",
-      "linea": 335,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\inventario_corporativo.py",
-      "linea": 360,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\inventario_corporativo.py",
-      "linea": 462,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\inventario_corporativo.py",
-      "linea": 486,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\inventario_corporativo.py",
-      "linea": 526,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\inventario_corporativo.py",
-      "linea": 560,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\inventario_corporativo.py",
-      "linea": 738,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\inventario_corporativo.py",
-      "linea": 768,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "timestamp": "2026-01-20T16:58:06.787975"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "blueprints\\materiales.py",
-      "linea": 46,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "linea": 50,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-20T16:58:06.787975"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "blueprints\\materiales.py",
-      "linea": 77,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "linea": 81,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-20T16:58:06.787975"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "blueprints\\materiales.py",
-      "linea": 79,
+      "linea": 115,
       "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-20T16:58:06.787975"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "blueprints\\materiales.py",
-      "linea": 106,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "linea": 225,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-20T16:58:06.787975"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "blueprints\\materiales.py",
-      "linea": 111,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
+      "linea": 323,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-20T16:58:06.787975"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "blueprints\\materiales.py",
-      "linea": 221,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\materiales.py",
-      "linea": 223,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\materiales.py",
-      "linea": 319,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\materiales.py",
-      "linea": 321,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\materiales.py",
-      "linea": 357,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\novedades_model.py",
-      "linea": 89,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\novedades_model.py",
-      "linea": 91,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\novedades_model.py",
-      "linea": 155,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\novedades_model.py",
-      "linea": 157,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\novedades_model.py",
-      "linea": 199,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\novedades_model.py",
-      "linea": 201,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\novedades_model.py",
-      "linea": 231,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\novedades_model.py",
-      "linea": 233,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\novedades_model.py",
-      "linea": 270,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\novedades_model.py",
-      "linea": 327,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\novedades_model.py",
-      "linea": 329,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.890379"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\oficinas.py",
-      "linea": 56,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.906132"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\oficinas.py",
-      "linea": 101,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.906132"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\oficinas.py",
-      "linea": 147,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.906132"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\oficinas.py",
-      "linea": 159,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.906132"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\oficinas.py",
-      "linea": 181,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.906132"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\oficinas.py",
-      "linea": 203,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.906132"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\oficinas.py",
-      "linea": 224,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.906132"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 136,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.908135"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 483,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.908135"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 505,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.908135"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 647,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.909139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 665,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.909139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 787,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.909139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 807,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.909139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 891,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.909139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 910,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.909139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 990,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.909139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 1009,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.909139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 1298,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.910136"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 1408,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.910136"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\prestamos.py",
-      "linea": 1459,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.910136"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\reportes.py",
-      "linea": 673,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.913135"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\reportes.py",
-      "linea": 847,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.913135"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\reportes.py",
-      "linea": 1737,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.915132"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\reportes.py",
-      "linea": 1757,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.915132"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\reportes.py",
-      "linea": 2690,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.917136"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 254,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.918139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 299,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.918139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 375,
-      "estado": "VULNERABLE",
-      "detalle": "str(e) en log - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.918139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 420,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.918139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 433,
-      "estado": "VULNERABLE",
-      "detalle": "str(e) en log - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.918139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 469,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.918139"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 479,
-      "estado": "REVISAR",
-      "detalle": "str(e) en log",
-      "timestamp": "2026-01-20T13:26:32.919137"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 520,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 528,
-      "estado": "REVISAR",
-      "detalle": "str(e) en log",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 566,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 574,
-      "estado": "REVISAR",
-      "detalle": "str(e) en log",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 635,
-      "estado": "VULNERABLE",
-      "detalle": "str(e) en log - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 671,
-      "estado": "VULNERABLE",
-      "detalle": "str(e) en log - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 706,
-      "estado": "VULNERABLE",
-      "detalle": "str(e) en log - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 729,
-      "estado": "REVISAR",
-      "detalle": "str(e) en log",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 808,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 820,
-      "estado": "VULNERABLE",
-      "detalle": "str(e) en log - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 890,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 903,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 934,
-      "estado": "VULNERABLE",
-      "detalle": "str(e) en log - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 953,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 976,
-      "estado": "REVISAR",
-      "detalle": "str(e) en log",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 1000,
-      "estado": "REVISAR",
-      "detalle": "str(e) en log",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 1024,
-      "estado": "REVISAR",
-      "detalle": "str(e) en log",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 1041,
-      "estado": "REVISAR",
-      "detalle": "str(e) en log",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "blueprints\\solicitudes.py",
-      "linea": 1074,
-      "estado": "REVISAR",
-      "detalle": "str(e) en log",
-      "timestamp": "2026-01-20T13:26:32.919180"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\confirmacion_asignaciones_model.py",
-      "linea": 130,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\confirmacion_asignaciones_model.py",
-      "linea": 183,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\confirmacion_asignaciones_model.py",
-      "linea": 302,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\confirmacion_asignaciones_model.py",
-      "linea": 372,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\confirmacion_asignaciones_model.py",
-      "linea": 500,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\confirmacion_asignaciones_model.py",
-      "linea": 577,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\confirmacion_asignaciones_model.py",
-      "linea": 616,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 60,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 104,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 174,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 218,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 255,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 310,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 343,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 376,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 398,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 423,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 493,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 533,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 563,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 585,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 617,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 649,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 688,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 720,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 783,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 830,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 873,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 930,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 988,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 1043,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 1108,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 1196,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 1235,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 1290,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 1354,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 1463,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model.py",
-      "linea": 1502,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model_extended.py",
-      "linea": 124,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model_extended.py",
-      "linea": 276,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model_extended.py",
-      "linea": 278,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model_extended.py",
-      "linea": 291,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model_extended.py",
       "linea": 361,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
+      "timestamp": "2026-01-20T16:58:06.787975"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "models\\inventario_corporativo_model_extended.py",
-      "linea": 425,
+      "linea": 277,
       "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model_extended.py",
-      "linea": 476,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\inventario_corporativo_model_extended.py",
-      "linea": 522,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.921761"
+      "detalle": "Stack trace expuesto",
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "models\\materiales_model.py",
-      "linea": 60,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\materiales_model.py",
-      "linea": 112,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\materiales_model.py",
-      "linea": 186,
+      "linea": 188,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\materiales_model.py",
-      "linea": 226,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\materiales_model.py",
-      "linea": 251,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\materiales_model.py",
-      "linea": 270,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "models\\novedades_model.py",
-      "linea": 89,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
+      "linea": 93,
+      "estado": "REVISAR",
+      "detalle": "Stack trace expuesto",
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "models\\novedades_model.py",
-      "linea": 91,
+      "linea": 204,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.921761"
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "models\\novedades_model.py",
-      "linea": 200,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
+      "linea": 238,
+      "estado": "REVISAR",
+      "detalle": "Stack trace expuesto",
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "models\\novedades_model.py",
-      "linea": 202,
+      "linea": 272,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.921761"
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "models\\novedades_model.py",
-      "linea": 234,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
+      "linea": 312,
+      "estado": "REVISAR",
+      "detalle": "Stack trace expuesto",
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "models\\novedades_model.py",
-      "linea": 236,
+      "linea": 379,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.921761"
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\novedades_model.py",
-      "linea": 268,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\novedades_model.py",
-      "linea": 270,
+      "archivo": "models\\solicitudes_model.py",
+      "linea": 502,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.921761"
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\novedades_model.py",
-      "linea": 308,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\novedades_model.py",
-      "linea": 310,
+      "archivo": "models\\solicitudes_model.py",
+      "linea": 741,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.921761"
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\novedades_model.py",
-      "linea": 375,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\novedades_model.py",
-      "linea": 377,
+      "archivo": "models\\solicitudes_model.py",
+      "linea": 1000,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\novedades_model.py",
-      "linea": 411,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\oficinas_model.py",
-      "linea": 36,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\oficinas_model.py",
-      "linea": 59,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\oficinas_model.py",
-      "linea": 86,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\oficinas_model.py",
-      "linea": 117,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\oficinas_model.py",
-      "linea": 147,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.921761"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\prestamos_model.py",
-      "linea": 39,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\prestamos_model.py",
-      "linea": 69,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\prestamos_model.py",
-      "linea": 117,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\prestamos_model.py",
-      "linea": 142,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\prestamos_model.py",
-      "linea": 182,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\prestamos_model.py",
-      "linea": 224,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\prestamos_model.py",
-      "linea": 278,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
       "archivo": "models\\solicitudes_model.py",
-      "linea": 498,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 500,
+      "linea": 1080,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 737,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 739,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 813,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 847,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 917,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 996,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 998,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 1076,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 1078,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 1122,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\solicitudes_model.py",
-      "linea": 1176,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción completa en print() - Usar logger en lugar de print",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 88,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 158,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 240,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 242,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 350,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 352,
-      "estado": "REVISAR",
-      "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 422,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 462,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 516,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 588,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 634,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 683,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 817,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 875,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "models\\usuarios_model.py",
-      "linea": 920,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "services\\auth_service.py",
-      "linea": 100,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "services\\auth_service.py",
-      "linea": 116,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "services\\notification_service.py",
-      "linea": 65,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "services\\notification_service.py",
-      "linea": 92,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "services\\notification_service.py",
-      "linea": 283,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
+      "timestamp": "2026-01-20T16:58:06.818325"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -2615,15 +738,7 @@
       "linea": 285,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "services\\notification_service.py",
-      "linea": 433,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
+      "timestamp": "2026-01-20T16:58:06.833963"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -2631,15 +746,7 @@
       "linea": 435,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "services\\notification_service.py",
-      "linea": 568,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
+      "timestamp": "2026-01-20T16:58:06.833963"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -2647,15 +754,7 @@
       "linea": 570,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "services\\notification_service.py",
-      "linea": 629,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
+      "timestamp": "2026-01-20T16:58:06.833963"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -2663,159 +762,7 @@
       "linea": 631,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "services\\notification_service.py",
-      "linea": 668,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.937387"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\helpers.py",
-      "linea": 62,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\helpers.py",
-      "linea": 76,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\helpers.py",
-      "linea": 126,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\helpers.py",
-      "linea": 167,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\helpers.py",
-      "linea": 190,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\helpers.py",
-      "linea": 207,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\helpers.py",
-      "linea": 227,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\initialization.py",
-      "linea": 86,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\initialization.py",
-      "linea": 90,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\initialization.py",
-      "linea": 94,
-      "estado": "VULNERABLE",
-      "detalle": "Excepción en log sin sanitizar - exc_info expone detalles",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\initialization.py",
-      "linea": 129,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\initialization.py",
-      "linea": 158,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\initialization.py",
-      "linea": 174,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\ldap_auth.py",
-      "linea": 29,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\ldap_auth.py",
-      "linea": 219,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\ldap_auth.py",
-      "linea": 296,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\ldap_auth.py",
-      "linea": 349,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.950401"
-    },
-    {
-      "categoria": "CWE-209: Information Exposure",
-      "archivo": "utils\\permissions.py",
-      "linea": 101,
-      "estado": "REVISAR",
-      "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T13:26:32.953415"
+      "timestamp": "2026-01-20T16:58:06.833963"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2823,7 +770,7 @@
       "linea": 87,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.584715"
+      "timestamp": "2026-01-20T16:58:07.460882"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2831,7 +778,7 @@
       "linea": 63,
       "estado": "VULNERABLE",
       "detalle": "Campo username sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.585713"
+      "timestamp": "2026-01-20T16:58:07.460882"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2839,7 +786,7 @@
       "linea": 70,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.585713"
+      "timestamp": "2026-01-20T16:58:07.460882"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2847,7 +794,7 @@
       "linea": 130,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.588715"
+      "timestamp": "2026-01-20T16:58:07.460882"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2855,7 +802,7 @@
       "linea": 148,
       "estado": "VULNERABLE",
       "detalle": "Campo username sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.591786"
+      "timestamp": "2026-01-20T16:58:07.474394"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2863,7 +810,7 @@
       "linea": 150,
       "estado": "VULNERABLE",
       "detalle": "Campo email sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.591786"
+      "timestamp": "2026-01-20T16:58:07.474394"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2871,7 +818,7 @@
       "linea": 85,
       "estado": "VULNERABLE",
       "detalle": "Campo email sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.639069"
+      "timestamp": "2026-01-20T16:58:07.531285"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2879,7 +826,7 @@
       "linea": 94,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.639069"
+      "timestamp": "2026-01-20T16:58:07.531285"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2887,7 +834,7 @@
       "linea": 139,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.655786"
+      "timestamp": "2026-01-20T16:58:07.533290"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2895,7 +842,7 @@
       "linea": 145,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.655786"
+      "timestamp": "2026-01-20T16:58:07.533290"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2903,7 +850,7 @@
       "linea": 340,
       "estado": "VULNERABLE",
       "detalle": "Campo email sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.657785"
+      "timestamp": "2026-01-20T16:58:07.536283"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2911,7 +858,7 @@
       "linea": 346,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.657785"
+      "timestamp": "2026-01-20T16:58:07.536283"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2919,7 +866,7 @@
       "linea": 352,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.657785"
+      "timestamp": "2026-01-20T16:58:07.536283"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2927,7 +874,7 @@
       "linea": 402,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.657785"
+      "timestamp": "2026-01-20T16:58:07.536283"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -2935,7 +882,7 @@
       "linea": 605,
       "estado": "VULNERABLE",
       "detalle": "Campo email sin autocomplete='off'",
-      "timestamp": "2026-01-20T13:26:33.658786"
+      "timestamp": "2026-01-20T16:58:07.537397"
     },
     {
       "categoria": "CWE-200: Hardcoded IP",
@@ -2943,7 +890,7 @@
       "linea": 45,
       "estado": "CORREGIDO",
       "detalle": "IP 10.60.0.30 cargada desde variable de entorno",
-      "timestamp": "2026-01-20T13:26:34.030003"
+      "timestamp": "2026-01-20T16:58:07.902612"
     },
     {
       "categoria": "CWE-200: Hardcoded IP",
@@ -2951,7 +898,7 @@
       "linea": 11,
       "estado": "CORREGIDO",
       "detalle": "IP 10.60.0.30 cargada desde variable de entorno",
-      "timestamp": "2026-01-20T13:26:34.030003"
+      "timestamp": "2026-01-20T16:58:07.902612"
     },
     {
       "categoria": "CWE-200: Hardcoded IP",
@@ -2959,95 +906,711 @@
       "linea": 28,
       "estado": "CORREGIDO",
       "detalle": "IP 10.60.0.31 cargada desde variable de entorno",
-      "timestamp": "2026-01-20T13:26:34.046031"
+      "timestamp": "2026-01-20T16:58:07.918640"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
       "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 2763,
+      "linea": 963,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
       "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 2771,
+      "linea": 971,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
       "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 2779,
+      "linea": 979,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
       "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 2787,
+      "linea": 987,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
       "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 2795,
+      "linea": 995,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
       "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 2803,
+      "linea": 1003,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
       "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 2811,
+      "linea": 1011,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
       "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 2819,
+      "linea": 1019,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
       "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 2827,
+      "linea": 1027,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
       "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 2835,
+      "linea": 1035,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
       "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 2843,
+      "linea": 1043,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1051,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1059,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1067,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1075,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1083,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1091,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1099,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1107,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1115,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1123,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1131,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1139,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1147,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1155,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1163,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1171,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1179,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1187,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1195,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1203,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1211,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1219,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1227,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1235,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1243,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1251,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1259,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1267,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1275,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1283,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1291,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1299,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1307,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1315,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1323,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1331,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1339,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1347,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1355,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1363,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1371,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1379,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1387,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1395,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1403,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1411,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1419,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1427,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1435,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1443,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1451,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1459,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1467,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1475,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1483,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1491,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1499,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1507,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1515,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1523,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1531,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1539,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1547,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1555,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1563,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1571,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1579,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1587,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1595,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1603,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1611,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1619,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1627,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1635,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1643,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1651,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1659,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -3055,7 +1618,7 @@
       "linea": 2667,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -3063,7 +1626,7 @@
       "linea": 2675,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -3071,7 +1634,7 @@
       "linea": 2683,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -3079,7 +1642,7 @@
       "linea": 2691,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -3087,7 +1650,7 @@
       "linea": 2699,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -3095,7 +1658,7 @@
       "linea": 2707,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -3103,7 +1666,7 @@
       "linea": 2715,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -3111,7 +1674,7 @@
       "linea": 2723,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -3119,7 +1682,7 @@
       "linea": 2731,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.281484"
+      "timestamp": "2026-01-20T16:58:08.146338"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -3127,7 +1690,7 @@
       "linea": 164,
       "estado": "VULNERABLE",
       "detalle": "target=\"_blank\" sin rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.297515"
+      "timestamp": "2026-01-20T16:58:08.161852"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -3135,7 +1698,7 @@
       "linea": 218,
       "estado": "VULNERABLE",
       "detalle": "target=\"_blank\" sin rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T13:26:34.297515"
+      "timestamp": "2026-01-20T16:58:08.161852"
     },
     {
       "categoria": "CWE-601: Open Redirect",
@@ -3143,7 +1706,7 @@
       "linea": 291,
       "estado": "VULNERABLE",
       "detalle": "Redirect con input no validado (JavaScript en HTML)",
-      "timestamp": "2026-01-20T13:26:35.126076"
+      "timestamp": "2026-01-20T16:58:09.004418"
     },
     {
       "categoria": "CWE-601: Open Redirect",
@@ -3151,7 +1714,7 @@
       "linea": 370,
       "estado": "VULNERABLE",
       "detalle": "Redirect con input no validado (JavaScript en HTML)",
-      "timestamp": "2026-01-20T13:26:35.139096"
+      "timestamp": "2026-01-20T16:58:09.012205"
     },
     {
       "categoria": "CWE-601: Open Redirect",
@@ -3159,7 +1722,7 @@
       "linea": 374,
       "estado": "VULNERABLE",
       "detalle": "Redirect con input no validado (JavaScript en HTML)",
-      "timestamp": "2026-01-20T13:26:35.139096"
+      "timestamp": "2026-01-20T16:58:09.012205"
     },
     {
       "categoria": "CWE-601: Open Redirect",
@@ -3167,7 +1730,7 @@
       "linea": 594,
       "estado": "VULNERABLE",
       "detalle": "Redirect con input no validado (JavaScript en HTML)",
-      "timestamp": "2026-01-20T13:26:35.139096"
+      "timestamp": "2026-01-20T16:58:09.013211"
     },
     {
       "categoria": "CWE-601: Open Redirect",
@@ -3175,7 +1738,7 @@
       "linea": 605,
       "estado": "VULNERABLE",
       "detalle": "Redirect con input no validado (JavaScript en HTML)",
-      "timestamp": "2026-01-20T13:26:35.139096"
+      "timestamp": "2026-01-20T16:58:09.013211"
     },
     {
       "categoria": "CWE-311: Insecure Transport",
@@ -3183,7 +1746,7 @@
       "linea": 1018,
       "estado": "VULNERABLE",
       "detalle": "Servidor HTTP sin SSL/TLS - Usar HTTPS en producción",
-      "timestamp": "2026-01-20T13:26:35.484088"
+      "timestamp": "2026-01-20T16:58:09.367702"
     }
   ]
 }
