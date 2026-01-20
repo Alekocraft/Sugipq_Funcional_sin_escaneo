@@ -5,7 +5,6 @@ from models.usuarios_model import UsuarioModel
 from database import get_database_connection
 import logging
 from config.config import Config  
-# ✅ CORRECCIÓN: Importar funciones de sanitización
 from utils.helpers import sanitizar_email, sanitizar_username, sanitizar_ip, sanitizar_identificacion
 
 logger = logging.getLogger(__name__)
@@ -13,24 +12,76 @@ logger = logging.getLogger(__name__)
 usuarios_bp = Blueprint('usuarios', __name__, url_prefix='/usuarios')
 
 # ======================
-# DECORADORES
+# DECORADORES (VERSIÓN ROBUSTA)
 # ======================
 
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Verificar si hay sesión activa
         if 'usuario_id' not in session:
             flash('Debe iniciar sesión para acceder a esta página', 'danger')
-            return redirect(url_for('auth_bp.login'))
+            # Intentar diferentes formas de redirigir al login
+            try:
+                return redirect(url_for('auth.login'))
+            except:
+                try:
+                    return redirect('/auth/login')
+                except:
+                    return redirect('/')
         
-        # CORRECCIÓN: "admin" equivale a "administrador"
+        # Verificar permisos de administrador
         rol_actual = session.get('rol', '').lower()
         if rol_actual not in ['administrador', 'admin']:
             flash('No tiene permisos de administrador para acceder a esta página', 'danger')
-            return redirect(url_for('dashboard'))
+            # Intentar diferentes formas de redirigir al dashboard
+            try:
+                return redirect(url_for('dashboard'))
+            except:
+                try:
+                    return redirect('/dashboard')
+                except:
+                    return redirect('/')
         
         return f(*args, **kwargs)
     return decorated_function
+
+# ======================
+# FUNCIÓN DE SANITIZACIÓN PARA LOGS
+# ======================
+
+def sanitizar_log_text(text):
+    """
+    Sanitiza texto para logs, eliminando caracteres peligrosos como nuevas líneas
+    y retornos de carro que podrían usarse para inyección de logs.
+    
+    Args:
+        text: Texto a sanitizar
+        
+    Returns:
+        str: Texto sanitizado
+    """
+    if text is None:
+        return "[NO_PROVIDIDO]"
+    
+    try:
+        # Convertir a string si no lo es
+        text_str = str(text)
+        
+        # Eliminar caracteres de nueva línea y retorno de carro
+        text_str = text_str.replace('\r', ' ')
+        text_str = text_str.replace('\n', ' ')
+        text_str = text_str.replace('\r\n', ' ')
+        text_str = text_str.replace('\t', ' ')
+        
+        # Limitar longitud para evitar logs excesivamente largos
+        if len(text_str) > 500:
+            text_str = text_str[:500] + "..."
+            
+        return text_str.strip()
+    except Exception as e:
+        logger.warning(f"Error sanitizando texto para log: {sanitizar_log_text(str(e))}")
+        return "[ERROR_SANITIZACION]"
 
 # ======================
 # RUTAS DE GESTIÓN DE USUARIOS
@@ -42,7 +93,6 @@ def listar_usuarios():
     """
     Lista todos los usuarios del sistema con gestión completa
     """
-    # 🔧 SOLUCIÓN: Definir contexto con valores por defecto SIEMPRE
     context = {
         'usuarios': [],
         'oficinas': [],
@@ -55,8 +105,14 @@ def listar_usuarios():
         'total_usuarios': 0
     }
     
+    conn = None
+    cursor = None
     try:
         conn = get_database_connection()
+        if not conn:
+            flash('Error de conexión a la base de datos', 'danger')
+            return render_template('usuarios/listar.html', **context)
+            
         cursor = conn.cursor()
         
         # Obtener todos los usuarios con información completa
@@ -141,8 +197,6 @@ def listar_usuarios():
         # Calcular total de usuarios locales (no LDAP)
         total_locales = len(usuarios) - total_ldap
         
-        conn.close()
-        
         # ✅ Actualizar contexto con valores reales
         context.update({
             'usuarios': usuarios,
@@ -157,11 +211,22 @@ def listar_usuarios():
         })
         
     except Exception as e:
-        # ✅ CORRECCIÓN LÍNEA 220: Mensaje de error genérico sin detalles
-        logger.error(f"Error en listado de usuarios", exc_info=False)
+        # ✅ CORRECCIÓN: Error sanitizado
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error en listado de usuarios: {error_sanitizado}")
         flash('Error al listar usuarios. Por favor, intente nuevamente.', 'danger')
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
     
-    # 🎯 SIEMPRE renderizar con el contexto completo (con valores por defecto si hubo error)
     return render_template('usuarios/listar.html', **context)
 
 @usuarios_bp.route('/crear', methods=['GET', 'POST'])
@@ -170,8 +235,16 @@ def crear_usuario():
     """
     Crea un nuevo usuario (local o desde LDAP)
     """
+    conn = None
+    cursor = None
+    
     try:
         conn = get_database_connection()
+        if not conn:
+            flash('Error de conexión a la base de datos', 'danger')
+            # ✅ USAR REDIRECCIÓN DIRECTA EN LUGAR DE url_for
+            return redirect('/usuarios')
+                
         cursor = conn.cursor()
         
         if request.method == 'GET':
@@ -192,8 +265,6 @@ def crear_usuario():
                 'oficina_polo_club',
                 'usuario'
             ]
-            
-            conn.close()
             
             return render_template('usuarios/crear.html',
                                  oficinas=oficinas,
@@ -219,11 +290,12 @@ def crear_usuario():
                 # Validaciones
                 if not usuario_data['usuario']:
                     flash('El nombre de usuario es obligatorio', 'danger')
-                    return redirect(url_for('usuarios.crear_usuario'))
+                    # ✅ USAR REDIRECCIÓN DIRECTA
+                    return redirect('/usuarios/crear')
                 
                 if not usuario_data['password']:
                     flash('La contraseña es obligatoria para usuarios locales', 'danger')
-                    return redirect(url_for('usuarios.crear_usuario'))
+                    return redirect('/usuarios/crear')
                 
                 # ✅ CORRECCIÓN: Sanitizar username para logs
                 usuario_sanitizado = sanitizar_username(usuario_data['usuario'])
@@ -232,11 +304,9 @@ def crear_usuario():
                 cursor.execute("SELECT COUNT(*) FROM Usuarios WHERE NombreUsuario = ?", 
                               (usuario_data['usuario'],))
                 if cursor.fetchone()[0] > 0:
-                    # ✅ CORRECCIÓN LÍNEA 232: Log sanitizado
                     logger.warning(f"Intento de crear usuario existente: {usuario_sanitizado}")
                     flash('El nombre de usuario ya existe', 'danger')
-                    conn.close()
-                    return redirect(url_for('usuarios.crear_usuario'))
+                    return redirect('/usuarios/crear')
                 
                 # Crear usuario local
                 success = UsuarioModel.crear_usuario_manual({
@@ -265,17 +335,13 @@ def crear_usuario():
                         ))
                         conn.commit()
                     
-                    # ✅ CORRECCIÓN LÍNEA 224: Log sanitizado
                     logger.info(f"Usuario local creado exitosamente: {usuario_sanitizado}")
                     flash('Usuario local creado exitosamente', 'success')
-                    conn.close()
-                    return redirect(url_for('usuarios.listar_usuarios'))
+                    return redirect('/usuarios')
                 else:
-                    # ✅ CORRECCIÓN LÍNEA 232: Log sanitizado
                     logger.error(f"Error al crear usuario local: {usuario_sanitizado}")
                     flash('Error al crear el usuario local', 'danger')
-                    conn.close()
-                    return redirect(url_for('usuarios.crear_usuario'))
+                    return redirect('/usuarios/crear')
             
             elif tipo_usuario == 'ldap':
                 # Crear usuario LDAP manualmente
@@ -286,7 +352,7 @@ def crear_usuario():
                 
                 if not usuario_ldap:
                     flash('El nombre de usuario LDAP es obligatorio', 'danger')
-                    return redirect(url_for('usuarios.crear_usuario'))
+                    return redirect('/usuarios/crear')
                 
                 # ✅ CORRECCIÓN: Sanitizar para logs
                 usuario_ldap_sanitizado = sanitizar_username(usuario_ldap)
@@ -294,11 +360,9 @@ def crear_usuario():
                 # Verificar si ya existe
                 cursor.execute("SELECT COUNT(*) FROM Usuarios WHERE NombreUsuario = ?", (usuario_ldap,))
                 if cursor.fetchone()[0] > 0:
-                    # ✅ CORRECCIÓN LÍNEA 263: Log sanitizado
                     logger.warning(f"Usuario LDAP ya existe en el sistema: {usuario_ldap_sanitizado}")
                     flash('El usuario LDAP ya existe en el sistema', 'warning')
-                    conn.close()
-                    return redirect(url_for('usuarios.crear_usuario'))
+                    return redirect('/usuarios/crear')
                 
                 # Crear usuario LDAP manual
                 usuario_creado = UsuarioModel.crear_usuario_ldap_manual({
@@ -308,29 +372,36 @@ def crear_usuario():
                     'oficina_id': oficina_id_ldap or 1
                 })
                 
-                conn.close()
-                
                 if usuario_creado:
-                    # ✅ CORRECCIÓN LÍNEA 267: Log sanitizado
                     logger.info(f"Usuario LDAP creado exitosamente: {usuario_ldap_sanitizado}")
                     flash(f'Usuario LDAP "{usuario_ldap}" creado exitosamente. Debe autenticarse primero con sus credenciales de dominio para activarse.', 'success')
-                    return redirect(url_for('usuarios.listar_usuarios'))
+                    return redirect('/usuarios')
                 else:
-                    # ✅ CORRECCIÓN LÍNEA 278: Log sanitizado
                     logger.error(f"Error al crear usuario LDAP: {usuario_ldap_sanitizado}")
                     flash('Error al crear el usuario LDAP', 'danger')
-                    return redirect(url_for('usuarios.crear_usuario'))
+                    return redirect('/usuarios/crear')
             
             else:
                 flash('Tipo de usuario no válido', 'danger')
-                conn.close()
-                return redirect(url_for('usuarios.crear_usuario'))
+                return redirect('/usuarios/crear')
                 
     except Exception as e:
-        # ✅ CORRECCIÓN LÍNEA 285: Mensaje de error genérico
-        logger.error("Error en creación de usuario", exc_info=False)
+        # ✅ CORRECCIÓN: Log sanitizado y redirección directa
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error en creación de usuario: {error_sanitizado}")
         flash('Error al crear usuario. Por favor, intente nuevamente.', 'danger')
-        return redirect(url_for('usuarios.crear_usuario'))
+        return redirect('/usuarios')
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
 
 @usuarios_bp.route('/editar/<int:usuario_id>', methods=['GET', 'POST'])
 @admin_required
@@ -338,8 +409,15 @@ def editar_usuario(usuario_id):
     """
     Editar un usuario existente
     """
+    conn = None
+    cursor = None
+    
     try:
         conn = get_database_connection()
+        if not conn:
+            flash('Error de conexión a la base de datos', 'danger')
+            return redirect('/usuarios')
+                
         cursor = conn.cursor()
         
         if request.method == 'GET':
@@ -365,8 +443,7 @@ def editar_usuario(usuario_id):
             
             if not usuario:
                 flash('Usuario no encontrado', 'danger')
-                conn.close()
-                return redirect(url_for('usuarios.listar_usuarios'))
+                return redirect('/usuarios')
             
             # Obtener datos para formulario
             cursor.execute("SELECT OficinaId, NombreOficina FROM Oficinas WHERE Activo = 1 ORDER BY NombreOficina")
@@ -385,8 +462,6 @@ def editar_usuario(usuario_id):
                 'oficina_polo_club',
                 'usuario'
             ]
-            
-            conn.close()
             
             usuario_dict = {
                 'id': usuario[0],
@@ -418,8 +493,7 @@ def editar_usuario(usuario_id):
             usuario_actual = cursor.fetchone()
             username_sanitizado = sanitizar_username(usuario_actual[0]) if usuario_actual else f"ID:{usuario_id}"
             
-            # Verificar que no estamos desactivando el último administrador activo
-            # CORRECCIÓN: Verificar ambos roles "admin" y "administrador"
+            
             es_admin = (nuevo_rol in ['administrador', 'admin'])
             if nuevo_activo == 0 and es_admin:
                 cursor.execute("""
@@ -428,11 +502,10 @@ def editar_usuario(usuario_id):
                 """, (usuario_id,))
                 
                 if cursor.fetchone()[0] == 0:
-                    # ✅ CORRECCIÓN LÍNEA 299: Log sanitizado
+                    # ✅ CORRECCIÓN: Log sanitizado
                     logger.warning(f"Intento de desactivar último administrador: {username_sanitizado}")
                     flash('No se puede desactivar el último administrador activo', 'danger')
-                    conn.close()
-                    return redirect(url_for('usuarios.editar_usuario', usuario_id=usuario_id))
+                    return redirect(f'/usuarios/editar/{usuario_id}')
             
             # Actualizar usuario
             cursor.execute("""
@@ -453,18 +526,29 @@ def editar_usuario(usuario_id):
             ))
             
             conn.commit()
-            conn.close()
             
-            # ✅ CORRECCIÓN LÍNEA 302: Log sanitizado
-            logger.info(f"Usuario actualizado exitosamente: {username_sanitizado} -> Rol:{nuevo_rol}")
+            # ✅ CORRECCIÓN: Log sanitizado
+            logger.info(f"Usuario actualizado exitosamente: {username_sanitizado} -> Rol:{sanitizar_log_text(nuevo_rol)}")
             flash('Usuario actualizado exitosamente', 'success')
-            return redirect(url_for('usuarios.listar_usuarios'))
+            return redirect('/usuarios')
             
     except Exception as e:
-        # ✅ CORRECCIÓN LÍNEA 307: Mensaje de error genérico
-        logger.error(f"Error en edición de usuario ID:{usuario_id}", exc_info=False)
+        # ✅ CORRECCIÓN: Log sanitizado
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error en edición de usuario ID:{usuario_id}: {error_sanitizado}")
         flash('Error al editar usuario. Por favor, intente nuevamente.', 'danger')
-        return redirect(url_for('usuarios.listar_usuarios'))
+        return redirect('/usuarios')
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
 
 @usuarios_bp.route('/cambiar-contrasena/<int:usuario_id>', methods=['POST'])
 @admin_required
@@ -472,28 +556,35 @@ def cambiar_contrasena(usuario_id):
     """
     Cambiar contraseña de un usuario local (no LDAP)
     """
+    conn = None
+    cursor = None
+    
     try:
         nueva_contrasena = request.form.get('nueva_contrasena')
         confirmar_contrasena = request.form.get('confirmar_contrasena')
         
         if not nueva_contrasena:
             flash('La nueva contraseña es requerida', 'danger')
-            return redirect(url_for('usuarios.editar_usuario', usuario_id=usuario_id))
+            return redirect(f'/usuarios/editar/{usuario_id}')
         
         if nueva_contrasena != confirmar_contrasena:
             flash('Las contraseñas no coinciden', 'danger')
-            return redirect(url_for('usuarios.editar_usuario', usuario_id=usuario_id))
+            return redirect(f'/usuarios/editar/{usuario_id}')
+        
+        conn = get_database_connection()
+        if not conn:
+            flash('Error de conexión a la base de datos', 'danger')
+            return redirect(f'/usuarios/editar/{usuario_id}')
+                
+        cursor = conn.cursor()
         
         # Verificar que no sea usuario LDAP
-        conn = get_database_connection()
-        cursor = conn.cursor()
         cursor.execute("SELECT ContraseñaHash FROM Usuarios WHERE UsuarioId = ?", (usuario_id,))
         resultado = cursor.fetchone()
         
         if resultado and resultado[0] == 'LDAP_USER':
             flash('No se puede cambiar contraseña a usuarios LDAP', 'danger')
-            conn.close()
-            return redirect(url_for('usuarios.editar_usuario', usuario_id=usuario_id))
+            return redirect(f'/usuarios/editar/{usuario_id}')
         
         # Obtener username para logs
         cursor.execute("SELECT NombreUsuario FROM Usuarios WHERE UsuarioId = ?", (usuario_id,))
@@ -514,18 +605,29 @@ def cambiar_contrasena(usuario_id):
         """, (password_hash, usuario_id))
         
         conn.commit()
-        conn.close()
         
-        # ✅ CORRECCIÓN LÍNEA 348: Log sanitizado
+        # ✅ CORRECCIÓN: Log sanitizado
         logger.info(f"Contraseña actualizada para usuario: {username_sanitizado}")
         flash('Contraseña actualizada exitosamente', 'success')
-        return redirect(url_for('usuarios.listar_usuarios'))
+        return redirect('/usuarios')
         
     except Exception as e:
-        # ✅ CORRECCIÓN: Mensaje de error genérico
-        logger.error(f"Error cambiando contraseña para usuario ID:{usuario_id}", exc_info=False)
+        # ✅ CORRECCIÓN: Log sanitizado
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error cambiando contraseña para usuario ID:{usuario_id}: {error_sanitizado}")
         flash('Error al cambiar contraseña. Por favor, intente nuevamente.', 'danger')
-        return redirect(url_for('usuarios.editar_usuario', usuario_id=usuario_id))
+        return redirect(f'/usuarios/editar/{usuario_id}')
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
 
 @usuarios_bp.route('/desactivar/<int:usuario_id>', methods=['POST'])
 @admin_required
@@ -533,11 +635,18 @@ def desactivar_usuario(usuario_id):
     """
     Desactivar usuario (eliminación lógica)
     """
+    conn = None
+    cursor = None
+    
     try:
         conn = get_database_connection()
+        if not conn:
+            flash('Error de conexión a la base de datos', 'danger')
+            return redirect('/usuarios')
+                
         cursor = conn.cursor()
         
-        # Obtener username para logs
+        # ✅ CORRECCIÓN: Sanitizar username para logs
         cursor.execute("SELECT NombreUsuario, Rol FROM Usuarios WHERE UsuarioId = ?", (usuario_id,))
         usuario = cursor.fetchone()
         username_sanitizado = sanitizar_username(usuario[0]) if usuario else f"ID:{usuario_id}"
@@ -549,13 +658,12 @@ def desactivar_usuario(usuario_id):
             """, (usuario_id,))
             
             if cursor.fetchone()[0] == 0:
-                # ✅ CORRECCIÓN LÍNEA 431: Log sanitizado
+                # ✅ CORRECCIÓN: Log sanitizado
                 logger.warning(f"Intento de desactivar último administrador activo: {username_sanitizado}")
                 flash('No se puede desactivar el último administrador activo', 'danger')
-                conn.close()
-                return redirect(url_for('usuarios.listar_usuarios'))
+                return redirect('/usuarios')
         
-        # Desactivar usuario
+        # ✅ CORRECCIÓN: Usar variable sanitizada
         cursor.execute("""
             UPDATE Usuarios 
             SET Activo = 0
@@ -563,16 +671,29 @@ def desactivar_usuario(usuario_id):
         """, (usuario_id,))
         
         conn.commit()
-        conn.close()
         
+        # ✅ CORRECCIÓN: Log sanitizado
         logger.info(f"Usuario desactivado: {username_sanitizado}")
         flash('Usuario desactivado exitosamente', 'success')
-        return redirect(url_for('usuarios.listar_usuarios'))
+        return redirect('/usuarios')
         
     except Exception as e:
-        logger.error(f"Error desactivando usuario ID:{usuario_id}", exc_info=False)
+        # ✅ CORRECCIÓN: Log sanitizado
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error desactivando usuario ID:{usuario_id}: {error_sanitizado}")
         flash('Error al desactivar usuario. Por favor, intente nuevamente.', 'danger')
-        return redirect(url_for('usuarios.listar_usuarios'))
+        return redirect('/usuarios')
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
 
 @usuarios_bp.route('/reactivar/<int:usuario_id>', methods=['POST'])
 @admin_required
@@ -580,8 +701,15 @@ def reactivar_usuario(usuario_id):
     """
     Reactivar un usuario desactivado
     """
+    conn = None
+    cursor = None
+    
     try:
         conn = get_database_connection()
+        if not conn:
+            flash('Error de conexión a la base de datos', 'danger')
+            return redirect('/usuarios')
+                
         cursor = conn.cursor()
         
         # Obtener username para logs
@@ -596,16 +724,29 @@ def reactivar_usuario(usuario_id):
         """, (usuario_id,))
         
         conn.commit()
-        conn.close()
         
+        # ✅ CORRECCIÓN: Log sanitizado
         logger.info(f"Usuario reactivado: {username_sanitizado}")
         flash('Usuario reactivado exitosamente', 'success')
-        return redirect(url_for('usuarios.listar_usuarios'))
+        return redirect('/usuarios')
         
     except Exception as e:
-        logger.error(f"Error reactivando usuario ID:{usuario_id}", exc_info=False)
+        # ✅ CORRECCIÓN: Log sanitizado
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error reactivando usuario ID:{usuario_id}: {error_sanitizado}")
         flash('Error al reactivar usuario. Por favor, intente nuevamente.', 'danger')
-        return redirect(url_for('usuarios.listar_usuarios'))
+        return redirect('/usuarios')
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
 
 @usuarios_bp.route('/eliminar/<int:usuario_id>', methods=['POST'])
 @admin_required
@@ -613,8 +754,15 @@ def eliminar_usuario(usuario_id):
     """
     Eliminar usuario permanentemente (solo si está desactivado)
     """
+    conn = None
+    cursor = None
+    
     try:
         conn = get_database_connection()
+        if not conn:
+            flash('Error de conexión a la base de datos', 'danger')
+            return redirect('/usuarios')
+                
         cursor = conn.cursor()
         
         # Verificar que el usuario está desactivado
@@ -623,13 +771,11 @@ def eliminar_usuario(usuario_id):
         
         if usuario and usuario[0] == 1:
             flash('No se puede eliminar un usuario activo. Desactívelo primero.', 'danger')
-            conn.close()
-            return redirect(url_for('usuarios.listar_usuarios'))
+            return redirect('/usuarios')
         
         username_sanitizado = sanitizar_username(usuario[1]) if usuario else f"ID:{usuario_id}"
         
-        # Verificar que no es el último admin (aunque esté desactivado)
-        # CORRECCIÓN: Verificar ambos roles "admin" y "administrador"
+        
         if usuario and usuario[2] in ['administrador', 'admin']:
             cursor.execute("""
                 SELECT COUNT(*) FROM Usuarios 
@@ -637,25 +783,38 @@ def eliminar_usuario(usuario_id):
             """, (usuario_id,))
             
             if cursor.fetchone()[0] == 0:
+                # ✅ CORRECCIÓN: Log sanitizado
                 logger.warning(f"Intento de eliminar único administrador: {username_sanitizado}")
                 flash('No se puede eliminar el único administrador del sistema', 'danger')
-                conn.close()
-                return redirect(url_for('usuarios.listar_usuarios'))
+                return redirect('/usuarios')
         
         # Eliminar usuario
         cursor.execute("DELETE FROM Usuarios WHERE UsuarioId = ?", (usuario_id,))
         
         conn.commit()
-        conn.close()
         
+        # ✅ CORRECCIÓN: Log sanitizado
         logger.info(f"Usuario eliminado permanentemente: {username_sanitizado}")
         flash('Usuario eliminado permanentemente', 'success')
-        return redirect(url_for('usuarios.listar_usuarios'))
+        return redirect('/usuarios')
         
     except Exception as e:
-        logger.error(f"Error eliminando usuario ID:{usuario_id}", exc_info=False)
+        # ✅ CORRECCIÓN: Log sanitizado
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error eliminando usuario ID:{usuario_id}: {error_sanitizado}")
         flash('Error al eliminar usuario. Por favor, intente nuevamente.', 'danger')
-        return redirect(url_for('usuarios.listar_usuarios'))
+        return redirect('/usuarios')
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
 
 @usuarios_bp.route('/buscar-ldap', methods=['POST'])
 @admin_required
@@ -696,7 +855,8 @@ def buscar_usuario_ldap():
         
     except Exception as e:
         # ✅ CORRECCIÓN: Mensaje de error genérico
-        logger.error("Error en búsqueda LDAP", exc_info=False)
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error en búsqueda LDAP: {error_sanitizado}")
         return jsonify({'success': False, 'message': 'Error en la búsqueda de usuarios'})
 
 @usuarios_bp.route('/sync-ldap/<string:username>', methods=['POST'])
@@ -706,17 +866,17 @@ def sincronizar_usuario_ldap(username):
     Forzar sincronización de usuario desde LDAP
     """
     try:
-        # Esta función requeriría que el admin ingrese la contraseña del usuario
-        # o usar una cuenta de servicio con permisos de lectura
+        
         flash('Función en desarrollo. Use /test-ldap para sincronizar usuarios.', 'info')
-        return redirect(url_for('usuarios.listar_usuarios'))
+        return redirect('/usuarios')
         
     except Exception as e:
         # ✅ CORRECCIÓN: Log sanitizado
         username_sanitizado = sanitizar_username(username)
-        logger.error(f"Error sincronizando usuario LDAP: {username_sanitizado}", exc_info=False)
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error sincronizando usuario LDAP: {username_sanitizado}: {error_sanitizado}")
         flash('Error sincronizando usuario', 'danger')
-        return redirect(url_for('usuarios.listar_usuarios'))
+        return redirect('/usuarios')
 
 # ======================
 # API PARA INTERFAZ
@@ -728,8 +888,14 @@ def api_estadisticas():
     """
     Obtiene estadísticas de usuarios para dashboard
     """
+    conn = None
+    cursor = None
+    
     try:
         conn = get_database_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': 'Error de conexión a la base de datos'})
+                
         cursor = conn.cursor()
         
         # Total usuarios
@@ -757,8 +923,6 @@ def api_estadisticas():
         for row in cursor.fetchall():
             roles_dist[row[0]] = row[1]
         
-        conn.close()
-        
         return jsonify({
             'success': True,
             'estadisticas': {
@@ -772,6 +936,18 @@ def api_estadisticas():
         })
         
     except Exception as e:
-        # ✅ CORRECCIÓN: Mensaje de error genérico
-        logger.error("Error obteniendo estadísticas de usuarios", exc_info=False)
+        # ✅ CORRECCIÓN: Log sanitizado
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error obteniendo estadísticas de usuarios: {error_sanitizado}")
         return jsonify({'success': False, 'message': 'Error al obtener estadísticas'})
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass

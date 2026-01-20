@@ -29,7 +29,9 @@
                 <h1 class="h2">Crear Nuevo Usuario</h1>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ url_for('auth_bp.dashboard') }}">Dashboard</a></li>
+                        <!-- CORRECCIÓN 1: Cambiar 'auth_bp.dashboard' por URL directa -->
+                        <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                        <!-- CORRECCIÓN 2: Verificar que 'usuarios.listar_usuarios' existe -->
                         <li class="breadcrumb-item"><a href="{{ url_for('usuarios.listar_usuarios') }}">Usuarios</a></li>
                         <li class="breadcrumb-item active">Crear</li>
                     </ol>

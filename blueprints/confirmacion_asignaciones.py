@@ -1,311 +1,554 @@
-﻿# blueprints/confirmacion_asignaciones.py
- 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from models.confirmacion_asignaciones_model import ConfirmacionAsignacionesModel
-from utils.helpers import sanitizar_email, sanitizar_username, sanitizar_ip
-from utils.auth import login_required
-from datetime import datetime
+﻿"""
+Modelo para gestionar confirmaciones de asignaciones con tokens temporales.
+Incluye generación de tokens, validación y registro de confirmaciones.
+MODIFICADO: Incluye campo de número de identificación (cédula)
+"""
+from database import get_database_connection
 import logging
-import re
+import secrets
+import hashlib
+from datetime import datetime, timedelta
+from utils.helpers import sanitizar_username, sanitizar_email, sanitizar_ip
 
 logger = logging.getLogger(__name__)
 
-confirmacion_bp = Blueprint(
-    'confirmacion',
-    __name__,
-    url_prefix='/confirmacion'
-)
-
-def validar_ldap(username, password):
+# Función de sanitización específica para logs (para prevenir Log Injection)
+def sanitizar_log_text(text):
+    """
+    Sanitiza texto para logs, eliminando caracteres peligrosos como nuevas líneas
+    y retornos de carro que podrían usarse para inyección de logs.
+    
+    Args:
+        text: Texto a sanitizar
+        
+    Returns:
+        str: Texto sanitizado
+    """
+    if text is None:
+        return "[NO_PROVIDIDO]"
+    
     try:
-        from utils.ldap_auth import ad_auth
+        # Convertir a string si no lo es
+        text_str = str(text)
         
-        resultado = ad_auth.authenticate_user(username, password)
+        # Eliminar caracteres de nueva línea y retorno de carro
+        text_str = text_str.replace('\r', ' ')
+        text_str = text_str.replace('\n', ' ')
+        text_str = text_str.replace('\r\n', ' ')
+        text_str = text_str.replace('\t', ' ')
         
-        if resultado:
-            email = resultado.get('email', f"{username}@qualitascolombia.com.co")
-            nombre = resultado.get('full_name', username)
+        # Limitar longitud para evitar logs excesivamente largos
+        if len(text_str) > 500:
+            text_str = text_str[:500] + "..."
             
-            logger.info(f"✅ LDAP: Autenticación exitosa para {username} ({email})")
-            return (True, email, nombre, None)
-        else:
-            logger.warning(f"❌ LDAP: Credenciales inválidas para {username}")
-            return (False, None, None, "Usuario o contraseña incorrectos")
-            
-    except ImportError as e:
-        logger.error(f"❌ Módulo LDAP no disponible: {e}")
-        return (False, None, None, "Sistema de autenticación no disponible")
+        return text_str.strip()
     except Exception as e:
-        logger.error(f"❌ Error en validación LDAP: {e}", exc_info=True)
-        return (False, None, None, f"Error de autenticación: {str(e)}")
+        logger.warning(f"Error sanitizando texto para log: {e}")
+        return "[ERROR_SANITIZACION]"
 
-def validar_numero_identificacion(numero_identificacion):
-    if not numero_identificacion or not numero_identificacion.strip():
-        return (False, None, "El número de identificación es obligatorio")
-    
-    numero_limpio = numero_identificacion.strip()
-    
-    if not numero_limpio.isdigit():
-        return (False, None, "El número de identificación debe contener solo números")
-    
-    if len(numero_limpio) < 6:
-        return (False, None, "El número de identificación debe tener al menos 6 dígitos")
-    
-    if len(numero_limpio) > 20:
-        return (False, None, "El número de identificación no puede tener más de 20 dígitos")
-    
-    return (True, numero_limpio, None)
 
-@confirmacion_bp.route('/confirmar-asignacion/<token>', methods=['GET', 'POST'])
-def confirmar_asignacion(token):
-    try:
-        validacion = ConfirmacionAsignacionesModel.validar_token(token)
+class ConfirmacionAsignacionesModel:
+    """
+    Modelo para gestionar confirmaciones de asignaciones de inventario.
+    """
+    
+    @staticmethod
+    def generar_token_confirmacion(asignacion_id, usuario_ad_email, dias_validez=8):
+        """
+        Genera un token único para confirmar una asignación.
         
-        if not validacion:
-            logger.warning(f"Token inválido o no encontrado: {token[:20]}...")
-            return render_template(
-                'confirmacion/error.html',
-                mensaje='Token inválido o no encontrado',
-                titulo='Error de Validación'
-            ), 404
+        Args:
+            asignacion_id: ID de la asignación
+            usuario_ad_email: Email del usuario asignado
+            dias_validez: Días de validez del token (default: 8)
+            
+        Returns:
+            str: Token generado o None si hay error
+        """
+        conn = get_database_connection()
+        if not conn:
+            logger.error("Error de conexión a la base de datos")
+            return None
         
-        if not validacion.get('es_valido'):
-            if validacion.get('ya_confirmado'):
-                return render_template(
-                    'confirmacion/ya_confirmado.html',
-                    mensaje=validacion.get('mensaje_error'),
-                    titulo='Asignación Ya Confirmada',
-                    asignacion=validacion
-                )
-            elif validacion.get('expirado'):
-                return render_template(
-                    'confirmacion/token_expirado.html',
-                    mensaje=validacion.get('mensaje_error'),
-                    titulo='Token Expirado'
-                )
+        cursor = None
+        try:
+            cursor = conn.cursor()
+            
+            # Generar token único y seguro
+            token_raw = secrets.token_urlsafe(32)
+            token_hash = hashlib.sha256(token_raw.encode()).hexdigest()
+            
+            # Validación de seguridad - asegurar que los tokens no están vacíos
+            if not token_raw or not token_hash:
+                logger.error("Error crítico: No se pudo generar el token o hash")
+                return None
+            
+            # Usar sanitizar_log_text para sanitizar valores en logs
+            logger.debug(f"Token generado - raw_len: {len(token_raw)}, hash_len: {len(token_hash)}")
+            
+            # Calcular fecha de expiración
+            fecha_expiracion = datetime.now() + timedelta(days=dias_validez)
+            
+            # Eliminar tokens anteriores de esta asignación
+            cursor.execute("""
+                DELETE FROM TokensConfirmacionAsignacion 
+                WHERE AsignacionId = ?
+            """, (asignacion_id,))
+            
+            # Insertar nuevo token
+            cursor.execute("""
+                INSERT INTO TokensConfirmacionAsignacion 
+                (AsignacionId, Token, TokenHash, UsuarioEmail, FechaExpiracion, Utilizado, FechaCreacion)
+                VALUES (?, ?, ?, ?, ?, 0, GETDATE())
+            """, (asignacion_id, token_raw, token_hash, usuario_ad_email, fecha_expiracion))
+            
+            conn.commit()
+            
+            # SANITIZADO: Usar sanitizar_email para logs
+            email_sanitizado = sanitizar_email(usuario_ad_email)
+            logger.info(f"Token generado para asignación {sanitizar_log_text(asignacion_id)} para usuario: {email_sanitizado}")
+            
+            return token_raw
+            
+        except Exception as e:
+            # SANITIZADO: Sanitizar el mensaje de error
+            error_sanitizado = sanitizar_log_text(str(e))
+            logger.error(f"Error generando token: {error_sanitizado}")
+            
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+            return None
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    
+    @staticmethod
+    def validar_token(token):
+        """
+        Valida un token de confirmación.
+        
+        Args:
+            token: Token a validar
+            
+        Returns:
+            dict: Información del token o None si es inválido
+                - asignacion_id
+                - usuario_email
+                - producto_nombre
+                - cantidad
+                - oficina
+                - fecha_asignacion
+                - es_valido
+                - mensaje_error
+        """
+        conn = get_database_connection()
+        if not conn:
+            return {'es_valido': False, 'mensaje_error': 'Error de conexión a la base de datos'}
+        
+        cursor = None
+        try:
+            cursor = conn.cursor()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+            
+            # Buscar token
+            cursor.execute("""
+                SELECT 
+                    t.TokenId,
+                    t.AsignacionId,
+                    t.UsuarioEmail,
+                    t.FechaExpiracion,
+                    t.Utilizado,
+                    t.FechaUtilizacion,
+                    a.ProductoId,
+                    a.OficinaId,
+                    a.FechaAsignacion,
+                    a.UsuarioADNombre,
+                    a.Estado,
+                    p.NombreProducto,
+                    p.CodigoUnico,
+                    o.NombreOficina,
+                    c.NombreCategoria
+                FROM TokensConfirmacionAsignacion t
+                INNER JOIN Asignaciones a ON t.AsignacionId = a.AsignacionId
+                INNER JOIN ProductosCorporativos p ON a.ProductoId = p.ProductoId
+                INNER JOIN Oficinas o ON a.OficinaId = o.OficinaId
+                LEFT JOIN CategoriasProductos c ON p.CategoriaId = c.CategoriaId
+                WHERE t.TokenHash = ? AND a.Activo = 1
+            """, (token_hash,))
+            
+            row = cursor.fetchone()
+            
+            if not row:
+                return {'es_valido': False, 'mensaje_error': 'Token no válido o asignación no encontrada'}
+            
+            token_id = row[0]
+            asignacion_id = row[1]
+            usuario_email = row[2]
+            fecha_expiracion = row[3]
+            utilizado = row[4]
+            fecha_utilizacion = row[5]
+            producto_id = row[6]
+            oficina_id = row[7]
+            fecha_asignacion = row[8]
+            usuario_nombre = row[9]
+            estado = row[10]
+            producto_nombre = row[11]
+            codigo_unico = row[12]
+            oficina_nombre = row[13]
+            categoria = row[14]
+            
+            # Validar si ya fue utilizado
+            if utilizado:
+                fecha_utilizacion_str = fecha_utilizacion.strftime("%d/%m/%Y %H:%M") if fecha_utilizacion else "N/A"
+                return {
+                    'es_valido': False,
+                    'mensaje_error': f'Este token ya fue utilizado el {fecha_utilizacion_str}',
+                    'ya_confirmado': True
+                }
+            
+            # Validar fecha de expiración
+            if datetime.now() > fecha_expiracion:
+                fecha_expiracion_str = fecha_expiracion.strftime("%d/%m/%Y %H:%M")
+                return {
+                    'es_valido': False,
+                    'mensaje_error': f'Token expirado. Venció el {fecha_expiracion_str}',
+                    'expirado': True
+                }
+            
+            # Token válido
+            return {
+                'es_valido': True,
+                'token_id': token_id,
+                'asignacion_id': asignacion_id,
+                'producto_id': producto_id,
+                'producto_nombre': producto_nombre,
+                'codigo_unico': codigo_unico,
+                'categoria': categoria,
+                'oficina_id': oficina_id,
+                'oficina_nombre': oficina_nombre,
+                'usuario_email': sanitizar_email(usuario_email),
+                'usuario_nombre': sanitizar_username(usuario_nombre),
+                'fecha_asignacion': fecha_asignacion,
+                'fecha_expiracion': fecha_expiracion,
+                'estado': estado,
+                'dias_restantes': (fecha_expiracion - datetime.now()).days
+            }
+            
+        except Exception as e:
+            # SANITIZADO: Sanitizar el mensaje de error
+            error_sanitizado = sanitizar_log_text(str(e))
+            logger.error(f"Error validando token: {error_sanitizado}")
+            return {'es_valido': False, 'mensaje_error': f'Error al validar token: {error_sanitizado}'}
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    
+    @staticmethod
+    def confirmar_asignacion(token, usuario_ad_username, numero_identificacion, direccion_ip=None, user_agent=None):
+        """
+        Confirma una asignación y marca el token como utilizado.
+        
+        Args:
+            token: Token de confirmación
+            usuario_ad_username: Username del usuario que confirma
+            numero_identificacion: Número de cédula o identificación del usuario
+            direccion_ip: IP del usuario (opcional)
+            user_agent: User agent del navegador (opcional)
+            
+        Returns:
+            dict: Resultado de la operación
+        """
+        conn = get_database_connection()
+        if not conn:
+            return {'success': False, 'message': 'Error de conexión a la base de datos'}
+        
+        cursor = None
+        try:
+            cursor = conn.cursor()
+            
+            # Validar token primero
+            validacion = ConfirmacionAsignacionesModel.validar_token(token)
+            if not validacion.get('es_valido'):
+                return {'success': False, 'message': validacion.get('mensaje_error', 'Token inválido')}
+            
+            token_id = validacion['token_id']
+            asignacion_id = validacion['asignacion_id']
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+            
+            # Validar número de identificación
+            if not numero_identificacion or not numero_identificacion.strip():
+                return {'success': False, 'message': 'El número de identificación es obligatorio'}
+            
+            # Limpiar y validar formato del número de identificación
+            numero_identificacion = numero_identificacion.strip()
+            if not numero_identificacion.isdigit():
+                return {'success': False, 'message': 'El número de identificación debe contener solo números'}
+            
+            if len(numero_identificacion) < 6 or len(numero_identificacion) > 20:
+                return {'success': False, 'message': 'El número de identificación debe tener entre 6 y 20 dígitos'}
+            
+            # Marcar token como utilizado e incluir número de identificación
+            cursor.execute("""
+                UPDATE TokensConfirmacionAsignacion
+                SET Utilizado = 1,
+                    FechaUtilizacion = GETDATE(),
+                    UsuarioConfirmacion = ?,
+                    NumeroIdentificacion = ?,
+                    DireccionIP = ?,
+                    UserAgent = ?
+                WHERE TokenHash = ?
+            """, (sanitizar_username(usuario_ad_username), numero_identificacion, 
+                  sanitizar_ip(direccion_ip) if direccion_ip else None,
+                  user_agent, token_hash))
+            
+            # Actualizar estado de la asignación
+            cursor.execute("""
+                UPDATE Asignaciones
+                SET Estado = 'CONFIRMADO',
+                    FechaConfirmacion = GETDATE(),
+                    UsuarioConfirmacion = ?
+                WHERE AsignacionId = ?
+            """, (sanitizar_username(usuario_ad_username), asignacion_id))
+            
+            # Registrar en historial
+            cursor.execute("""
+                INSERT INTO AsignacionesCorporativasHistorial
+                (ProductoId, OficinaId, Accion, Cantidad, UsuarioAccion, Fecha, 
+                 UsuarioAsignadoNombre, UsuarioAsignadoEmail, Observaciones)
+                VALUES (?, ?, 'CONFIRMACION', 1, ?, GETDATE(), ?, ?, ?)
+            """, (
+                validacion['producto_id'],
+                validacion['oficina_id'],
+                sanitizar_username(usuario_ad_username),
+                sanitizar_username(validacion['usuario_nombre']),
+                sanitizar_email(validacion['usuario_email']),
+                f"Confirmación realizada desde IP: {sanitizar_ip(direccion_ip) if direccion_ip else 'N/A'}. Cédula: [PROTEGIDA]"
+            ))
+            
+            conn.commit()
+            
+            # SANITIZADO: Usar sanitizar_username y sanitizar_log_text para logs
+            usuario_sanitizado = sanitizar_username(usuario_ad_username)
+            asignacion_sanitizado = sanitizar_log_text(asignacion_id)
+            logger.info(f"Asignación {asignacion_sanitizado} confirmada por {usuario_sanitizado} (CC: [PROTEGIDO])")
+            
+            return {
+                'success': True,
+                'message': 'Asignación confirmada exitosamente',
+                'asignacion_id': asignacion_id,
+                'producto_nombre': validacion['producto_nombre'],
+                'oficina_nombre': validacion['oficina_nombre']
+            }
+            
+        except Exception as e:
+            # SANITIZADO: Sanitizar el mensaje de error
+            error_sanitizado = sanitizar_log_text(str(e))
+            logger.error(f"Error confirmando asignación: {error_sanitizado}")
+            
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+            return {'success': False, 'message': f'Error al confirmar: {error_sanitizado}'}
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    
+    @staticmethod
+    def obtener_confirmaciones_pendientes(usuario_email=None):
+        """
+        Obtiene asignaciones pendientes de confirmación.
+        
+        Args:
+            usuario_email: Email del usuario (opcional, para filtrar)
+            
+        Returns:
+            list: Lista de asignaciones pendientes
+        """
+        conn = get_database_connection()
+        if not conn:
+            return []
+        
+        cursor = None
+        try:
+            cursor = conn.cursor()
+            
+            query = """
+                SELECT 
+                    a.AsignacionId,
+                    a.ProductoId,
+                    p.NombreProducto,
+                    p.CodigoUnico,
+                    o.NombreOficina,
+                    a.FechaAsignacion,
+                    a.UsuarioADNombre,
+                    a.UsuarioADEmail,
+                    t.FechaExpiracion,
+                    t.Utilizado,
+                    DATEDIFF(day, GETDATE(), t.FechaExpiracion) AS DiasRestantes
+                FROM Asignaciones a
+                INNER JOIN TokensConfirmacionAsignacion t ON a.AsignacionId = t.AsignacionId
+                INNER JOIN ProductosCorporativos p ON a.ProductoId = p.ProductoId
+                INNER JOIN Oficinas o ON a.OficinaId = o.OficinaId
+                WHERE a.Estado = 'ASIGNADO' 
+                    AND a.Activo = 1
+                    AND t.Utilizado = 0
+                    AND t.FechaExpiracion > GETDATE()
+            """
+            
+            if usuario_email:
+                query += " AND a.UsuarioADEmail = ?"
+                cursor.execute(query, (sanitizar_email(usuario_email),))
             else:
-                return render_template(
-                    'confirmacion/error.html',
-                    mensaje=validacion.get('mensaje_error', 'Error desconocido'),
-                    titulo='Error de Validación'
-                )
-        
-        if request.method == 'GET':
-            ldap_disponible = True
-            try:
-                from utils.ldap_auth import ad_auth
-                if ad_auth is None or not hasattr(ad_auth, 'authenticate_user'):
-                    ldap_disponible = False
-                    logger.warning("ADAuth no está disponible o mal configurado")
-            except ImportError:
-                ldap_disponible = False
-                logger.warning("Módulo ldap_auth no disponible")
+                cursor.execute(query)
             
-            return render_template(
-                'confirmacion/confirmar.html',
-                token=token,
-                asignacion=validacion,
-                ldap_disponible=ldap_disponible
-            )
-        
-        if request.method == 'POST':
-            numero_identificacion = request.form.get('numero_identificacion', '').strip()
-            es_valido, numero_limpio, error_cedula = validar_numero_identificacion(numero_identificacion)
+            cols = [c[0] for c in cursor.description]
+            results = [dict(zip(cols, row)) for row in cursor.fetchall()]
             
-            if not es_valido:
-                logger.warning(f"❌ Número de identificación inválido: {error_cedula}")
-                flash(error_cedula, 'error')
-                return render_template(
-                    'confirmacion/confirmar.html',
-                    token=token,
-                    asignacion=validacion,
-                    ldap_disponible=True,
-                    error=error_cedula
-                )
+            # Sanitizar emails en los resultados
+            for result in results:
+                if 'UsuarioADEmail' in result:
+                    result['UsuarioADEmail'] = sanitizar_email(result['UsuarioADEmail'])
+                if 'UsuarioADNombre' in result:
+                    result['UsuarioADNombre'] = sanitizar_username(result['UsuarioADNombre'])
             
-            logger.info(f"✅ Número de identificación validado: {numero_limpio}")
+            return results
             
-            sin_autenticar = request.form.get('sin_autenticar') == 'true'
-            
-            if not sin_autenticar:
-                username = request.form.get('username', '').strip()
-                password = request.form.get('password', '')
-                
-                if not username or not password:
-                    flash('Debe ingresar usuario y contraseña', 'error')
-                    return render_template(
-                        'confirmacion/confirmar.html',
-                        token=token,
-                        asignacion=validacion,
-                        ldap_disponible=True,
-                        error='Debe ingresar usuario y contraseña'
-                    )
-                
-                logger.info(f"🔐 Intentando validar LDAP para usuario: {sanitizar_username(username)}")
-                
-                exito, email_ldap, nombre_ldap, mensaje_error = validar_ldap(username, password)
-                
-                if not exito:
-                    logger.warning(f"❌ Fallo autenticación LDAP para usuario: {sanitizar_username(username)}")
-                    flash(f'Error de autenticación: {mensaje_error}', 'error')
-                    return render_template(
-                        'confirmacion/confirmar.html',
-                        token=token,
-                        asignacion=validacion,
-                        ldap_disponible=True,
-                        error=mensaje_error,
-                        username_anterior=username
-                    )
-                
-                logger.info(f"✅ LDAP validado: {sanitizar_username(username)} -> {sanitizar_email(email_ldap)}")
-                
-                email_asignado = validacion.get('usuario_email', '').lower()
-                email_ldap_lower = (email_ldap or '').lower()
-                
-                logger.info(f"📧 Comparando emails: LDAP={email_ldap_lower} vs Asignado={email_asignado}")
-                
-                if email_ldap_lower != email_asignado:
-                    logger.warning(f"❌ Usuario LDAP ({email_ldap}) no coincide con asignado ({email_asignado})")
-                    flash('El usuario autenticado no coincide con el destinatario de la asignación', 'error')
-                    return render_template(
-                        'confirmacion/confirmar.html',
-                        token=token,
-                        asignacion=validacion,
-                        ldap_disponible=True,
-                        error=f'El usuario autenticado ({email_ldap}) no coincide con el destinatario ({email_asignado})',
-                        username_anterior=username
-                    )
-                
-                usuario_confirmacion = email_ldap
-                nombre_confirmacion = nombre_ldap
-                logger.info(f"✅ Usuario validado y coincidente: {sanitizar_username(username)} ({sanitizar_email(email_ldap)})")
-            else:
-                usuario_confirmacion = validacion.get('usuario_email', 'Usuario')
-                nombre_confirmacion = validacion.get('usuario_nombre', 'Usuario')
-                logger.warning(f"⚠️ Confirmación sin autenticación LDAP para: {usuario_confirmacion}")
-            
-            direccion_ip = request.remote_addr
-            user_agent = request.headers.get('User-Agent', '')
-            
-            logger.info(f"📝 Confirmando asignación - Usuario: {sanitizar_email(usuario_confirmacion)}, CC: [PROTEGIDO], IP: {sanitizar_ip(direccion_ip)}")
-            
-            resultado = ConfirmacionAsignacionesModel.confirmar_asignacion(
-                token=token,
-                usuario_ad_username=usuario_confirmacion,
-                numero_identificacion=numero_limpio,
-                direccion_ip=direccion_ip,
-                user_agent=user_agent
-            )
-            
-            if resultado.get('success'):
-                logger.info(f"✅ Asignación confirmada exitosamente: {resultado.get('asignacion_id')} - CC: {numero_limpio}")
-                return render_template(
-                    'confirmacion/confirmado_exitoso.html',
-                    resultado=resultado,
-                    titulo='Confirmación Exitosa',
-                    mensaje='Su asignación ha sido confirmada correctamente.',
-                    producto=resultado.get('producto_nombre'),
-                    oficina=resultado.get('oficina_nombre'),
-                    usuario=nombre_confirmacion,
-                    fecha_confirmacion=datetime.now()
-                )
-            else:
-                logger.error(f"❌ Error al confirmar asignación: {resultado.get('message')}")
-                return render_template(
-                    'confirmacion/error.html',
-                    mensaje=resultado.get('message', 'Error al confirmar la asignación'),
-                    titulo='Error al Confirmar'
-                )
+        except Exception as e:
+            # SANITIZADO: Sanitizar el mensaje de error
+            error_sanitizado = sanitizar_log_text(str(e))
+            logger.error(f"Error obteniendo confirmaciones pendientes: {error_sanitizado}")
+            return []
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
     
-    except Exception as e:
-        logger.error(f"❌ Error procesando confirmación: {e}", exc_info=True)
-        return render_template(
-            'confirmacion/error.html',
-            mensaje=f'Error inesperado al procesar la confirmación: {str(e)}',
-            titulo='Error del Sistema'
-        ), 500
-
-@confirmacion_bp.route('/mis-pendientes')
-@login_required
-def mis_pendientes():
-    try:
-        usuario_email = session.get('email')
-        if not usuario_email:
-            flash('No se pudo obtener tu información de usuario', 'error')
-            return redirect(url_for('auth.login'))
+    @staticmethod
+    def limpiar_tokens_expirados():
+        """
+        Elimina tokens expirados de la base de datos (tarea de mantenimiento).
         
-        pendientes = ConfirmacionAsignacionesModel.obtener_confirmaciones_pendientes(
-            usuario_email=usuario_email
-        )
+        Returns:
+            int: Número de tokens eliminados
+        """
+        conn = get_database_connection()
+        if not conn:
+            return 0
         
-        return render_template(
-            'confirmacion/mis_pendientes.html',
-            confirmaciones=pendientes,
-            pendientes=pendientes,
-            total_pendientes=len(pendientes),
-            titulo='Mis Confirmaciones Pendientes'
-        )
+        cursor = None
+        try:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                DELETE FROM TokensConfirmacionAsignacion
+                WHERE FechaExpiracion < DATEADD(day, -30, GETDATE())
+            """)
+            
+            eliminados = cursor.rowcount
+            conn.commit()
+            
+            logger.info(f"Tokens expirados eliminados: {eliminados}")
+            return eliminados
+            
+        except Exception as e:
+            # SANITIZADO: Sanitizar el mensaje de error
+            error_sanitizado = sanitizar_log_text(str(e))
+            logger.error(f"Error limpiando tokens expirados: {error_sanitizado}")
+            
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+            return 0
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
     
-    except Exception as e:
-        logger.error(f"Error obteniendo confirmaciones pendientes: {e}", exc_info=True)
-        flash('Error al cargar las confirmaciones pendientes', 'error')
-        return redirect(url_for('dashboard'))
-
-@confirmacion_bp.route('/estadisticas')
-@login_required
-def estadisticas():
-    try:
-        if not session.get('is_admin', False):
-            flash('No tienes permisos para ver esta página', 'error')
-            return redirect(url_for('dashboard'))
+    @staticmethod
+    def obtener_estadisticas_confirmaciones():
+        """
+        Obtiene estadísticas generales de confirmaciones.
         
-        stats = ConfirmacionAsignacionesModel.obtener_estadisticas_confirmaciones()
+        Returns:
+            dict: Diccionario con estadísticas
+        """
+        conn = get_database_connection()
+        if not conn:
+            return {}
         
-        return render_template(
-            'confirmacion/estadisticas.html',
-            estadisticas=stats,
-            titulo='Estadísticas de Confirmaciones'
-        )
-    
-    except Exception as e:
-        logger.error(f"Error obteniendo estadísticas: {e}", exc_info=True)
-        flash('Error al cargar las estadísticas', 'error')
-        return redirect(url_for('dashboard'))
-
-@confirmacion_bp.route('/limpiar-tokens', methods=['POST'])
-@login_required
-def limpiar_tokens():
-    try:
-        if not session.get('is_admin', False):
-            flash('No tienes permisos para realizar esta acción', 'error')
-            return redirect(url_for('dashboard'))
-        
-        eliminados = ConfirmacionAsignacionesModel.limpiar_tokens_expirados()
-        
-        flash(f'Se eliminaron {eliminados} tokens expirados', 'success')
-        logger.info(f"Tokens expirados limpiados: {eliminados}")
-        
-        return redirect(url_for('confirmacion.estadisticas'))
-    
-    except Exception as e:
-        logger.error(f"Error limpiando tokens: {e}", exc_info=True)
-        flash('Error al limpiar tokens expirados', 'error')
-        return redirect(url_for('confirmacion.estadisticas'))
-
-@confirmacion_bp.errorhandler(404)
-def not_found_error(error):
-    logger.warning(f"Página no encontrada en confirmación: {request.url}")
-    return render_template(
-        'confirmacion/error.html',
-        mensaje='La página solicitada no existe',
-        titulo='Página No Encontrada'
-    ), 404
-
-@confirmacion_bp.errorhandler(500)
-def internal_error(error):
-    logger.error(f"Error interno en confirmación: {error}", exc_info=True)
-    return render_template(
-        'confirmacion/error.html',
-        mensaje='Ocurrió un error interno en el servidor',
-        titulo='Error del Servidor'
-    ), 500
+        cursor = None
+        try:
+            cursor = conn.cursor()
+            
+            estadisticas = {}
+            
+            # Total de tokens generados
+            cursor.execute("""
+                SELECT COUNT(*) FROM TokensConfirmacionAsignacion
+            """)
+            estadisticas['total_tokens_generados'] = cursor.fetchone()[0] or 0
+            
+            # Tokens utilizados
+            cursor.execute("""
+                SELECT COUNT(*) FROM TokensConfirmacionAsignacion WHERE Utilizado = 1
+            """)
+            estadisticas['tokens_utilizados'] = cursor.fetchone()[0] or 0
+            
+            # Tokens pendientes (no expirados)
+            cursor.execute("""
+                SELECT COUNT(*) FROM TokensConfirmacionAsignacion 
+                WHERE Utilizado = 0 AND FechaExpiracion > GETDATE()
+            """)
+            estadisticas['tokens_pendientes'] = cursor.fetchone()[0] or 0
+            
+            # Tokens expirados
+            cursor.execute("""
+                SELECT COUNT(*) FROM TokensConfirmacionAsignacion 
+                WHERE Utilizado = 0 AND FechaExpiracion <= GETDATE()
+            """)
+            estadisticas['tokens_expirados'] = cursor.fetchone()[0] or 0
+            
+            # Confirmaciones por mes (últimos 6 meses)
+            cursor.execute("""
+                SELECT 
+                    FORMAT(FechaUtilizacion, 'yyyy-MM') AS Mes,
+                    COUNT(*) AS Confirmaciones
+                FROM TokensConfirmacionAsignacion 
+                WHERE Utilizado = 1 
+                    AND FechaUtilizacion >= DATEADD(month, -6, GETDATE())
+                GROUP BY FORMAT(FechaUtilizacion, 'yyyy-MM')
+                ORDER BY Mes DESC
+            """)
+            
+            estadisticas['confirmaciones_por_mes'] = [
+                {'mes': row[0], 'cantidad': row[1]} 
+                for row in cursor.fetchall()
+            ]
+            
+            return estadisticas
+            
+        except Exception as e:
+            # SANITIZADO: Sanitizar el mensaje de error
+            error_sanitizado = sanitizar_log_text(str(e))
+            logger.error(f"Error obteniendo estadísticas: {error_sanitizado}")
+            return {}
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()

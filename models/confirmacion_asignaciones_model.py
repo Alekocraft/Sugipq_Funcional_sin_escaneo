@@ -2,13 +2,14 @@
 Modelo para gestionar confirmaciones de asignaciones con tokens temporales.
 Incluye generación de tokens, validación y registro de confirmaciones.
 MODIFICADO: Incluye campo de número de identificación (cédula)
+CORREGIDO: Se eliminó sanitizar_email en INSERT (causaba NULL en TokenHash)
 """
 from database import get_database_connection
 import logging
 import secrets
 import hashlib
 from datetime import datetime, timedelta
-from utils.helpers import sanitizar_username, sanitizar_email, sanitizar_ip  # ✅ CORRECCIÓN: Importar funciones de sanitización
+from utils.helpers import sanitizar_username, sanitizar_email, sanitizar_ip
 
 logger = logging.getLogger(__name__)
 
@@ -44,28 +45,59 @@ class ConfirmacionAsignacionesModel:
             token_raw = secrets.token_urlsafe(32)
             token_hash = hashlib.sha256(token_raw.encode()).hexdigest()
             
+            # === DEBUG LOGS ===
+            logger.info(f"[DEBUG TOKEN] Generando token para asignacion_id={asignacion_id}")
+            logger.info(f"[DEBUG TOKEN] token_raw generado: {token_raw[:10]}... (len={len(token_raw)})")
+            logger.info(f"[DEBUG TOKEN] token_hash generado: {token_hash[:10]}... (len={len(token_hash)})")
+            logger.info(f"[DEBUG TOKEN] usuario_ad_email: {usuario_ad_email}")
+            
+            # Validar que los valores no sean None o vacíos
+            if not token_raw:
+                logger.error("[DEBUG TOKEN] ERROR: token_raw es None o vacío!")
+                return None
+            if not token_hash:
+                logger.error("[DEBUG TOKEN] ERROR: token_hash es None o vacío!")
+                return None
+            if not usuario_ad_email:
+                logger.error("[DEBUG TOKEN] ERROR: usuario_ad_email es None o vacío!")
+                return None
+            
             # Calcular fecha de expiración
             fecha_expiracion = datetime.now() + timedelta(days=dias_validez)
+            logger.info(f"[DEBUG TOKEN] fecha_expiracion: {fecha_expiracion}")
             
             # Eliminar tokens anteriores de esta asignación
             cursor.execute("""
                 DELETE FROM TokensConfirmacionAsignacion 
                 WHERE AsignacionId = ?
             """, (asignacion_id,))
+            logger.info(f"[DEBUG TOKEN] Tokens anteriores eliminados")
             
-            # Insertar nuevo token
+            # === INSERTAR NUEVO TOKEN ===
+            # IMPORTANTE: NO usar sanitizar_email aquí - esa función es SOLO para logs
+            # y devuelve un email enmascarado como "jo***@gmail.com"
+            logger.info(f"[DEBUG TOKEN] Ejecutando INSERT con valores:")
+            logger.info(f"[DEBUG TOKEN]   - AsignacionId: {asignacion_id}")
+            logger.info(f"[DEBUG TOKEN]   - Token (primeros 10): {token_raw[:10]}")
+            logger.info(f"[DEBUG TOKEN]   - TokenHash (primeros 10): {token_hash[:10]}")
+            logger.info(f"[DEBUG TOKEN]   - UsuarioEmail: {usuario_ad_email}")
+            logger.info(f"[DEBUG TOKEN]   - FechaExpiracion: {fecha_expiracion}")
+            
             cursor.execute("""
                 INSERT INTO TokensConfirmacionAsignacion 
                 (AsignacionId, Token, TokenHash, UsuarioEmail, FechaExpiracion, Utilizado, FechaCreacion)
                 VALUES (?, ?, ?, ?, ?, 0, GETDATE())
-            """, (asignacion_id, token_raw, token_hash, sanitizar_email(usuario_ad_email), fecha_expiracion))  # ✅ CORRECCIÓN
+            """, (asignacion_id, token_raw, token_hash, usuario_ad_email, fecha_expiracion))
             
             conn.commit()
-            logger.info(f"Token generado para asignación {asignacion_id} para usuario: {sanitizar_email(usuario_ad_email)}")  # ✅ CORRECCIÓN
+            logger.info(f"[DEBUG TOKEN] INSERT exitoso! Token generado para asignación {asignacion_id}")
             return token_raw
             
         except Exception as e:
-            logger.error(f"Error generando token: {e}")
+            logger.error(f"[DEBUG TOKEN] ERROR en generar_token_confirmacion: {e}")
+            logger.error(f"[DEBUG TOKEN] Tipo de error: {type(e).__name__}")
+            import traceback
+            logger.error(f"[DEBUG TOKEN] Traceback: {traceback.format_exc()}")
             if conn:
                 try:
                     conn.rollback()
@@ -99,14 +131,16 @@ class ConfirmacionAsignacionesModel:
         """
         conn = get_database_connection()
         if not conn:
-            return {'es_valido': False, 'mensaje_error': 'Error de conexión a la base de datos'}
+            return {'es_valido': False, 'mensaje_error': 'Error de conexión'}
         
         cursor = None
         try:
             cursor = conn.cursor()
+            
+            # Calcular hash del token para buscar
             token_hash = hashlib.sha256(token.encode()).hexdigest()
             
-            # Buscar token
+            # Buscar token en la base de datos
             cursor.execute("""
                 SELECT 
                     t.TokenId,
@@ -114,83 +148,75 @@ class ConfirmacionAsignacionesModel:
                     t.UsuarioEmail,
                     t.FechaExpiracion,
                     t.Utilizado,
-                    t.FechaUtilizacion,
+                    t.FechaConfirmacion,
                     a.ProductoId,
+                    p.NombreProducto,
                     a.OficinaId,
+                    o.NombreOficina,
                     a.FechaAsignacion,
                     a.UsuarioADNombre,
-                    a.Estado,
-                    p.NombreProducto,
-                    p.CodigoUnico,
-                    o.NombreOficina,
-                    c.NombreCategoria
+                    a.UsuarioADEmail
                 FROM TokensConfirmacionAsignacion t
                 INNER JOIN Asignaciones a ON t.AsignacionId = a.AsignacionId
                 INNER JOIN ProductosCorporativos p ON a.ProductoId = p.ProductoId
-                INNER JOIN Oficinas o ON a.OficinaId = o.OficinaId
-                LEFT JOIN CategoriasProductos c ON p.CategoriaId = c.CategoriaId
-                WHERE t.TokenHash = ? AND a.Activo = 1
+                LEFT JOIN Oficinas o ON a.OficinaId = o.OficinaId
+                WHERE t.TokenHash = ?
             """, (token_hash,))
             
             row = cursor.fetchone()
             
             if not row:
-                return {'es_valido': False, 'mensaje_error': 'Token no válido o asignación no encontrada'}
+                return {'es_valido': False, 'mensaje_error': 'Token no encontrado o inválido'}
             
+            # Extraer datos
             token_id = row[0]
             asignacion_id = row[1]
             usuario_email = row[2]
             fecha_expiracion = row[3]
             utilizado = row[4]
-            fecha_utilizacion = row[5]
+            fecha_confirmacion = row[5]
             producto_id = row[6]
-            oficina_id = row[7]
-            fecha_asignacion = row[8]
-            usuario_nombre = row[9]
-            estado = row[10]
-            producto_nombre = row[11]
-            codigo_unico = row[12]
-            oficina_nombre = row[13]
-            categoria = row[14]
+            producto_nombre = row[7]
+            oficina_id = row[8]
+            oficina_nombre = row[9]
+            fecha_asignacion = row[10]
+            usuario_ad_nombre = row[11]
+            usuario_ad_email = row[12]
             
-            # Validar si ya fue utilizado
+            # Verificar si ya fue utilizado
             if utilizado:
                 return {
-                    'es_valido': False,
-                    'mensaje_error': f'Este token ya fue utilizado el {fecha_utilizacion.strftime("%d/%m/%Y %H:%M")}',
-                    'ya_confirmado': True
+                    'es_valido': False, 
+                    'mensaje_error': 'Este enlace ya fue utilizado',
+                    'fecha_confirmacion': fecha_confirmacion
                 }
             
-            # Validar fecha de expiración
-            if datetime.now() > fecha_expiracion:
+            # Verificar expiración
+            if fecha_expiracion and datetime.now() > fecha_expiracion:
                 return {
-                    'es_valido': False,
-                    'mensaje_error': f'Token expirado. Venció el {fecha_expiracion.strftime("%d/%m/%Y %H:%M")}',
-                    'expirado': True
+                    'es_valido': False, 
+                    'mensaje_error': 'El enlace ha expirado',
+                    'fecha_expiracion': fecha_expiracion
                 }
             
-            # Token válido
             return {
                 'es_valido': True,
                 'token_id': token_id,
                 'asignacion_id': asignacion_id,
+                'usuario_email': usuario_email,
                 'producto_id': producto_id,
                 'producto_nombre': producto_nombre,
-                'codigo_unico': codigo_unico,
-                'categoria': categoria,
                 'oficina_id': oficina_id,
                 'oficina_nombre': oficina_nombre,
-                'usuario_email': sanitizar_email(usuario_email),  # ✅ CORRECCIÓN
-                'usuario_nombre': sanitizar_username(usuario_nombre),  # ✅ CORRECCIÓN
                 'fecha_asignacion': fecha_asignacion,
-                'fecha_expiracion': fecha_expiracion,
-                'estado': estado,
-                'dias_restantes': (fecha_expiracion - datetime.now()).days
+                'usuario_ad_nombre': usuario_ad_nombre,
+                'usuario_ad_email': usuario_ad_email,
+                'fecha_expiracion': fecha_expiracion
             }
             
         except Exception as e:
             logger.error(f"Error validando token: {e}")
-            return {'es_valido': False, 'mensaje_error': f'Error al validar token: {str(e)}'}
+            return {'es_valido': False, 'mensaje_error': f'Error al validar: {str(e)}'}
         finally:
             if cursor:
                 cursor.close()
@@ -198,98 +224,66 @@ class ConfirmacionAsignacionesModel:
                 conn.close()
     
     @staticmethod
-    def confirmar_asignacion(token, usuario_ad_username, numero_identificacion, direccion_ip=None, user_agent=None):
+    def confirmar_asignacion(token, numero_identificacion=None, ip_confirmacion=None):
         """
-        Confirma una asignación y marca el token como utilizado.
+        Confirma una asignación usando el token.
         
         Args:
             token: Token de confirmación
-            usuario_ad_username: Username del usuario que confirma
-            numero_identificacion: Número de cédula o identificación del usuario
-            direccion_ip: IP del usuario (opcional)
-            user_agent: User agent del navegador (opcional)
+            numero_identificacion: Número de cédula/identificación del usuario
+            ip_confirmacion: IP desde donde se confirma
             
         Returns:
-            dict: Resultado de la operación
+            dict: Resultado de la confirmación
         """
         conn = get_database_connection()
         if not conn:
-            return {'success': False, 'message': 'Error de conexión a la base de datos'}
+            return {'success': False, 'message': 'Error de conexión'}
         
         cursor = None
         try:
             cursor = conn.cursor()
             
-            # Validar token primero
+            # Primero validar el token
             validacion = ConfirmacionAsignacionesModel.validar_token(token)
+            
             if not validacion.get('es_valido'):
-                return {'success': False, 'message': validacion.get('mensaje_error', 'Token inválido')}
+                return {
+                    'success': False, 
+                    'message': validacion.get('mensaje_error', 'Token inválido')
+                }
             
-            token_id = validacion['token_id']
-            asignacion_id = validacion['asignacion_id']
-            token_hash = hashlib.sha256(token.encode()).hexdigest()
+            token_id = validacion.get('token_id')
+            asignacion_id = validacion.get('asignacion_id')
             
-            # Validar número de identificación
-            if not numero_identificacion or not numero_identificacion.strip():
-                return {'success': False, 'message': 'El número de identificación es obligatorio'}
-            
-            # Limpiar y validar formato del número de identificación
-            numero_identificacion = numero_identificacion.strip()
-            if not numero_identificacion.isdigit():
-                return {'success': False, 'message': 'El número de identificación debe contener solo números'}
-            
-            if len(numero_identificacion) < 6 or len(numero_identificacion) > 20:
-                return {'success': False, 'message': 'El número de identificación debe tener entre 6 y 20 dígitos'}
-            
-            # Marcar token como utilizado e incluir número de identificación
+            # Marcar token como utilizado
             cursor.execute("""
                 UPDATE TokensConfirmacionAsignacion
                 SET Utilizado = 1,
-                    FechaUtilizacion = GETDATE(),
-                    UsuarioConfirmacion = ?,
+                    FechaConfirmacion = GETDATE(),
                     NumeroIdentificacion = ?,
-                    DireccionIP = ?,
-                    UserAgent = ?
-                WHERE TokenHash = ?
-            """, (sanitizar_username(usuario_ad_username), numero_identificacion, 
-                  sanitizar_ip(direccion_ip) if direccion_ip else None,  # ✅ CORRECCIÓN
-                  user_agent, token_hash))
+                    IPConfirmacion = ?
+                WHERE TokenId = ?
+            """, (numero_identificacion, ip_confirmacion, token_id))
             
             # Actualizar estado de la asignación
             cursor.execute("""
                 UPDATE Asignaciones
                 SET Estado = 'CONFIRMADO',
-                    FechaConfirmacion = GETDATE(),
-                    UsuarioConfirmacion = ?
+                    FechaConfirmacion = GETDATE()
                 WHERE AsignacionId = ?
-            """, (sanitizar_username(usuario_ad_username), asignacion_id))  # ✅ CORRECCIÓN
-            
-            # Registrar en historial
-            cursor.execute("""
-                INSERT INTO AsignacionesCorporativasHistorial
-                (ProductoId, OficinaId, Accion, Cantidad, UsuarioAccion, Fecha, 
-                 UsuarioAsignadoNombre, UsuarioAsignadoEmail, Observaciones)
-                VALUES (?, ?, 'CONFIRMACION', 1, ?, GETDATE(), ?, ?, ?)
-            """, (
-                validacion['producto_id'],
-                validacion['oficina_id'],
-                sanitizar_username(usuario_ad_username),  # ✅ CORRECCIÓN
-                sanitizar_username(validacion['usuario_nombre']),  # ✅ CORRECCIÓN
-                sanitizar_email(validacion['usuario_email']),  # ✅ CORRECCIÓN
-                f"Confirmación realizada desde IP: {sanitizar_ip(direccion_ip) if direccion_ip else 'N/A'}. Cédula: [PROTEGIDA]"  # ✅ CORRECCIÓN: No mostrar número de identificación
-            ))
+            """, (asignacion_id,))
             
             conn.commit()
             
-            # ✅ CORRECCIÓN: Línea 283 - No mostrar información sensible
-            logger.info(f"Asignación {asignacion_id} confirmada por {sanitizar_username(usuario_ad_username)} (CC: [PROTEGIDO])")
+            logger.info(f"Asignación {asignacion_id} confirmada exitosamente")
             
             return {
                 'success': True,
                 'message': 'Asignación confirmada exitosamente',
                 'asignacion_id': asignacion_id,
-                'producto_nombre': validacion['producto_nombre'],
-                'oficina_nombre': validacion['oficina_nombre']
+                'producto_nombre': validacion.get('producto_nombre'),
+                'oficina_nombre': validacion.get('oficina_nombre')
             }
             
         except Exception as e:
@@ -309,10 +303,10 @@ class ConfirmacionAsignacionesModel:
     @staticmethod
     def obtener_confirmaciones_pendientes(usuario_email=None):
         """
-        Obtiene asignaciones pendientes de confirmación.
+        Obtiene las asignaciones pendientes de confirmación.
         
         Args:
-            usuario_email: Email del usuario (opcional, para filtrar)
+            usuario_email: Filtrar por email de usuario (opcional)
             
         Returns:
             list: Lista de asignaciones pendientes
@@ -327,44 +321,44 @@ class ConfirmacionAsignacionesModel:
             
             query = """
                 SELECT 
-                    a.AsignacionId,
+                    t.TokenId,
+                    t.AsignacionId,
+                    t.UsuarioEmail,
+                    t.FechaExpiracion,
+                    t.FechaCreacion,
                     a.ProductoId,
                     p.NombreProducto,
                     p.CodigoUnico,
+                    a.OficinaId,
                     o.NombreOficina,
                     a.FechaAsignacion,
-                    a.UsuarioADNombre,
-                    a.UsuarioADEmail,
-                    t.FechaExpiracion,
-                    t.Utilizado,
-                    DATEDIFF(day, GETDATE(), t.FechaExpiracion) AS DiasRestantes
-                FROM Asignaciones a
-                INNER JOIN TokensConfirmacionAsignacion t ON a.AsignacionId = t.AsignacionId
+                    a.UsuarioAsignador,
+                    a.UsuarioADNombre
+                FROM TokensConfirmacionAsignacion t
+                INNER JOIN Asignaciones a ON t.AsignacionId = a.AsignacionId
                 INNER JOIN ProductosCorporativos p ON a.ProductoId = p.ProductoId
-                INNER JOIN Oficinas o ON a.OficinaId = o.OficinaId
-                WHERE a.Estado = 'ASIGNADO' 
-                    AND a.Activo = 1
-                    AND t.Utilizado = 0
-                    AND t.FechaExpiracion > GETDATE()
+                LEFT JOIN Oficinas o ON a.OficinaId = o.OficinaId
+                WHERE t.Utilizado = 0
+                  AND t.FechaExpiracion > GETDATE()
             """
             
+            params = []
             if usuario_email:
-                query += " AND a.UsuarioADEmail = ?"
-                cursor.execute(query, (sanitizar_email(usuario_email),))  # ✅ CORRECCIÓN
-            else:
-                cursor.execute(query)
+                query += " AND t.UsuarioEmail = ?"
+                params.append(usuario_email)
             
-            cols = [c[0] for c in cursor.description]
-            results = [dict(zip(cols, row)) for row in cursor.fetchall()]
+            query += " ORDER BY t.FechaCreacion DESC"
             
-            # Sanitizar emails en los resultados
-            for result in results:
-                if 'UsuarioADEmail' in result:
-                    result['UsuarioADEmail'] = sanitizar_email(result['UsuarioADEmail'])
-                if 'UsuarioADNombre' in result:
-                    result['UsuarioADNombre'] = sanitizar_username(result['UsuarioADNombre'])
+            cursor.execute(query, params)
             
-            return results
+            columnas = [desc[0] for desc in cursor.description]
+            resultados = []
+            
+            for row in cursor.fetchall():
+                item = dict(zip(columnas, row))
+                resultados.append(item)
+            
+            return resultados
             
         except Exception as e:
             logger.error(f"Error obteniendo confirmaciones pendientes: {e}")
@@ -376,9 +370,70 @@ class ConfirmacionAsignacionesModel:
                 conn.close()
     
     @staticmethod
+    def obtener_historial_confirmaciones(dias=30):
+        """
+        Obtiene el historial de confirmaciones.
+        
+        Args:
+            dias: Número de días hacia atrás (default: 30)
+            
+        Returns:
+            list: Lista de confirmaciones
+        """
+        conn = get_database_connection()
+        if not conn:
+            return []
+        
+        cursor = None
+        try:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT 
+                    t.TokenId,
+                    t.AsignacionId,
+                    t.UsuarioEmail,
+                    t.FechaCreacion,
+                    t.FechaConfirmacion,
+                    t.Utilizado,
+                    t.NumeroIdentificacion,
+                    t.IPConfirmacion,
+                    a.ProductoId,
+                    p.NombreProducto,
+                    p.CodigoUnico,
+                    o.NombreOficina,
+                    a.UsuarioAsignador,
+                    a.UsuarioADNombre
+                FROM TokensConfirmacionAsignacion t
+                INNER JOIN Asignaciones a ON t.AsignacionId = a.AsignacionId
+                INNER JOIN ProductosCorporativos p ON a.ProductoId = p.ProductoId
+                LEFT JOIN Oficinas o ON a.OficinaId = o.OficinaId
+                WHERE t.FechaCreacion >= DATEADD(day, -?, GETDATE())
+                ORDER BY t.FechaCreacion DESC
+            """, (dias,))
+            
+            columnas = [desc[0] for desc in cursor.description]
+            resultados = []
+            
+            for row in cursor.fetchall():
+                item = dict(zip(columnas, row))
+                resultados.append(item)
+            
+            return resultados
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo historial de confirmaciones: {e}")
+            return []
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    
+    @staticmethod
     def limpiar_tokens_expirados():
         """
-        Elimina tokens expirados de la base de datos (tarea de mantenimiento).
+        Elimina tokens expirados de la base de datos.
         
         Returns:
             int: Número de tokens eliminados
@@ -393,97 +448,41 @@ class ConfirmacionAsignacionesModel:
             
             cursor.execute("""
                 DELETE FROM TokensConfirmacionAsignacion
-                WHERE FechaExpiracion < DATEADD(day, -30, GETDATE())
+                WHERE FechaExpiracion < GETDATE()
+                  AND Utilizado = 0
             """)
             
             eliminados = cursor.rowcount
             conn.commit()
             
-            logger.info(f"Tokens expirados eliminados: {eliminados}")
+            if eliminados > 0:
+                logger.info(f"Se eliminaron {eliminados} tokens expirados")
+            
             return eliminados
             
         except Exception as e:
             logger.error(f"Error limpiando tokens expirados: {e}")
-            if conn:
-                try:
-                    conn.rollback()
-                except:
-                    pass
             return 0
         finally:
             if cursor:
                 cursor.close()
             if conn:
                 conn.close()
-    
+
     @staticmethod
-    def obtener_estadisticas_confirmaciones():
+    def reenviar_token(asignacion_id, usuario_ad_email):
         """
-        Obtiene estadísticas generales de confirmaciones.
+        Genera un nuevo token para una asignación existente.
         
+        Args:
+            asignacion_id: ID de la asignación
+            usuario_ad_email: Email del usuario
+            
         Returns:
-            dict: Diccionario con estadísticas
+            str: Nuevo token o None si hay error
         """
-        conn = get_database_connection()
-        if not conn:
-            return {}
-        
-        cursor = None
-        try:
-            cursor = conn.cursor()
-            
-            estadisticas = {}
-            
-            # Total de tokens generados
-            cursor.execute("""
-                SELECT COUNT(*) FROM TokensConfirmacionAsignacion
-            """)
-            estadisticas['total_tokens_generados'] = cursor.fetchone()[0] or 0
-            
-            # Tokens utilizados
-            cursor.execute("""
-                SELECT COUNT(*) FROM TokensConfirmacionAsignacion WHERE Utilizado = 1
-            """)
-            estadisticas['tokens_utilizados'] = cursor.fetchone()[0] or 0
-            
-            # Tokens pendientes (no expirados)
-            cursor.execute("""
-                SELECT COUNT(*) FROM TokensConfirmacionAsignacion 
-                WHERE Utilizado = 0 AND FechaExpiracion > GETDATE()
-            """)
-            estadisticas['tokens_pendientes'] = cursor.fetchone()[0] or 0
-            
-            # Tokens expirados
-            cursor.execute("""
-                SELECT COUNT(*) FROM TokensConfirmacionAsignacion 
-                WHERE Utilizado = 0 AND FechaExpiracion <= GETDATE()
-            """)
-            estadisticas['tokens_expirados'] = cursor.fetchone()[0] or 0
-            
-            # Confirmaciones por mes (últimos 6 meses)
-            cursor.execute("""
-                SELECT 
-                    FORMAT(FechaUtilizacion, 'yyyy-MM') AS Mes,
-                    COUNT(*) AS Confirmaciones
-                FROM TokensConfirmacionAsignacion 
-                WHERE Utilizado = 1 
-                    AND FechaUtilizacion >= DATEADD(month, -6, GETDATE())
-                GROUP BY FORMAT(FechaUtilizacion, 'yyyy-MM')
-                ORDER BY Mes DESC
-            """)
-            
-            estadisticas['confirmaciones_por_mes'] = [
-                {'mes': row[0], 'cantidad': row[1]} 
-                for row in cursor.fetchall()
-            ]
-            
-            return estadisticas
-            
-        except Exception as e:
-            logger.error(f"Error obteniendo estadísticas: {e}")
-            return {}
-        finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
+        return ConfirmacionAsignacionesModel.generar_token_confirmacion(
+            asignacion_id=asignacion_id,
+            usuario_ad_email=usuario_ad_email,
+            dias_validez=8
+        )

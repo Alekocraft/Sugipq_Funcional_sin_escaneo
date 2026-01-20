@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from functools import wraps
 import os
 
-auth_bp = Blueprint('auth', __name__, url_prefix='')
+ 
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 SESSION_TIMEOUT_MINUTES = 30  # ✅ Cambiado de 5 a 30 minutos
 SESSION_ABSOLUTE_TIMEOUT_HOURS = 8  # ✅ Aumentado de 3 a 8 horas
@@ -101,21 +102,13 @@ def get_client_info():
         'timestamp': datetime.now().isoformat()
     }
 
-@auth_bp.route('/')
-def index():
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
     if 'usuario_id' in session:
         if check_session_timeout():
             clear_session_safely()
             return redirect('/auth/login')
         return redirect('/dashboard')
-    return redirect('/auth/login')
-
-@auth_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    if 'usuario_id' in session:
-        if not check_session_timeout():
-            return redirect('/dashboard')
-        clear_session_safely()
     
     if request.method == 'POST':
         usuario = request.form.get('usuario', '').strip()
@@ -182,8 +175,6 @@ def logout():
     clear_session_safely()
     flash('Sesión cerrada correctamente', 'info')
     return redirect('/auth/login')
-
-# ... [Resto del archivo auth.py se mantiene igual]
 
 @auth_bp.route('/test-ldap', methods=['GET', 'POST'])
 def test_ldap():

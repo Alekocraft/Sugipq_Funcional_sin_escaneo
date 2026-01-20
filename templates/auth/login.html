@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <title>Iniciar Sesión - SUGIPQ</title>
+    <title>Iniciar Sesión - Sistema Unificado de Gestión de Inventarios y Préstamos Quálitas - SUGIPQ</title>
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" 
@@ -13,417 +13,117 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" 
           integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" crossorigin="anonymous">
-
-    <style>
-        /* ===== Variables de colores corporativos ===== */
-        :root {
-            --morado-qualitas: #532D8C;
-            --cyan-qualitas: #0098B1;
-            --naranja-qualitas: #F15A29;
-        }
-
-        /* ===== Reset y base ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            height: 100%;
-        }
-
-        body {
-            background: linear-gradient(135deg, var(--morado-qualitas) 0%, var(--cyan-qualitas) 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        /* ===== Contenedor principal ===== */
-        .login-wrapper {
-            width: 100%;
-            max-width: 420px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        /* ===== Tarjeta de login ===== */
-        .login-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
-            overflow: hidden;
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* ===== Header de la tarjeta ===== */
-        .login-header {
-            background: var(--morado-qualitas);
-            padding: 35px 30px;
-            text-align: center;
-            color: white;
-        }
-
-        .login-header img {
-            max-height: 70px;
-            margin-bottom: 15px;
-            filter: brightness(0) invert(1);
-        }
-
-        .login-header h1 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin: 0 0 8px 0;
-        }
-
-        .login-header p {
-            margin: 0;
-            opacity: 0.9;
-            font-size: 0.9rem;
-        }
-
-        /* ===== Cuerpo de la tarjeta ===== */
-        .login-body {
-            padding: 35px 30px;
-        }
-
-        /* ===== Formulario ===== */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            font-weight: 500;
-            color: #333;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .form-label i {
-            color: var(--morado-qualitas);
-        }
-
-        .input-group {
-            position: relative;
-        }
-
-        .form-control {
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 12px 15px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            border-color: var(--cyan-qualitas);
-            box-shadow: 0 0 0 0.2rem rgba(0, 152, 177, 0.15);
-        }
-
-        .input-group .form-control {
-            border-right: none;
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-        }
-
-        .input-group-text {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-left: none;
-            border-radius: 0 10px 10px 0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .input-group:focus-within .input-group-text {
-            border-color: var(--cyan-qualitas);
-        }
-
-        .toggle-password:hover {
-            background: #f8f9fa;
-        }
-
-        /* ===== Botón de login ===== */
-        .btn-login {
-            width: 100%;
-            padding: 14px;
-            background: var(--cyan-qualitas);
-            border: none;
-            color: white;
-            font-weight: 600;
-            font-size: 1rem;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .btn-login:hover {
-            background: var(--naranja-qualitas);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(241, 90, 41, 0.35);
-        }
-
-        .btn-login:active {
-            transform: translateY(0);
-        }
-
-        /* ===== Alertas ===== */
-        .alert {
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: none;
-            border-left: 4px solid;
-            padding: 12px 15px;
-        }
-
-        .alert-danger {
-            background-color: #fff5f5;
-            border-left-color: #dc3545;
-            color: #721c24;
-        }
-
-        .alert-success {
-            background-color: #f0fff4;
-            border-left-color: #28a745;
-            color: #155724;
-        }
-
-        .alert-warning {
-            background-color: #fff8e6;
-            border-left-color: #ffc107;
-            color: #856404;
-        }
-
-        .alert-info {
-            background-color: #e7f5ff;
-            border-left-color: var(--cyan-qualitas);
-            color: #0c5460;
-        }
-
-        /* ===== Info LDAP ===== */
-        .ldap-info {
-            background: #f8f9fa;
-            border-left: 4px solid var(--cyan-qualitas);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-size: 0.875rem;
-            color: #555;
-        }
-
-        .ldap-info i {
-            color: var(--cyan-qualitas);
-        }
-
-        .ldap-info strong {
-            color: #333;
-        }
-
-        /* ===== Link de prueba LDAP ===== */
-        .ldap-test-link {
-            text-align: center;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-
-        .ldap-test-link a {
-            color: #6c757d;
-            text-decoration: none;
-            font-size: 0.85rem;
-            transition: color 0.3s ease;
-        }
-
-        .ldap-test-link a:hover {
-            color: var(--cyan-qualitas);
-        }
-
-        /* ===== Footer ===== */
-        .login-footer {
-            text-align: center;
-            padding: 25px 15px;
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.85rem;
-            max-width: 420px;
-            width: 100%;
-        }
-
-        .login-footer p {
-            margin: 0 0 5px 0;
-            line-height: 1.5;
-        }
-
-        .login-footer .company-name {
-            font-weight: 600;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .login-footer .system-name {
-            opacity: 0.85;
-            font-size: 0.8rem;
-        }
-
-        .login-footer .security-badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            margin-bottom: 10px;
-            font-size: 0.8rem;
-            opacity: 0.9;
-        }
-
-        /* ===== Responsive ===== */
-        @media (max-width: 480px) {
-            .login-header {
-                padding: 25px 20px;
-            }
-
-            .login-header h1 {
-                font-size: 1.1rem;
-            }
-
-            .login-body {
-                padding: 25px 20px;
-            }
-
-            .login-footer {
-                padding: 20px 10px;
-                font-size: 0.8rem;
-            }
-        }
-    </style>
+    <!-- Estilos personalizados -->
+    <link href="{{ url_for('static', filename='css/login.css') }}" rel="stylesheet">
 </head>
 
-<body>
-    <!-- Contenedor principal -->
-    <div class="login-wrapper">
-        <div class="login-card">
-            <!-- Header -->
-            <div class="login-header">
-                <img src="{{ url_for('static', filename='images/Qualitas_Logo.svg') }}" 
-                     alt="Quálitas Logo" 
-                     onerror="this.style.display='none'">
-                <h1>Sistema de Gestión de Inventarios</h1>
-                <p>SUGIPQ - Quálitas Colombia</p>
-            </div>
-            
-            <!-- Body -->
-            <div class="login-body">
-                <!-- Mensajes Flash -->
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                                <i class="fas fa-{{ 'exclamation-circle' if category == 'error' or category == 'danger' else 'exclamation-triangle' if category == 'warning' else 'info-circle' if category == 'info' else 'check-circle' }} me-2"></i>
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                
-                <!-- Formulario de Login -->
-                <form method="POST" action="{{ url_for('auth.login') }}" id="loginForm">
-                    <!-- Usuario -->
-                    <div class="form-group">
-                        <label for="usuario" class="form-label">
-                            <i class="fas fa-user me-2"></i>Usuario
-                        </label>
-                        <div class="input-group">
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="usuario" 
-                                   name="usuario" 
-                                   placeholder="Ingresa tu usuario"
-                                   required
-                                   autofocus
-                                   minlength="1"
-                                   maxlength="50"
-                                   autocomplete="username">
-                            <span class="input-group-text">
-                                <i class="fas fa-id-card text-muted"></i>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <!-- Contraseña -->
-                    <div class="form-group">
-                        <label for="contrasena" class="form-label">
-                            <i class="fas fa-lock me-2"></i>Contraseña
-                        </label>
-                        <div class="input-group">
-                            <input type="password" 
-                                   class="form-control" 
-                                   id="contrasena" 
-                                   name="contraseña" 
-                                   placeholder="Ingresa tu contraseña"
-                                   required
-                                   minlength="1"
-                                   maxlength="100"
-                                   autocomplete="current-password">
-                            <button type="button" 
-                                    class="input-group-text toggle-password" 
-                                    data-target="contrasena" 
-                                    aria-label="Mostrar u ocultar contraseña">
-                                <i class="fas fa-eye text-muted"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Botón de Login -->
-                    <button type="submit" class="btn btn-login">
-                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
-                    </button>
-                </form>
-                
-                <!-- Información LDAP -->
-                <div class="ldap-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Autenticación integrada:</strong> 
-                    Use sus credenciales de Active Directory.
-                </div>
+<body class="login-body">
+    <!-- Fondo decorativo -->
+    <div class="login-background"></div>
 
-                <!-- Link de prueba LDAP -->
-                <div class="ldap-test-link">
-                    <a href="{{ url_for('auth.test_ldap') }}">
-                        <i class="fas fa-network-wired me-1"></i> 
-                        ¿Problemas con LDAP? Haz una prueba de conexión
-                    </a>
+    <!-- Contenedor principal -->
+    <div class="login-container">
+        <div class="login-card-wrapper">
+
+            <!-- Encabezado con logo -->
+            <div class="login-header mb-4 text-center">
+                <img src="{{ url_for('static', filename='images/Qualitas_Logo.svg') }}"
+                     alt="Logo Quálitas" class="login-logo mb-3">
+                <h1 class="login-title">Sistema Unificado de Gestión de Inventarios y Préstamos Quálitas - SUGIPQ</h1>
+                <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+            </div>
+
+            <!-- Alertas -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show custom-alert" role="alert">
+                <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' }} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <!-- Tarjeta principal -->
+            <div class="card login-card">
+                <div class="card-body p-4">
+            
+                    <form method="POST" action="" class="login-form" id="loginForm">
+                        <!-- Campo Usuario -->
+                        <div class="form-group mb-3">
+                            <label for="usuario" class="form-label">
+                                <i class="fas fa-user me-2 text-morado"></i>Usuario
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-id-card text-muted" aria-hidden="true"></i>
+                                </span>
+                                <input type="text"
+                                       id="usuario"
+                                       name="usuario"
+                                       class="form-control login-input"
+                                       placeholder="Ingresa tu usuario"
+                                       required
+                                       minlength="1"
+                                       maxlength="50"
+                                       autocomplete="username"
+                                       autofocus
+                                       aria-describedby="usuario-help">
+                            </div>
+                            <div id="usuario-help" class="form-text visually-hidden">Campo para ingresar el nombre de usuario</div>
+                        </div>
+
+                        <!-- Campo Contraseña -->
+                        <div class="form-group mb-4">
+                            <label for="contrasena" class="form-label">
+                                <i class="fas fa-lock me-2 text-morado"></i>Contraseña
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-key text-muted" aria-hidden="true"></i>
+                                </span>
+                                <input type="password"
+                                       id="contrasena"
+                                       name="contraseña"
+                                       class="form-control login-input"
+                                       placeholder="Ingresa tu contraseña"
+                                       required
+                                       minlength="1"
+                                       maxlength="100"
+                                       autocomplete="current-password"
+                                       aria-describedby="contraseña-help">
+                                <button type="button" class="input-group-text toggle-password" data-target="contrasena" aria-label="Mostrar u ocultar contraseña">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div id="contraseña-help" class="form-text visually-hidden">Campo para ingresar la contraseña</div>
+                        </div>
+
+                        <!-- Botón de ingreso -->
+                        <button type="submit" class="btn login-btn w-100">
+                            <i class="fas fa-sign-in-alt me-2" aria-hidden="true"></i> Iniciar Sesión
+                        </button>
+                    </form>
+
+                    <!-- ✅ CORREGIDO: Enlace para prueba LDAP -->
+                    <div class="text-center mt-3 pt-3 border-top">
+                        <a href="{{ url_for('auth.test_ldap') }}" class="text-decoration-none small">
+                            <i class="fas fa-network-wired me-1"></i> ¿Problemas con LDAP? Haz una prueba de conexión
+                        </a>
+                    </div>
                 </div>
             </div>
+
+            <!-- Footer -->
+            <div class="login-footer mt-4 text-center">
+                <p>
+                    <i class="fas fa-shield-alt me-1" aria-hidden="true"></i>
+                    Quálitas Compañía de Seguros Colombia S.A. ©  Sistema de Inventarios {{ current_year }}.
+                </p>
+            </div>
         </div>
-    </div>
-    
-    <!-- Footer -->
-    <div class="login-footer">
-        <div class="security-badge">
-            <i class="fas fa-shield-alt"></i>
-            <span>Sistema seguro y confidencial</span>
-        </div>
-        <p>
-            <span class="company-name">© 2025 Quálitas Compañía de Seguros Colombia S.A.</span>
-            <span class="system-name">Sistema Unificado de Gestión de Inventarios y Préstamos Quálitas - SUGIPQ</span>
-        </p>
     </div>
 
     <!-- Bootstrap JS -->
@@ -431,9 +131,10 @@
             integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" 
             crossorigin="anonymous"></script>
 
+    <!-- Script de UI -->
     <script>
+        // Auto-dismiss alerts después de 5 segundos
         document.addEventListener('DOMContentLoaded', function() {
-            // ===== Auto-dismiss alerts después de 5 segundos =====
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(function(alert) {
                 setTimeout(function() {
@@ -442,7 +143,7 @@
                 }, 5000);
             });
 
-            // ===== Toggle mostrar/ocultar contraseña =====
+            // Mostrar / ocultar contraseña (interacción visual)
             document.querySelectorAll('.toggle-password').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const targetId = btn.getAttribute('data-target');
@@ -459,33 +160,51 @@
                     icon.classList.toggle('fa-eye');
                     icon.classList.toggle('fa-eye-slash');
                     
-                    btn.setAttribute('aria-label', isHidden ? 'Ocultar contraseña' : 'Mostrar contraseña');
+                    // Actualizar el texto de accesibilidad
+                    const newState = isHidden ? 'visible' : 'oculta';
+                    btn.setAttribute('aria-label', `Contraseña ${newState}`);
                 });
             });
 
-            // ===== Validación del formulario =====
-            const form = document.getElementById('loginForm');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    const usuario = document.getElementById('usuario');
-                    const password = document.getElementById('contrasena');
-                    
-                    if (usuario && usuario.value.trim().length === 0) {
-                        e.preventDefault();
-                        usuario.focus();
-                        return;
-                    }
-                    
-                    if (password && password.value.trim().length === 0) {
-                        e.preventDefault();
-                        password.focus();
-                        return;
-                    }
-                    
-                    // Limpieza de espacios en el usuario
-                    if (usuario) usuario.value = usuario.value.trim();
+            // Efecto visual de focus
+            document.querySelectorAll('.login-input').forEach(input => {
+                input.addEventListener('focus', () => {
+                    input.closest('.form-group').classList.add('focused');
                 });
-            }
+                input.addEventListener('blur', () => {
+                    if (!input.value) input.closest('.form-group').classList.remove('focused');
+                });
+            });
+
+            // Validación básica del formulario
+            document.getElementById('loginForm')?.addEventListener('submit', (e) => {
+                const usuario = document.getElementById('usuario');
+                const contraseña = document.getElementById('contrasena');
+                
+                // Validación básica de longitud
+                if (usuario && usuario.value.trim().length === 0) {
+                    e.preventDefault();
+                    usuario.focus();
+                    return;
+                }
+                
+                if (contraseña && contraseña.value.trim().length === 0) {
+                    e.preventDefault();
+                    contraseña.focus();
+                    return;
+                }
+                
+                // Limpieza básica de datos (eliminar espacios en blanco)
+                if (usuario) usuario.value = usuario.value.trim();
+                
+                // Añadir clase de loading al botón
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.classList.add('loading');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Iniciando sesión...';
+                }
+            });
         });
     </script>
 </body>
