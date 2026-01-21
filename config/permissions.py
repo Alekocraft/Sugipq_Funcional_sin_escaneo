@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-#config/permissions.py
-
+"""config/permissions.py"""
 
 from __future__ import annotations
 
@@ -180,7 +179,7 @@ OFFICE_BASE_PERMS = {
         # Préstamos
         "prestamos": ["view_own", "create"],
         # Inventario corporativo
-        "inventario_corporativo": ["view", "request_return", "request_transfer", "view_reports"],
+        "inventario_corporativo": ["view", "return", "transfer", "request_return", "request_transfer", "view_reports"],
     },
     "office_filter": "OFFICE_ONLY",
 }

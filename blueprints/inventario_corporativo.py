@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 from models.inventario_corporativo_model import InventarioCorporativoModel
 from models.oficinas_model import OficinaModel
 from utils.permissions import can_access, can_manage_inventario_corporativo, can_view_inventario_actions, user_can_view_all
+from database import get_database_connection
 import os
 import pandas as pd
 from io import BytesIO
@@ -60,6 +61,15 @@ inventario_corporativo_bp = Blueprint(
 
 def _require_login():
     return 'usuario_id' in session
+
+def _can_approve_inv_requests() -> bool:
+    """Determina si el usuario puede aprobar/rechazar solicitudes de devolución/traspaso."""
+    rol = (session.get('rol') or '').strip().lower()
+    # Roles típicos con capacidad de aprobación
+    if rol in {'administrador', 'aprobador', 'lider_inventario'}:
+        return True
+    # Fallback: quien gestiona inventario corporativo suele poder aprobar
+    return can_manage_inventario_corporativo()
 
 def _handle_unauthorized():
     flash('No autorizado', 'danger')
@@ -177,7 +187,7 @@ def listar_oficinas_servicio():
     if not _require_login():
         return redirect('/login')
 
-    # Acceso al m�dulo (la vista existe tanto para admin como para oficinas)
+    # Acceso al módulo (la vista existe tanto para admin como para oficinas)
     if not (can_access('inventario_corporativo', 'view') or can_access('inventario_corporativo', 'view_oficinas_servicio')):
         return _handle_unauthorized()
 
@@ -185,23 +195,12 @@ def listar_oficinas_servicio():
     puede_ver_todas = user_can_view_all()
     oficina_id = session.get('oficina_id')
 
+    # Evitar variables no definidas para la vista global
     oficinas = []
     asignaciones = None
     if not puede_ver_todas and oficina_id:
-        # Vista "Mi oficina": lo asignado (tipo reporte de oficinas) + botones de devoluci�n/traspaso
+        # Vista "Mi oficina": lo asignado (tipo reporte de oficinas) + botones de devolución/traspaso
         asignaciones = InventarioCorporativoModel.obtener_asignaciones_por_oficina(oficina_id) or []
-        # Normalizar llaves para el template (compatibilidad con diferentes queries)
-        asignaciones = [
-            {
-                **a,
-                "material_nombre": a.get("material_nombre") or a.get("nombre_producto") or a.get("material") or "",
-                "serial": a.get("serial") or a.get("codigo_unico") or "",
-                "oficina_nombre": a.get("oficina_nombre") or a.get("oficina") or "",
-                "usuario_asignado": a.get("usuario_asignado") or a.get("usuario_ad_nombre") or a.get("usuario") or "",
-                "cantidad_asignada": a.get("cantidad_asignada") if a.get("cantidad_asignada") is not None else a.get("cantidad") or 0,
-            }
-            for a in asignaciones
-        ]
         # Lista de oficinas para selector de traspaso
         oficinas = OficinaModel.obtener_todas() or []
         if not user_can_view_all():
@@ -235,11 +234,12 @@ def listar_oficinas_servicio():
         filtro_tipo='oficinas_servicio',
         titulo=titulo,
         puede_gestionar_inventario=can_manage_inventario_corporativo(),
-        # Acciones de gesti�n (ver/editar/asignar) SOLO para quienes gestionan inventario
+        # Acciones de gestión (ver/editar/asignar) SOLO para quienes gestionan inventario
         puede_ver_acciones_inventario=can_manage_inventario_corporativo(),
         # Acciones para oficinas (solicitudes)
         puede_solicitar_devolucion=can_access('inventario_corporativo', 'request_return') or can_access('inventario_corporativo', 'return'),
         puede_solicitar_traslado=can_access('inventario_corporativo', 'request_transfer') or can_access('inventario_corporativo', 'transfer'),
+        puede_aprobar_solicitudes=_can_approve_inv_requests(),
         es_vista_oficinas_servicio=True,
         mostrar_tabla_productos=mostrar_tabla_productos,
         vista_mi_oficina=(not puede_ver_todas)
@@ -681,104 +681,547 @@ def exportar_inventario_corporativo_excel(tipo):
 @inventario_corporativo_bp.route('/api/solicitar-devolucion', methods=['POST'])
 @login_required
 def api_solicitar_devolucion():
-    """Crea una solicitud de devolucion a COQ para una asignacion.
-
-    Seguridad:
-    - Requiere permiso inventario_corporativo.return
-    - Si el usuario NO puede ver todas las oficinas, valida que la asignacion pertenezca a su oficina.
-    """
+    """Crea una solicitud de devolución a COQ para un ítem asignado."""
     try:
-        if not can_access('inventario_corporativo', 'return'):
-            return jsonify({'success': False, 'message': 'No tiene permisos para solicitar devolucion'}), 403
+        data = request.get_json(silent=True) or request.form or {}
 
-        data = request.get_json(silent=True) or {}
-        asignacion_id = int(data.get('asignacion_id') or 0)
-        cantidad = int(data.get('cantidad') or 0)
-        observacion = (data.get('observacion') or '').strip()
+        asignacion_id = _safe_int(data.get('asignacion_id') or 0)
+        cantidad = _safe_int(data.get('cantidad') or 0)
+        motivo = (data.get('motivo') or data.get('observacion') or data.get('observaciones') or '').strip()
 
-        if asignacion_id <= 0 or cantidad <= 0:
-            return jsonify({'success': False, 'message': 'Datos invalidos'}), 400
+        if asignacion_id <= 0:
+            return jsonify(success=False, message='Asignación inválida.'), 400
+        if cantidad <= 0:
+            return jsonify(success=False, message='Cantidad inválida.'), 400
+        if not motivo:
+            return jsonify(success=False, message='El motivo es obligatorio.'), 400
 
-        asignacion = InventarioCorporativoModel.obtener_asignacion_por_id(asignacion_id)
-        if not asignacion:
-            return jsonify({'success': False, 'message': 'Asignacion no encontrada'}), 404
+        # Bloqueo de duplicados activos (devolución/traspaso) por asignación
+        conn_check = get_database_connection()
+        if conn_check:
+            try:
+                if _has_active_request_for_asignacion(conn_check, asignacion_id):
+                    return jsonify(
+                        success=False,
+                        message='Ya existe una solicitud activa (devolución o traspaso) para esta asignación.'
+                    ), 409
+            finally:
+                try:
+                    conn_check.close()
+                except Exception:
+                    pass
 
-        if not user_can_view_all():
-            oficina_id = session.get('oficina_id')
-            if oficina_id is None or int(asignacion.get('oficina_id') or 0) != int(oficina_id):
-                return jsonify({'success': False, 'message': 'No puede solicitar devolucion para otra oficina'}), 403
+        usuario_id = _session_user_id()
+        username = _session_username() or 'sistema'
 
-        max_cantidad = int(asignacion.get('cantidad_asignada') or 0)
-        if max_cantidad > 0 and cantidad > max_cantidad:
-            return jsonify({'success': False, 'message': f'Cantidad excede lo asignado ({max_cantidad})'}), 400
+        # Compatibilidad con diferentes firmas del Model (por si cambia nombre de parámetro)
+        try:
+            ok, msg = InventarioCorporativoModel.crear_solicitud_devolucion(
+                asignacion_id=asignacion_id,
+                cantidad=cantidad,
+                motivo=motivo,
+                usuario_solicita=(usuario_id if usuario_id is not None else str(username))
+            )
+        except TypeError:
+            # Fallback: algunos modelos esperan usuario_solicita_id
+            ok, msg = InventarioCorporativoModel.crear_solicitud_devolucion(
+                asignacion_id,
+                cantidad,
+                motivo,
+                (usuario_id if usuario_id is not None else str(username))
+            )
 
-        usuario_solicita = session.get('usuario_nombre') or session.get('usuario_id') or 'Sistema'
-
-        ok = InventarioCorporativoModel.crear_solicitud_devolucion(
-            asignacion_id=asignacion_id,
-            cantidad=cantidad,
-            usuario_solicita=str(usuario_solicita),
-            observacion=observacion
-        )
-
-        if ok:
-            return jsonify({'success': True, 'message': 'Solicitud de devolucion creada'}), 200
-        return jsonify({'success': False, 'message': 'No fue posible crear la solicitud'}), 500
+        return jsonify(success=ok, message=msg), (200 if ok else 400)
 
     except Exception as e:
-        logger.error("Error creando solicitud de devolucion (api): [error](%s)", type(e).__name__)
-        return jsonify({'success': False, 'message': 'Error interno'}), 500
-
+        logger.error(f"Error creando solicitud de devolucion (api): [error]({type(e).__name__})")
+        return jsonify(success=False, message='Error interno del servidor'), 500
 
 @inventario_corporativo_bp.route('/api/solicitar-traspaso', methods=['POST'])
 @login_required
 def api_solicitar_traspaso():
-    """Crea una solicitud de traspaso/traslado entre oficinas.
-
-    Seguridad:
-    - Requiere permiso inventario_corporativo.transfer
-    - Si el usuario NO puede ver todas las oficinas, valida que la asignacion pertenezca a su oficina.
-    """
+    """Crea una solicitud de traspaso entre oficinas para un ítem asignado."""
     try:
-        if not can_access('inventario_corporativo', 'transfer'):
-            return jsonify({'success': False, 'message': 'No tiene permisos para solicitar traspaso'}), 403
+        data = request.get_json(silent=True) or request.form or {}
 
-        data = request.get_json(silent=True) or {}
-        asignacion_id = int(data.get('asignacion_id') or 0)
-        oficina_destino_id = int(data.get('oficina_destino_id') or 0)
-        cantidad = int(data.get('cantidad') or 0)
-        observacion = (data.get('observacion') or '').strip()
+        asignacion_id = _safe_int(data.get('asignacion_id') or 0)
+        cantidad = _safe_int(data.get('cantidad') or 0)
+        destino_oficina_id = _safe_int(data.get('oficina_destino_id') or 0)
 
-        if asignacion_id <= 0 or oficina_destino_id <= 0 or cantidad <= 0:
-            return jsonify({'success': False, 'message': 'Datos invalidos'}), 400
+        destino_usuario = (
+            (data.get('destino_usuario') or data.get('usuario_destino') or data.get('destinoUsuario') or '')
+        ).strip()
 
-        asignacion = InventarioCorporativoModel.obtener_asignacion_por_id(asignacion_id)
-        if not asignacion:
-            return jsonify({'success': False, 'message': 'Asignacion no encontrada'}), 404
+        motivo = (data.get('motivo') or data.get('observaciones') or data.get('observacion') or '').strip()
 
-        if not user_can_view_all():
-            oficina_id = session.get('oficina_id')
-            if oficina_id is None or int(asignacion.get('oficina_id') or 0) != int(oficina_id):
-                return jsonify({'success': False, 'message': 'No puede solicitar traspaso para otra oficina'}), 403
+        if asignacion_id <= 0:
+            return jsonify(success=False, message='Asignación inválida.'), 400
+        if cantidad <= 0:
+            return jsonify(success=False, message='Cantidad inválida.'), 400
+        if destino_oficina_id <= 0:
+            return jsonify(success=False, message='Debe seleccionar la oficina destino.'), 400
+        if not destino_usuario:
+            return jsonify(success=False, message='Debe seleccionar el usuario destino.'), 400
+        if not motivo:
+            return jsonify(success=False, message='El motivo es obligatorio.'), 400
 
-        max_cantidad = int(asignacion.get('cantidad_asignada') or 0)
-        if max_cantidad > 0 and cantidad > max_cantidad:
-            return jsonify({'success': False, 'message': f'Cantidad excede lo asignado ({max_cantidad})'}), 400
+        # Bloqueo de duplicados activos (devolución/traspaso) por asignación
+        conn_check = get_database_connection()
+        if conn_check:
+            try:
+                if _has_active_request_for_asignacion(conn_check, asignacion_id):
+                    return jsonify(
+                        success=False,
+                        message='Ya existe una solicitud activa (devolución o traspaso) para esta asignación.'
+                    ), 409
+            finally:
+                try:
+                    conn_check.close()
+                except Exception:
+                    pass
 
-        usuario_solicita = session.get('usuario_nombre') or session.get('usuario_id') or 'Sistema'
+        usuario_id = _session_user_id()
+        username = _session_username() or 'sistema'
 
-        ok = InventarioCorporativoModel.crear_solicitud_traspaso(
-            asignacion_id=asignacion_id,
-            oficina_destino_id=oficina_destino_id,
-            cantidad=cantidad,
-            usuario_solicita=str(usuario_solicita),
-            observacion=observacion
-        )
+        # Compatibilidad de firmas (por si el modelo usa nombres distintos)
+        try:
+            ok, msg = InventarioCorporativoModel.crear_solicitud_traspaso(
+                asignacion_id=asignacion_id,
+                cantidad=cantidad,
+                destino_oficina_id=destino_oficina_id,
+                destino_usuario=destino_usuario,
+                motivo=motivo,
+                usuario_solicita=(usuario_id if usuario_id is not None else str(username))
+            )
+        except TypeError:
+            # Alternativas comunes de nombre de parámetro
+            try:
+                ok, msg = InventarioCorporativoModel.crear_solicitud_traspaso(
+                    asignacion_id=asignacion_id,
+                    cantidad=cantidad,
+                    oficina_destino_id=destino_oficina_id,
+                    usuario_destino=destino_usuario,
+                    motivo=motivo,
+                    usuario_solicita=(usuario_id if usuario_id is not None else str(username))
+                )
+            except TypeError:
+                # Fallback posicional
+                ok, msg = InventarioCorporativoModel.crear_solicitud_traspaso(
+                    asignacion_id, cantidad, destino_oficina_id, destino_usuario, motivo,
+                    (usuario_id if usuario_id is not None else str(username))
+                )
 
-        if ok:
-            return jsonify({'success': True, 'message': 'Solicitud de traspaso creada'}), 200
-        return jsonify({'success': False, 'message': 'No fue posible crear la solicitud'}), 500
+        return jsonify(success=ok, message=msg), (200 if ok else 400)
 
     except Exception as e:
-        logger.error("Error creando solicitud de traspaso (api): [error](%s)", type(e).__name__)
-        return jsonify({'success': False, 'message': 'Error interno'}), 500
+        logger.error(f"Error creando solicitud de traspaso (api): [error]({type(e).__name__})")
+        return jsonify(success=False, message='Error interno del servidor'), 500
+
+
+
+# ============================================================================
+# API: LDAP - BÚSQUEDA DE USUARIOS (AUTOCOMPLETE)
+# ============================================================================
+@inventario_corporativo_bp.route('/api/ldap/buscar-usuarios', methods=['GET'])
+@login_required
+def api_ldap_buscar_usuarios():
+    """Busca usuarios en Active Directory por nombre/usuario/email (para traspasos)."""
+    try:
+        term = (request.args.get('term') or request.args.get('q') or '').strip()
+        if len(term) < 2:
+            return jsonify({'success': True, 'users': []})
+
+        # limitar para no cargar el AD
+        term = term[:80]
+
+        from utils.ldap_auth import ADAuth
+        ad = ADAuth()
+        users = ad.search_user_by_name(term) or []
+
+        # Normalizar y limitar
+        out = []
+        for u in users[:10]:
+            out.append({
+                'nombre': u.get('nombre') or '',
+                'usuario': u.get('usuario') or '',
+                'email': u.get('email') or '',
+                'departamento': u.get('departamento') or ''
+            })
+        return jsonify({'success': True, 'users': out})
+    except Exception as e:
+        logger.error(f"Error LDAP buscar usuarios: [error]({type(e).__name__})")
+        return jsonify({'success': False, 'users': [], 'message': 'Error consultando directorio activo'}), 500
+
+# ============================================================================
+# API: APROBACIÓN (DEVOLUCIÓN / TRASPASO) PARA ROLES APROBADORES / ADMIN
+# ============================================================================
+
+def _fetchall_dict(cursor):
+    """Convierte un cursor pyodbc en lista de dict."""
+    cols = [c[0] for c in cursor.description]
+    return [dict(zip(cols, row)) for row in cursor.fetchall()]
+
+
+def _safe_int(v, default=0):
+    try:
+        return int(v)
+    except Exception:
+        return default
+
+def _session_user_id():
+    # En el proyecto se usa 'usuario_id' para el ID numérico
+    for k in ('usuario_id', 'user_id', 'UsuarioId', 'id_usuario'):
+        v = session.get(k)
+        if v is not None:
+            try:
+                return int(v)
+            except Exception:
+                pass
+    return None
+
+def _session_username():
+    for k in ('usuario', 'username', 'usuario_nombre', 'Usuario', 'UserName'):
+        v = session.get(k)
+        if v:
+            return str(v)
+    return None
+
+def _table_exists(cur, table_name: str) -> bool:
+    cur.execute(
+        """SELECT 1
+           FROM INFORMATION_SCHEMA.TABLES
+           WHERE TABLE_SCHEMA='dbo' AND TABLE_NAME=?""",
+        (table_name,)
+    )
+    return cur.fetchone() is not None
+
+def _column_exists(cur, table_name: str, column_name: str) -> bool:
+    cur.execute(
+        """SELECT 1
+           FROM INFORMATION_SCHEMA.COLUMNS
+           WHERE TABLE_SCHEMA='dbo' AND TABLE_NAME=? AND COLUMN_NAME=?""",
+        (table_name, column_name)
+    )
+    return cur.fetchone() is not None
+
+def _first_existing_column(cur, table_name: str, candidates):
+    for c in candidates:
+        if _column_exists(cur, table_name, c):
+            return c
+    return None
+
+def _has_active_request_for_asignacion(conn, asignacion_id: int):
+    """Evita duplicados: si existe devolucion/traspaso activo no finalizado para la misma Asignación."""
+    try:
+        cur = conn.cursor()
+
+        # Tablas (si existen en esta BD)
+        devol_table = 'DevolucionesInventarioCorporativo'
+        tras_table  = 'TraspasosInventarioCorporativo'
+
+        has_dev = False
+        has_tra = False
+
+        if _table_exists(cur, devol_table):
+            estado_col = _first_existing_column(cur, devol_table, ['EstadoDevolucion', 'Estado', 'estado'])
+            activo_col = _first_existing_column(cur, devol_table, ['Activo', 'activo'])
+            asig_col   = _first_existing_column(cur, devol_table, ['AsignacionId', 'asignacion_id'])
+            if asig_col:
+                where = f"{asig_col} = ?"
+                params = [asignacion_id]
+                if activo_col:
+                    where += f" AND {activo_col} = 1"
+                if estado_col:
+                    # 'APROBADO/RECHAZADO' son los estados usados en el blueprint; si la BD usa otros, sigue funcionando por NOT IN
+                    where += f" AND ( {estado_col} IS NULL OR UPPER({estado_col}) NOT IN ('APROBADO','RECHAZADO') )"
+                cur.execute(f"SELECT TOP 1 1 FROM dbo.{devol_table} WHERE {where}", params)
+                has_dev = cur.fetchone() is not None
+
+        if _table_exists(cur, tras_table):
+            estado_col = _first_existing_column(cur, tras_table, ['EstadoTraspaso', 'Estado', 'estado'])
+            activo_col = _first_existing_column(cur, tras_table, ['Activo', 'activo'])
+            asig_col   = _first_existing_column(cur, tras_table, ['AsignacionId', 'asignacion_id'])
+            if asig_col:
+                where = f"{asig_col} = ?"
+                params = [asignacion_id]
+                if activo_col:
+                    where += f" AND {activo_col} = 1"
+                if estado_col:
+                    where += f" AND ( {estado_col} IS NULL OR UPPER({estado_col}) NOT IN ('APROBADO','RECHAZADO') )"
+                cur.execute(f"SELECT TOP 1 1 FROM dbo.{tras_table} WHERE {where}", params)
+                has_tra = cur.fetchone() is not None
+
+        return has_dev or has_tra
+
+    except Exception:
+        # Si no se puede validar (por permisos/esquema), no bloqueamos el flujo
+        return False
+
+
+@inventario_corporativo_bp.route('/api/solicitudes-pendientes', methods=['GET'])
+@login_required
+def api_solicitudes_pendientes_inventario():
+    """Lista solicitudes pendientes (devoluciones/traspasos) para aprobación."""
+    if not _can_approve_inv_requests():
+        return jsonify({'success': False, 'message': 'No autorizado'}), 403
+
+    conn = get_database_connection()
+    if not conn:
+        return jsonify({'success': False, 'message': 'No hay conexión a base de datos'}), 500
+
+    try:
+        cur = conn.cursor()
+
+        # Devoluciones (pendientes = cualquier estado distinto de Aprobado/Rechazado, y activo=1)
+        q_devol = """
+            SELECT
+                'DEVOLUCION' AS tipo,
+                d.DevolucionId AS solicitud_id,
+                d.AsignacionId AS asignacion_id,
+                d.ProductoId AS producto_id,
+                p.NombreProducto AS producto_nombre,
+                d.OficinaId AS oficina_origen_id,
+                o.NombreOficina AS oficina_origen_nombre,
+                NULL AS oficina_destino_id,
+                NULL AS oficina_destino_nombre,
+                d.Cantidad AS cantidad,
+                d.Motivo AS motivo,
+                d.EstadoDevolucion AS estado,
+                d.UsuarioSolicita AS usuario_solicita,
+                d.FechaSolicitud AS fecha_solicitud,
+                a.UsuarioADNombre AS usuario_origen_nombre,
+                a.UsuarioADEmail AS usuario_origen_email
+            FROM dbo.DevolucionesInventarioCorporativo d
+            INNER JOIN dbo.ProductosCorporativos p ON p.ProductoId = d.ProductoId
+            INNER JOIN dbo.Oficinas o ON o.OficinaId = d.OficinaId
+            LEFT JOIN dbo.Asignaciones a ON a.AsignacionId = d.AsignacionId
+            WHERE d.Activo = 1
+              AND UPPER(ISNULL(d.EstadoDevolucion,'')) NOT IN ('APROBADO','RECHAZADO')
+        """
+
+        # Traspasos
+        q_tras = """
+            SELECT
+                'TRASPASO' AS tipo,
+                t.TraspasoId AS solicitud_id,
+                t.AsignacionOrigenId AS asignacion_id,
+                t.ProductoId AS producto_id,
+                p.NombreProducto AS producto_nombre,
+                t.OficinaOrigenId AS oficina_origen_id,
+                o1.NombreOficina AS oficina_origen_nombre,
+                t.OficinaDestinoId AS oficina_destino_id,
+                o2.NombreOficina AS oficina_destino_nombre,
+                t.Cantidad AS cantidad,
+                t.Motivo AS motivo,
+                t.EstadoTraspaso AS estado,
+                t.UsuarioSolicita AS usuario_solicita,
+                t.FechaSolicitud AS fecha_solicitud,
+                a.UsuarioADNombre AS usuario_origen_nombre,
+                a.UsuarioADEmail AS usuario_origen_email
+            FROM dbo.TraspasosInventarioCorporativo t
+            INNER JOIN dbo.ProductosCorporativos p ON p.ProductoId = t.ProductoId
+            INNER JOIN dbo.Oficinas o1 ON o1.OficinaId = t.OficinaOrigenId
+            INNER JOIN dbo.Oficinas o2 ON o2.OficinaId = t.OficinaDestinoId
+            LEFT JOIN dbo.Asignaciones a ON a.AsignacionId = t.AsignacionOrigenId
+            WHERE t.Activo = 1
+              AND UPPER(ISNULL(t.EstadoTraspaso,'')) NOT IN ('APROBADO','RECHAZADO')
+        """
+
+        cur.execute(q_devol)
+        devol = _fetchall_dict(cur)
+
+        cur.execute(q_tras)
+        tras = _fetchall_dict(cur)
+
+        # Ordenar por fecha desc
+        data = devol + tras
+        data.sort(key=lambda x: x.get('fecha_solicitud') or datetime.min, reverse=True)
+
+        return jsonify({'success': True, 'data': data})
+
+    except Exception as e:
+        logger.error(f"Error listando solicitudes pendientes inventario: [error]({type(e).__name__})")
+        return jsonify({'success': False, 'message': 'Error interno del servidor'}), 500
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+@inventario_corporativo_bp.route('/api/solicitudes/aprobar', methods=['POST'])
+@login_required
+def api_aprobar_solicitud_inventario():
+    """Aprueba una solicitud (devolución/traspaso) sin romper esquemas distintos."""
+    if not _can_approve_inv_requests():
+        return jsonify({'success': False, 'message': 'No autorizado'}), 403
+
+    data = request.get_json(silent=True) or request.form or {}
+    tipo = (data.get('tipo') or '').strip().upper()
+    solicitud_id = _safe_int(data.get('solicitud_id') or 0)
+    observaciones = (data.get('observaciones') or '').strip()
+
+    if solicitud_id <= 0 or tipo not in {'DEVOLUCION', 'TRASPASO'}:
+        return jsonify({'success': False, 'message': 'Solicitud inválida'}), 400
+
+    conn = get_database_connection()
+    if not conn:
+        return jsonify({'success': False, 'message': 'No hay conexión a base de datos'}), 500
+
+    try:
+        cur = conn.cursor()
+
+        if tipo == 'DEVOLUCION':
+            table = 'DevolucionesInventarioCorporativo'
+            id_col = _first_existing_column(cur, table, ['DevolucionId', 'Id', 'devolucion_id'])
+            estado_col = _first_existing_column(cur, table, ['EstadoDevolucion', 'Estado', 'estado'])
+        else:
+            table = 'TraspasosInventarioCorporativo'
+            id_col = _first_existing_column(cur, table, ['TraspasoId', 'Id', 'traspaso_id'])
+            estado_col = _first_existing_column(cur, table, ['EstadoTraspaso', 'Estado', 'estado'])
+
+        if not _table_exists(cur, table) or not id_col or not estado_col:
+            return jsonify({'success': False, 'message': 'Estructura de BD no compatible para aprobar'}), 500
+
+        usuario_id = _session_user_id()
+        username = _session_username() or 'sistema'
+
+        usuario_col = _first_existing_column(cur, table, ['UsuarioApruebaId', 'UsuarioAprueba', 'AprobadoPor', 'AprobadoPorId'])
+        fecha_col   = _first_existing_column(cur, table, ['FechaAprobacion', 'FechaAprobado', 'FechaGestion', 'FechaGestionAprobacion'])
+        obs_col     = _first_existing_column(cur, table, ['ObservacionesAprobacion', 'ObservacionAprobacion', 'Observaciones', 'Observacion'])
+        activo_col  = _first_existing_column(cur, table, ['Activo', 'activo'])
+
+        sets = [f"{estado_col} = ?"]
+        params = ['APROBADO']
+
+        if usuario_col:
+            if usuario_col.lower().endswith('id') and usuario_id is not None:
+                sets.append(f"{usuario_col} = ?")
+                params.append(int(usuario_id))
+            else:
+                sets.append(f"{usuario_col} = ?")
+                params.append(str(username))
+
+        if fecha_col:
+            sets.append(f"{fecha_col} = GETDATE()")
+
+        if obs_col:
+            sets.append(f"{obs_col} = ?")
+            params.append(observaciones or '')
+
+        where = f"{id_col} = ?"
+        params.append(solicitud_id)
+
+        if activo_col:
+            where += f" AND {activo_col} = 1"
+
+        sql = f"UPDATE dbo.{table} SET " + ", ".join(sets) + " WHERE " + where
+        cur.execute(sql, tuple(params))
+        conn.commit()
+
+        if cur.rowcount <= 0:
+            return jsonify({'success': False, 'message': 'No se encontró la solicitud o ya fue gestionada'}), 404
+
+        return jsonify({'success': True, 'message': 'Solicitud aprobada'})
+
+    except Exception as e:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        logger.error(f"Error aprobando solicitud inventario: [error]({type(e).__name__})")
+        return jsonify({'success': False, 'message': 'Error interno del servidor'}), 500
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+@inventario_corporativo_bp.route('/api/solicitudes/rechazar', methods=['POST'])
+@login_required
+def api_rechazar_solicitud_inventario():
+    """Rechaza una solicitud (devolución/traspaso) sin romper esquemas distintos."""
+    if not _can_approve_inv_requests():
+        return jsonify({'success': False, 'message': 'No autorizado'}), 403
+
+    data = request.get_json(silent=True) or request.form or {}
+    tipo = (data.get('tipo') or '').strip().upper()
+    solicitud_id = _safe_int(data.get('solicitud_id') or 0)
+    observaciones = (data.get('observaciones') or '').strip()
+
+    if solicitud_id <= 0 or tipo not in {'DEVOLUCION', 'TRASPASO'}:
+        return jsonify({'success': False, 'message': 'Solicitud inválida'}), 400
+
+    conn = get_database_connection()
+    if not conn:
+        return jsonify({'success': False, 'message': 'No hay conexión a base de datos'}), 500
+
+    try:
+        cur = conn.cursor()
+
+        if tipo == 'DEVOLUCION':
+            table = 'DevolucionesInventarioCorporativo'
+            id_col = _first_existing_column(cur, table, ['DevolucionId', 'Id', 'devolucion_id'])
+            estado_col = _first_existing_column(cur, table, ['EstadoDevolucion', 'Estado', 'estado'])
+        else:
+            table = 'TraspasosInventarioCorporativo'
+            id_col = _first_existing_column(cur, table, ['TraspasoId', 'Id', 'traspaso_id'])
+            estado_col = _first_existing_column(cur, table, ['EstadoTraspaso', 'Estado', 'estado'])
+
+        if not _table_exists(cur, table) or not id_col or not estado_col:
+            return jsonify({'success': False, 'message': 'Estructura de BD no compatible para rechazar'}), 500
+
+        usuario_id = _session_user_id()
+        username = _session_username() or 'sistema'
+
+        usuario_col = _first_existing_column(cur, table, ['UsuarioApruebaId', 'UsuarioAprueba', 'AprobadoPor', 'AprobadoPorId'])
+        fecha_col   = _first_existing_column(cur, table, ['FechaAprobacion', 'FechaAprobado', 'FechaGestion', 'FechaGestionAprobacion'])
+        obs_col     = _first_existing_column(cur, table, ['ObservacionesAprobacion', 'ObservacionAprobacion', 'Observaciones', 'Observacion'])
+        activo_col  = _first_existing_column(cur, table, ['Activo', 'activo'])
+
+        sets = [f"{estado_col} = ?"]
+        params = ['RECHAZADO']
+
+        if usuario_col:
+            if usuario_col.lower().endswith('id') and usuario_id is not None:
+                sets.append(f"{usuario_col} = ?")
+                params.append(int(usuario_id))
+            else:
+                sets.append(f"{usuario_col} = ?")
+                params.append(str(username))
+
+        if fecha_col:
+            sets.append(f"{fecha_col} = GETDATE()")
+
+        if obs_col:
+            sets.append(f"{obs_col} = ?")
+            params.append(observaciones or '')
+
+        where = f"{id_col} = ?"
+        params.append(solicitud_id)
+
+        if activo_col:
+            where += f" AND {activo_col} = 1"
+
+        sql = f"UPDATE dbo.{table} SET " + ", ".join(sets) + " WHERE " + where
+        cur.execute(sql, tuple(params))
+        conn.commit()
+
+        if cur.rowcount <= 0:
+            return jsonify({'success': False, 'message': 'No se encontró la solicitud o ya fue gestionada'}), 404
+
+        return jsonify({'success': True, 'message': 'Solicitud rechazada'})
+
+    except Exception as e:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        logger.error(f"Error rechazando solicitud inventario: [error]({type(e).__name__})")
+        return jsonify({'success': False, 'message': 'Error interno del servidor'}), 500
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+

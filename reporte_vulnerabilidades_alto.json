@@ -1,5 +1,5 @@
 {
-  "fecha_validacion": "2026-01-20T16:58:09.415479",
+  "fecha_validacion": "2026-01-21T12:24:13.986276",
   "ruta_raiz": "C:\\Users\\sinventarios\\source\\repos\\sugipq",
   "configuracion": {
     "carpetas_excluidas": [
@@ -33,12 +33,12 @@
   },
   "resumen": {
     "total_vulnerabilidades_encontradas": 41,
-    "total_vulnerabilidades_corregidas": 101,
-    "total_validaciones": 190,
+    "total_vulnerabilidades_corregidas": 112,
+    "total_validaciones": 210,
     "archivos_afectados": 16,
     "archivos_seguros": 5,
     "archivos_excluidos": 6,
-    "carpetas_excluidas": 16
+    "carpetas_excluidas": 10
   },
   "archivos_problematicos": [
     {
@@ -234,7 +234,7 @@
       "linea": 506,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.397392"
+      "timestamp": "2026-01-21T12:24:10.941257"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -242,7 +242,7 @@
       "linea": 531,
       "estado": "CORREGIDO",
       "detalle": "Usa sanitización: Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.397392"
+      "timestamp": "2026-01-21T12:24:10.941257"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -250,7 +250,7 @@
       "linea": 610,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.397392"
+      "timestamp": "2026-01-21T12:24:10.941257"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -258,7 +258,7 @@
       "linea": 662,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.397392"
+      "timestamp": "2026-01-21T12:24:10.941257"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -266,7 +266,7 @@
       "linea": 676,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.397392"
+      "timestamp": "2026-01-21T12:24:10.941257"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -274,7 +274,7 @@
       "linea": 729,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.397392"
+      "timestamp": "2026-01-21T12:24:10.941257"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -282,7 +282,7 @@
       "linea": 787,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.397392"
+      "timestamp": "2026-01-21T12:24:10.941257"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -290,7 +290,7 @@
       "linea": 797,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.397392"
+      "timestamp": "2026-01-21T12:24:10.941257"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -298,7 +298,7 @@
       "linea": 877,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.397392"
+      "timestamp": "2026-01-21T12:24:10.942256"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -306,7 +306,7 @@
       "linea": 111,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.413419"
+      "timestamp": "2026-01-21T12:24:10.945258"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -314,7 +314,7 @@
       "linea": 123,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.413419"
+      "timestamp": "2026-01-21T12:24:10.945258"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -322,7 +322,7 @@
       "linea": 35,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.429224"
+      "timestamp": "2026-01-21T12:24:10.968261"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -330,7 +330,7 @@
       "linea": 41,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.429224"
+      "timestamp": "2026-01-21T12:24:10.968261"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -338,7 +338,7 @@
       "linea": 47,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.429224"
+      "timestamp": "2026-01-21T12:24:10.968261"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -346,7 +346,7 @@
       "linea": 51,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.429224"
+      "timestamp": "2026-01-21T12:24:10.968261"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -354,7 +354,7 @@
       "linea": 64,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.429224"
+      "timestamp": "2026-01-21T12:24:10.968261"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -362,7 +362,7 @@
       "linea": 67,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.429224"
+      "timestamp": "2026-01-21T12:24:10.968261"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -370,7 +370,7 @@
       "linea": 73,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.429224"
+      "timestamp": "2026-01-21T12:24:10.968261"
     },
     {
       "categoria": "CWE-117: Log Injection",
@@ -378,7 +378,7 @@
       "linea": 87,
       "estado": "VULNERABLE",
       "detalle": "Datos sensibles sin sanitizar en log",
-      "timestamp": "2026-01-20T16:58:06.429224"
+      "timestamp": "2026-01-21T12:24:10.968261"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -386,7 +386,7 @@
       "linea": 106,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.780938"
+      "timestamp": "2026-01-21T12:24:11.315264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -394,7 +394,7 @@
       "linea": 261,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.780938"
+      "timestamp": "2026-01-21T12:24:11.315264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -402,7 +402,7 @@
       "linea": 297,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.780938"
+      "timestamp": "2026-01-21T12:24:11.315264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -410,7 +410,7 @@
       "linea": 319,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.780938"
+      "timestamp": "2026-01-21T12:24:11.315264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -418,7 +418,7 @@
       "linea": 339,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.780938"
+      "timestamp": "2026-01-21T12:24:11.316264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -426,7 +426,7 @@
       "linea": 357,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.780938"
+      "timestamp": "2026-01-21T12:24:11.316264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -434,7 +434,7 @@
       "linea": 371,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.780938"
+      "timestamp": "2026-01-21T12:24:11.316264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -442,7 +442,7 @@
       "linea": 390,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.780938"
+      "timestamp": "2026-01-21T12:24:11.316264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -450,7 +450,7 @@
       "linea": 428,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.780938"
+      "timestamp": "2026-01-21T12:24:11.316264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -458,7 +458,7 @@
       "linea": 553,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.781935"
+      "timestamp": "2026-01-21T12:24:11.317264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -466,7 +466,7 @@
       "linea": 656,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.781935"
+      "timestamp": "2026-01-21T12:24:11.317264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -474,7 +474,7 @@
       "linea": 746,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.781935"
+      "timestamp": "2026-01-21T12:24:11.317264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -482,7 +482,7 @@
       "linea": 769,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.781935"
+      "timestamp": "2026-01-21T12:24:11.317264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -490,7 +490,7 @@
       "linea": 802,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.781935"
+      "timestamp": "2026-01-21T12:24:11.317264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -498,7 +498,7 @@
       "linea": 838,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.781935"
+      "timestamp": "2026-01-21T12:24:11.317264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -506,7 +506,7 @@
       "linea": 975,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.781935"
+      "timestamp": "2026-01-21T12:24:11.317264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -514,7 +514,7 @@
       "linea": 1003,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.781935"
+      "timestamp": "2026-01-21T12:24:11.317264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -522,7 +522,7 @@
       "linea": 468,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.783937"
+      "timestamp": "2026-01-21T12:24:11.319264"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -530,7 +530,7 @@
       "linea": 255,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.785936"
+      "timestamp": "2026-01-21T12:24:11.321263"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -538,7 +538,7 @@
       "linea": 300,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.785936"
+      "timestamp": "2026-01-21T12:24:11.321263"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -546,7 +546,7 @@
       "linea": 421,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.785936"
+      "timestamp": "2026-01-21T12:24:11.322263"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -554,7 +554,7 @@
       "linea": 470,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.785936"
+      "timestamp": "2026-01-21T12:24:11.322263"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -562,7 +562,7 @@
       "linea": 521,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.785936"
+      "timestamp": "2026-01-21T12:24:11.322263"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -570,7 +570,7 @@
       "linea": 567,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.785936"
+      "timestamp": "2026-01-21T12:24:11.322263"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -578,7 +578,7 @@
       "linea": 160,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.787975"
+      "timestamp": "2026-01-21T12:24:11.325263"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -586,7 +586,79 @@
       "linea": 301,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.787975"
+      "timestamp": "2026-01-21T12:24:11.327268"
+    },
+    {
+      "categoria": "CWE-209: Information Exposure",
+      "archivo": "blueprints\\inventario_corporativo.py",
+      "linea": 318,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-21T12:24:11.328263"
+    },
+    {
+      "categoria": "CWE-209: Information Exposure",
+      "archivo": "blueprints\\inventario_corporativo.py",
+      "linea": 373,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-21T12:24:11.328263"
+    },
+    {
+      "categoria": "CWE-209: Information Exposure",
+      "archivo": "blueprints\\inventario_corporativo.py",
+      "linea": 398,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-21T12:24:11.328263"
+    },
+    {
+      "categoria": "CWE-209: Information Exposure",
+      "archivo": "blueprints\\inventario_corporativo.py",
+      "linea": 500,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-21T12:24:11.329352"
+    },
+    {
+      "categoria": "CWE-209: Information Exposure",
+      "archivo": "blueprints\\inventario_corporativo.py",
+      "linea": 524,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-21T12:24:11.329352"
+    },
+    {
+      "categoria": "CWE-209: Information Exposure",
+      "archivo": "blueprints\\inventario_corporativo.py",
+      "linea": 564,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-21T12:24:11.329352"
+    },
+    {
+      "categoria": "CWE-209: Information Exposure",
+      "archivo": "blueprints\\inventario_corporativo.py",
+      "linea": 598,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-21T12:24:11.329352"
+    },
+    {
+      "categoria": "CWE-209: Information Exposure",
+      "archivo": "blueprints\\inventario_corporativo.py",
+      "linea": 622,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-21T12:24:11.329352"
+    },
+    {
+      "categoria": "CWE-209: Information Exposure",
+      "archivo": "blueprints\\inventario_corporativo.py",
+      "linea": 652,
+      "estado": "REVISAR",
+      "detalle": "Excepción en log sin sanitizar",
+      "timestamp": "2026-01-21T12:24:11.329352"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -594,7 +666,7 @@
       "linea": 50,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.787975"
+      "timestamp": "2026-01-21T12:24:11.331262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -602,7 +674,7 @@
       "linea": 81,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.787975"
+      "timestamp": "2026-01-21T12:24:11.331262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -610,7 +682,7 @@
       "linea": 115,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.787975"
+      "timestamp": "2026-01-21T12:24:11.331262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -618,7 +690,7 @@
       "linea": 225,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.787975"
+      "timestamp": "2026-01-21T12:24:11.331262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -626,7 +698,7 @@
       "linea": 323,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.787975"
+      "timestamp": "2026-01-21T12:24:11.331262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -634,7 +706,7 @@
       "linea": 361,
       "estado": "REVISAR",
       "detalle": "Excepción en log sin sanitizar",
-      "timestamp": "2026-01-20T16:58:06.787975"
+      "timestamp": "2026-01-21T12:24:11.331262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -642,7 +714,7 @@
       "linea": 277,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.358259"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -650,7 +722,7 @@
       "linea": 188,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.359266"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -658,7 +730,7 @@
       "linea": 93,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.360262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -666,7 +738,7 @@
       "linea": 204,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.360262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -674,7 +746,7 @@
       "linea": 238,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.361266"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -682,7 +754,7 @@
       "linea": 272,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.361266"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -690,7 +762,7 @@
       "linea": 312,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.361266"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -698,7 +770,7 @@
       "linea": 379,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.361266"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -706,7 +778,7 @@
       "linea": 502,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.365262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -714,7 +786,7 @@
       "linea": 741,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.366262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -722,7 +794,7 @@
       "linea": 1000,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.366262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -730,7 +802,7 @@
       "linea": 1080,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.818325"
+      "timestamp": "2026-01-21T12:24:11.367262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -738,7 +810,7 @@
       "linea": 285,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.833963"
+      "timestamp": "2026-01-21T12:24:11.371258"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -746,7 +818,7 @@
       "linea": 435,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.833963"
+      "timestamp": "2026-01-21T12:24:11.372262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -754,7 +826,7 @@
       "linea": 570,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.833963"
+      "timestamp": "2026-01-21T12:24:11.372262"
     },
     {
       "categoria": "CWE-209: Information Exposure",
@@ -762,7 +834,7 @@
       "linea": 631,
       "estado": "REVISAR",
       "detalle": "Stack trace expuesto",
-      "timestamp": "2026-01-20T16:58:06.833963"
+      "timestamp": "2026-01-21T12:24:11.372262"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -770,7 +842,7 @@
       "linea": 87,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.460882"
+      "timestamp": "2026-01-21T12:24:12.006266"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -778,7 +850,7 @@
       "linea": 63,
       "estado": "VULNERABLE",
       "detalle": "Campo username sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.460882"
+      "timestamp": "2026-01-21T12:24:12.008266"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -786,7 +858,7 @@
       "linea": 70,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.460882"
+      "timestamp": "2026-01-21T12:24:12.008266"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -794,7 +866,7 @@
       "linea": 130,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.460882"
+      "timestamp": "2026-01-21T12:24:12.010265"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -802,7 +874,7 @@
       "linea": 148,
       "estado": "VULNERABLE",
       "detalle": "Campo username sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.474394"
+      "timestamp": "2026-01-21T12:24:12.014266"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -810,7 +882,7 @@
       "linea": 150,
       "estado": "VULNERABLE",
       "detalle": "Campo email sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.474394"
+      "timestamp": "2026-01-21T12:24:12.014266"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -818,7 +890,7 @@
       "linea": 85,
       "estado": "VULNERABLE",
       "detalle": "Campo email sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.531285"
+      "timestamp": "2026-01-21T12:24:12.079266"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -826,7 +898,7 @@
       "linea": 94,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.531285"
+      "timestamp": "2026-01-21T12:24:12.079266"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -834,7 +906,7 @@
       "linea": 139,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.533290"
+      "timestamp": "2026-01-21T12:24:12.082266"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -842,7 +914,7 @@
       "linea": 145,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.533290"
+      "timestamp": "2026-01-21T12:24:12.082266"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -850,7 +922,7 @@
       "linea": 340,
       "estado": "VULNERABLE",
       "detalle": "Campo email sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.536283"
+      "timestamp": "2026-01-21T12:24:12.085268"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -858,7 +930,7 @@
       "linea": 346,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.536283"
+      "timestamp": "2026-01-21T12:24:12.085268"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -866,7 +938,7 @@
       "linea": 352,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.536283"
+      "timestamp": "2026-01-21T12:24:12.085268"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -874,7 +946,7 @@
       "linea": 402,
       "estado": "VULNERABLE",
       "detalle": "Campo password sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.536283"
+      "timestamp": "2026-01-21T12:24:12.085268"
     },
     {
       "categoria": "CWE-525: Autocomplete Enabled",
@@ -882,7 +954,7 @@
       "linea": 605,
       "estado": "VULNERABLE",
       "detalle": "Campo email sin autocomplete='off'",
-      "timestamp": "2026-01-20T16:58:07.537397"
+      "timestamp": "2026-01-21T12:24:12.086266"
     },
     {
       "categoria": "CWE-200: Hardcoded IP",
@@ -890,7 +962,7 @@
       "linea": 45,
       "estado": "CORREGIDO",
       "detalle": "IP 10.60.0.30 cargada desde variable de entorno",
-      "timestamp": "2026-01-20T16:58:07.902612"
+      "timestamp": "2026-01-21T12:24:12.456266"
     },
     {
       "categoria": "CWE-200: Hardcoded IP",
@@ -898,7 +970,7 @@
       "linea": 11,
       "estado": "CORREGIDO",
       "detalle": "IP 10.60.0.30 cargada desde variable de entorno",
-      "timestamp": "2026-01-20T16:58:07.902612"
+      "timestamp": "2026-01-21T12:24:12.456266"
     },
     {
       "categoria": "CWE-200: Hardcoded IP",
@@ -906,135 +978,7 @@
       "linea": 28,
       "estado": "CORREGIDO",
       "detalle": "IP 10.60.0.31 cargada desde variable de entorno",
-      "timestamp": "2026-01-20T16:58:07.918640"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 963,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 971,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 979,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 987,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 995,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 1003,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 1011,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 1019,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 1027,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 1035,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 1043,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 1051,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 1059,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 1067,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 1075,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
-    },
-    {
-      "categoria": "CWE-1022: Tabnabbing",
-      "archivo": "reporte_vulnerabilidades_alto.html",
-      "linea": 1083,
-      "estado": "CORREGIDO",
-      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.473267"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1042,7 +986,7 @@
       "linea": 1091,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1050,7 +994,7 @@
       "linea": 1099,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1058,7 +1002,7 @@
       "linea": 1107,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1066,7 +1010,7 @@
       "linea": 1115,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1074,7 +1018,7 @@
       "linea": 1123,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1082,7 +1026,7 @@
       "linea": 1131,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1090,7 +1034,7 @@
       "linea": 1139,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1098,7 +1042,7 @@
       "linea": 1147,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1106,7 +1050,7 @@
       "linea": 1155,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1114,7 +1058,7 @@
       "linea": 1163,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1122,7 +1066,7 @@
       "linea": 1171,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1130,7 +1074,7 @@
       "linea": 1179,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1138,7 +1082,7 @@
       "linea": 1187,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1146,7 +1090,7 @@
       "linea": 1195,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1154,7 +1098,7 @@
       "linea": 1203,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1162,7 +1106,7 @@
       "linea": 1211,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1170,7 +1114,7 @@
       "linea": 1219,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1178,7 +1122,7 @@
       "linea": 1227,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1186,7 +1130,7 @@
       "linea": 1235,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1194,7 +1138,7 @@
       "linea": 1243,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1202,7 +1146,7 @@
       "linea": 1251,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1210,7 +1154,7 @@
       "linea": 1259,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1218,7 +1162,7 @@
       "linea": 1267,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1226,7 +1170,7 @@
       "linea": 1275,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1234,7 +1178,7 @@
       "linea": 1283,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1242,7 +1186,7 @@
       "linea": 1291,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1250,7 +1194,7 @@
       "linea": 1299,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1258,7 +1202,7 @@
       "linea": 1307,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1266,7 +1210,7 @@
       "linea": 1315,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1274,7 +1218,7 @@
       "linea": 1323,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1282,7 +1226,7 @@
       "linea": 1331,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1290,7 +1234,7 @@
       "linea": 1339,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1298,7 +1242,7 @@
       "linea": 1347,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1306,7 +1250,7 @@
       "linea": 1355,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1314,7 +1258,7 @@
       "linea": 1363,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1322,7 +1266,7 @@
       "linea": 1371,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1330,7 +1274,7 @@
       "linea": 1379,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1338,7 +1282,7 @@
       "linea": 1387,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1346,7 +1290,7 @@
       "linea": 1395,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1354,7 +1298,7 @@
       "linea": 1403,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1362,7 +1306,7 @@
       "linea": 1411,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1370,7 +1314,7 @@
       "linea": 1419,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1378,7 +1322,7 @@
       "linea": 1427,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1386,7 +1330,7 @@
       "linea": 1435,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1394,7 +1338,7 @@
       "linea": 1443,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1402,7 +1346,7 @@
       "linea": 1451,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1410,7 +1354,7 @@
       "linea": 1459,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1418,7 +1362,7 @@
       "linea": 1467,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1426,7 +1370,7 @@
       "linea": 1475,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1434,7 +1378,7 @@
       "linea": 1483,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1442,7 +1386,7 @@
       "linea": 1491,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1450,7 +1394,7 @@
       "linea": 1499,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1458,7 +1402,7 @@
       "linea": 1507,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1466,7 +1410,7 @@
       "linea": 1515,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1474,7 +1418,7 @@
       "linea": 1523,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1482,7 +1426,7 @@
       "linea": 1531,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1490,7 +1434,7 @@
       "linea": 1539,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1498,7 +1442,7 @@
       "linea": 1547,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1506,7 +1450,7 @@
       "linea": 1555,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1514,7 +1458,7 @@
       "linea": 1563,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1522,7 +1466,7 @@
       "linea": 1571,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1530,7 +1474,7 @@
       "linea": 1579,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1538,7 +1482,7 @@
       "linea": 1587,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1546,7 +1490,7 @@
       "linea": 1595,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1554,7 +1498,7 @@
       "linea": 1603,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1562,7 +1506,7 @@
       "linea": 1611,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1570,7 +1514,7 @@
       "linea": 1619,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1578,7 +1522,7 @@
       "linea": 1627,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1586,7 +1530,7 @@
       "linea": 1635,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1594,7 +1538,7 @@
       "linea": 1643,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1602,7 +1546,7 @@
       "linea": 1651,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1610,7 +1554,223 @@
       "linea": 1659,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1667,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1675,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1683,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1691,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1699,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1707,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1715,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1723,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1731,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1739,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1747,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1755,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1763,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1771,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1779,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1787,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1795,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1803,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1811,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1819,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1827,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1835,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1843,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1851,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1859,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1867,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
+    },
+    {
+      "categoria": "CWE-1022: Tabnabbing",
+      "archivo": "reporte_vulnerabilidades_alto.html",
+      "linea": 1875,
+      "estado": "CORREGIDO",
+      "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
+      "timestamp": "2026-01-21T12:24:12.711268"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1618,7 +1778,7 @@
       "linea": 2667,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.713272"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1626,7 +1786,7 @@
       "linea": 2675,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.713272"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1634,7 +1794,7 @@
       "linea": 2683,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.713272"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1642,7 +1802,7 @@
       "linea": 2691,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.713272"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1650,7 +1810,7 @@
       "linea": 2699,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.713272"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1658,7 +1818,7 @@
       "linea": 2707,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.713272"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1666,7 +1826,7 @@
       "linea": 2715,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.713272"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1674,7 +1834,7 @@
       "linea": 2723,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.713272"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1682,7 +1842,7 @@
       "linea": 2731,
       "estado": "CORREGIDO",
       "detalle": "target=\"_blank\" con rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.146338"
+      "timestamp": "2026-01-21T12:24:12.713272"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1690,7 +1850,7 @@
       "linea": 164,
       "estado": "VULNERABLE",
       "detalle": "target=\"_blank\" sin rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.161852"
+      "timestamp": "2026-01-21T12:24:12.725271"
     },
     {
       "categoria": "CWE-1022: Tabnabbing",
@@ -1698,7 +1858,7 @@
       "linea": 218,
       "estado": "VULNERABLE",
       "detalle": "target=\"_blank\" sin rel=\"noopener noreferrer\"",
-      "timestamp": "2026-01-20T16:58:08.161852"
+      "timestamp": "2026-01-21T12:24:12.727270"
     },
     {
       "categoria": "CWE-601: Open Redirect",
@@ -1706,7 +1866,7 @@
       "linea": 291,
       "estado": "VULNERABLE",
       "detalle": "Redirect con input no validado (JavaScript en HTML)",
-      "timestamp": "2026-01-20T16:58:09.004418"
+      "timestamp": "2026-01-21T12:24:13.572276"
     },
     {
       "categoria": "CWE-601: Open Redirect",
@@ -1714,7 +1874,7 @@
       "linea": 370,
       "estado": "VULNERABLE",
       "detalle": "Redirect con input no validado (JavaScript en HTML)",
-      "timestamp": "2026-01-20T16:58:09.012205"
+      "timestamp": "2026-01-21T12:24:13.577274"
     },
     {
       "categoria": "CWE-601: Open Redirect",
@@ -1722,7 +1882,7 @@
       "linea": 374,
       "estado": "VULNERABLE",
       "detalle": "Redirect con input no validado (JavaScript en HTML)",
-      "timestamp": "2026-01-20T16:58:09.012205"
+      "timestamp": "2026-01-21T12:24:13.577274"
     },
     {
       "categoria": "CWE-601: Open Redirect",
@@ -1730,7 +1890,7 @@
       "linea": 594,
       "estado": "VULNERABLE",
       "detalle": "Redirect con input no validado (JavaScript en HTML)",
-      "timestamp": "2026-01-20T16:58:09.013211"
+      "timestamp": "2026-01-21T12:24:13.579274"
     },
     {
       "categoria": "CWE-601: Open Redirect",
@@ -1738,7 +1898,7 @@
       "linea": 605,
       "estado": "VULNERABLE",
       "detalle": "Redirect con input no validado (JavaScript en HTML)",
-      "timestamp": "2026-01-20T16:58:09.013211"
+      "timestamp": "2026-01-21T12:24:13.579274"
     },
     {
       "categoria": "CWE-311: Insecure Transport",
@@ -1746,7 +1906,7 @@
       "linea": 1018,
       "estado": "VULNERABLE",
       "detalle": "Servidor HTTP sin SSL/TLS - Usar HTTPS en producción",
-      "timestamp": "2026-01-20T16:58:09.367702"
+      "timestamp": "2026-01-21T12:24:13.937276"
     }
   ]
 }

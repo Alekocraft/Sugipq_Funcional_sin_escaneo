@@ -1,289 +1,755 @@
 {% extends "base.html" %}
+{% block title %}{{ titulo or 'Inventario Corporativo' }} - Sistema de Gestión{% endblock %}
 
-{% block title %}Inventario Corporativo - Oficinas Servicio{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventario_corporativo.css') }}">
+<style>
+  .task-item { cursor: pointer; }
+  .task-item:hover { background: rgba(0,0,0,.03); }
+  .table thead th { white-space: nowrap; }
+  .nowrap { white-space: nowrap; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-3">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="mb-0">Inventario Corporativo - Oficinas Servicio</h4>
-    {% if vista_mi_oficina %}
-      <span class="badge bg-info text-dark">Vista: Mi oficina</span>
-    {% else %}
-      <span class="badge bg-secondary">Vista: Todas las oficinas</span>
-    {% endif %}
+<div class="container-fluid">
+
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h1 class="text-primary">{{ titulo or 'Inventario Corporativo' }}</h1>
+      <p class="text-muted mb-0">Productos cargados: {{ total_productos }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+      <div class="btn-group">
+        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-file-excel"></i> Exportar
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="/inventario-corporativo/exportar/excel/todo">
+            <i class="fas fa-table"></i> Todo el inventario
+          </a></li>
+        </ul>
+      </div>
+
+      {% if puede_gestionar_inventario %}
+      <a href="{{ url_for('inventario_corporativo.crear_inventario_corporativo') }}" class="btn btn-primary ms-2">
+        <i class="fas fa-plus"></i> Nuevo Producto
+      </a>
+      {% endif %}
+    </div>
   </div>
 
-  <!-- Filtros -->
-  <form method="GET" class="card card-body mb-3">
-    <div class="row g-2 align-items-end">
-      <div class="col-md-4">
-        <label class="form-label">Buscar</label>
-        <input type="text" name="q" class="form-control" value="{{ request.args.get('q','') }}" placeholder="Material, serial, usuario...">
-      </div>
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="card"><div class="card-body">
+        <h6 class="text-muted mb-1">Total Productos</h6>
+        <h3 class="mb-0">{{ total_productos }}</h3>
+      </div></div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card"><div class="card-body">
+        <h6 class="text-muted mb-1">Valor Total</h6>
+        <h3 class="mb-0">${{ "{:,.0f}".format(valor_total_inventario or 0) }}</h3>
+      </div></div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card"><div class="card-body">
+        <h6 class="text-muted mb-1">Stock Bajo</h6>
+        <h3 class="mb-0">{{ productos_bajo_stock }}</h3>
+      </div></div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card"><div class="card-body">
+        <h6 class="text-muted mb-1">Asignables</h6>
+        <h3 class="mb-0">{{ productos_asignables }}</h3>
+      </div></div>
+    </div>
+  </div>
 
-      <div class="col-md-3">
-        <label class="form-label">Oficina</label>
-        <select name="oficina" class="form-select" {% if vista_mi_oficina %}disabled{% endif %}>
-          <option value="">Todas</option>
-          {% for o in oficinas %}
-            <option value="{{ o.get('oficina_id') }}" {% if request.args.get('oficina','')|string == (o.get('oficina_id')|string) %}selected{% endif %}>
-              {{ o.get('nombre_oficina') }}
-            </option>
-          {% endfor %}
-        </select>
-        {% if vista_mi_oficina %}
-          <div class="form-text">Filtrado automaticamente por su oficina.</div>
-        {% endif %}
-      </div>
+  {% if es_vista_oficinas_servicio %}
+  <div class="row mb-4">
+    <div class="col-lg-4 mb-3">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <strong><i class="fas fa-tasks me-2"></i>Tareas</strong>
+          <span class="badge bg-secondary" id="badge-tareas-total">—</span>
+        </div>
+        <div class="list-group list-group-flush">
+          {% if puede_solicitar_devolucion %}
+          <div class="list-group-item task-item" data-task="open-devolucion">
+            <div class="d-flex align-items-center justify-content-between">
+              <span><i class="fas fa-undo me-2 text-primary"></i>Solicitar devolución</span>
+              <i class="fas fa-chevron-right text-muted"></i>
+            </div>
+            <small class="text-muted">Crear solicitud de devolución para un ítem asignado.</small>
+          </div>
+          {% endif %}
+          {% if puede_solicitar_traslado %}
+          <div class="list-group-item task-item" data-task="open-traspaso">
+            <div class="d-flex align-items-center justify-content-between">
+              <span><i class="fas fa-random me-2 text-primary"></i>Solicitar traspaso</span>
+              <i class="fas fa-chevron-right text-muted"></i>
+            </div>
+            <small class="text-muted">Traspasar un ítem asignado a otra oficina.</small>
+          </div>
+          {% endif %}
 
-      <div class="col-md-3">
-        <label class="form-label">Estado</label>
-        <select name="estado" class="form-select">
-          <option value="">Todos</option>
-          <option value="activo" {% if request.args.get('estado','') == 'activo' %}selected{% endif %}>Activo</option>
-          <option value="baja" {% if request.args.get('estado','') == 'baja' %}selected{% endif %}>Baja</option>
-        </select>
-      </div>
-
-      <div class="col-md-2 d-grid">
-        <button class="btn btn-primary" type="submit">
-          <i class="fas fa-filter me-1"></i> Filtrar
-        </button>
+          {% if puede_aprobar_solicitudes %}
+          <div class="list-group-item task-item" data-task="go-aprobaciones">
+            <div class="d-flex align-items-center justify-content-between">
+              <span><i class="fas fa-check-circle me-2 text-warning"></i>Aprobar / Rechazar solicitudes</span>
+              <span class="badge bg-warning text-dark" id="badge-pendientes">0</span>
+            </div>
+            <small class="text-muted">Gestionar devoluciones y traspasos pendientes.</small>
+          </div>
+          {% endif %}
+        </div>
       </div>
     </div>
-  </form>
 
-  <!-- Tabla -->
-  <div class="card">
-    <div class="card-body p-0">
+    <div class="col-lg-8 mb-3">
+      {% if vista_mi_oficina %}
+      <div class="card h-100">
+        <div class="card-header">
+          <strong><i class="fas fa-warehouse me-2"></i>Asignaciones de mi oficina</strong>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle" id="tabla-asignaciones">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th class="text-center">Cantidad</th>
+                  <th>Usuario</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in (asignaciones or []) %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold">{{ a.nombre_producto or a.producto_nombre or a.nombre or '—' }}</div>
+                    <small class="text-muted">{{ a.codigo_unico or a.codigo or '' }}</small>
+                  </td>
+                  <td class="text-center">
+                    {{ a.cantidad_asignada or a.cantidad or 1 }}
+                  </td>
+                  <td>
+                    {{ a.usuario_asignado or a.usuario_ad_nombre or a.usuario or '—' }}
+                  </td>
+                  <td class="text-end nowrap">
+                    {% if puede_solicitar_devolucion %}
+                    <button class="btn btn-sm btn-outline-primary"
+                            data-action="devolucion"
+                            data-asignacion-id="{{ a.asignacion_id or a.AsignacionId or a.id }}"
+                            data-max="{{ a.cantidad_asignada or a.cantidad or 1 }}"
+                            data-producto="{{ a.nombre_producto or a.producto_nombre or a.nombre or '' }}">
+                      <i class="fas fa-undo"></i>
+                    </button>
+                    {% endif %}
+                    {% if puede_solicitar_traslado %}
+                    <button class="btn btn-sm btn-outline-secondary"
+                            data-action="traspaso"
+                            data-asignacion-id="{{ a.asignacion_id or a.AsignacionId or a.id }}"
+                            data-max="{{ a.cantidad_asignada or a.cantidad or 1 }}"
+                            data-producto="{{ a.nombre_producto or a.producto_nombre or a.nombre or '' }}">
+                      <i class="fas fa-random"></i>
+                    </button>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">No hay asignaciones activas para esta oficina.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <small class="text-muted">Tip: también puedes usar las tareas (panel izquierdo) para abrir los formularios.</small>
+        </div>
+      </div>
+      {% else %}
+      <div class="alert alert-info mb-0">
+        <i class="fas fa-info-circle me-2"></i>
+        Estás viendo la vista global de oficinas. Si necesitas solicitar devoluciones o traspasos, ingresa desde una oficina específica.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if puede_aprobar_solicitudes %}
+  <div class="card mb-4" id="panel-aprobaciones">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <strong><i class="fas fa-clipboard-check me-2"></i>Solicitudes pendientes</strong>
+      <button class="btn btn-sm btn-outline-secondary" id="btn-recargar-pendientes">
+        <i class="fas fa-sync"></i> Recargar
+      </button>
+    </div>
+    <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-hover table-striped mb-0">
-          <thead class="table-dark">
+        <table class="table table-sm table-striped align-middle" id="tabla-pendientes">
+          <thead>
             <tr>
-              <th>ID</th>
-              <th>Material</th>
-              <th>Serial</th>
-              <th>Cantidad</th>
-              <th>Oficina</th>
-              <th>Usuario</th>
+              <th>Tipo</th>
+              <th>Producto</th>
+              <th>Origen</th>
+              <th>Destino</th>
+              <th class="text-center">Cant.</th>
+              <th>Solicita</th>
+              <th class="nowrap">Fecha</th>
               <th class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {% for a in asignaciones %}
-              {% set aid = a.get('asignacion_id') or a.get('id') %}
-              <tr>
-                <td>{{ aid }}</td>
-                <td>{{ a.get('material_nombre','') }}</td>
-                <td>{{ a.get('serial','') }}</td>
-                <td>{{ a.get('cantidad_asignada') if a.get('cantidad_asignada') is not none else a.get('cantidad', 0) }}</td>
-                <td>{{ a.get('oficina_nombre','') }}</td>
-                <td>{{ a.get('usuario_asignado','') }}</td>
-                <td class="text-end">
-                  {% if can_access is defined %}
-                    {% if can_access('inventario_corporativo', 'return') %}
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-danger"
-                        data-bs-toggle="modal"
-                        data-bs-target="#modalDevolucion"
-                        data-asignacion-id="{{ aid }}"
-                        data-max="{{ a.get('cantidad_asignada') if a.get('cantidad_asignada') is not none else a.get('cantidad', 0) }}"
-                        title="Solicitar devolucion a COQ">
-                        <i class="fas fa-undo"></i>
-                      </button>
-                    {% endif %}
-
-                    {% if can_access('inventario_corporativo', 'transfer') %}
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-warning"
-                        data-bs-toggle="modal"
-                        data-bs-target="#modalTraspaso"
-                        data-asignacion-id="{{ aid }}"
-                        data-max="{{ a.get('cantidad_asignada') if a.get('cantidad_asignada') is not none else a.get('cantidad', 0) }}"
-                        title="Solicitar traspaso">
-                        <i class="fas fa-exchange-alt"></i>
-                      </button>
-                    {% endif %}
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-
-            {% if asignaciones|length == 0 %}
-              <tr>
-                <td colspan="7" class="text-center py-4 text-muted">
-                  No hay registros para mostrar.
-                </td>
-              </tr>
-            {% endif %}
+            <tr><td colspan="8" class="text-center text-muted py-4">Cargando…</td></tr>
           </tbody>
         </table>
+      </div>
+      <small class="text-muted">Al aprobar/rechazar se actualizará el estado de la solicitud y desaparecerá de la lista.</small>
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {% if mostrar_tabla_productos %}
+  <div class="card">
+    <div class="card-header">
+      <strong><i class="fas fa-boxes me-2"></i>Productos</strong>
+    </div>
+    <div class="card-body">
+      <div class="row g-2 mb-3">
+        <div class="col-md-4">
+          <input type="text" class="form-control" id="filtro-texto" placeholder="Buscar por nombre/código…">
+        </div>
+        <div class="col-md-4">
+          <select class="form-select" id="filtro-categoria">
+            <option value="">Todas las categorías</option>
+            {% for c in (categorias or []) %}
+              <option value="{{ c.nombre or c.NombreCategoria or c.categoria or c.id }}">{{ c.nombre or c.NombreCategoria or c.categoria }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select class="form-select" id="filtro-proveedor">
+            <option value="">Todos los proveedores</option>
+            {% for p in (proveedores or []) %}
+              <option value="{{ p.nombre or p.NombreProveedor or p.proveedor or p.id }}">{{ p.nombre or p.NombreProveedor or p.proveedor }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped align-middle" id="tabla-productos">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Proveedor</th>
+              <th>Oficina</th>
+              <th>Valor</th>
+              <th>Stock</th>
+              {% if puede_ver_acciones_inventario %}
+              <th class="text-end">Acciones</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for producto in productos %}
+            <tr>
+              <td class="nowrap"><strong class="codigo">{{ producto.codigo_unico or producto.CodigoUnico or '' }}</strong></td>
+              <td class="nombre">{{ producto.nombre or producto.NombreProducto or '' }}</td>
+              <td class="categoria">{{ producto.categoria or producto.NombreCategoria or '' }}</td>
+              <td class="proveedor">{{ producto.proveedor or producto.NombreProveedor or '' }}</td>
+              <td class="oficina">{{ producto.oficina or producto.NombreOficina or producto.Oficina or '' }}</td>
+              <td class="nowrap">${{ "{:,.0f}".format(producto.valor_unitario or producto.ValorUnitario or 0) }}</td>
+              <td class="nowrap">
+                {% set qty = (producto.cantidad or producto.CantidadDisponible or 0) %}
+                {% set min_qty = (producto.cantidad_minima or producto.CantidadMinima or 5) %}
+                <span class="badge {% if qty <= min_qty %}bg-warning{% else %}bg-success{% endif %}">
+                  {{ qty }} u
+                </span>
+              </td>
+              {% if puede_ver_acciones_inventario %}
+              <td class="text-end nowrap">
+                <a href="{{ url_for('inventario_corporativo.ver_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-primary">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('inventario_corporativo.editar_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-warning">
+                  <i class="fas fa-edit"></i>
+                </a>
+                {% if producto.es_asignable or producto.EsAsignable %}
+                <a href="{{ url_for('inventario_corporativo.asignar_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-info">
+                  <i class="fas fa-share"></i>
+                </a>
+                {% endif %}
+              </td>
+              {% endif %}
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="{% if puede_ver_acciones_inventario %}8{% else %}7{% endif %}" class="text-center text-muted py-4">
+                No hay productos para mostrar.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Modal: Solicitar Devolución -->
+<div class="modal fade" id="modalDevolucion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-undo me-2"></i>Solicitar devolución</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-secondary py-2 mb-3">
+          <div class="fw-semibold" id="dev-producto">—</div>
+          <small class="text-muted">Asignación: <span id="dev-asignacion-id">—</span></small>
+        </div>
+
+        <div class="row g-2">
+          <div class="col-md-3">
+            <label class="form-label">Cantidad</label>
+            <input type="number" min="1" class="form-control" id="dev-cantidad" value="1" required>
+            <div class="form-text">Máx: <span id="dev-max">1</span></div>
+          </div>
+          <div class="col-md-9">
+            <label class="form-label">Motivo</label>
+            <input type="text" class="form-control" id="dev-motivo" placeholder="Describe el motivo de la devolución" required>
+          </div>
+        </div>
+
+        <div class="mt-3" id="dev-msg"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" id="btn-enviar-devolucion">
+          <i class="fas fa-paper-plane me-1"></i> Enviar solicitud
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal Devolucion -->
-<div class="modal fade" id="modalDevolucion" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form id="formDevolucion">
-        <div class="modal-header">
-          <h5 class="modal-title">Solicitar devolucion a COQ</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" name="asignacion_id" id="dev_asignacion_id">
-          <div class="mb-2">
-            <label class="form-label">Cantidad a devolver</label>
-            <input type="number" min="1" class="form-control" name="cantidad" id="dev_cantidad" required>
-            <div class="form-text" id="dev_help"></div>
-          </div>
-          <div class="mb-2">
-            <label class="form-label">Motivo</label>
-            <textarea class="form-control" name="motivo" id="dev_motivo" rows="3" placeholder="Motivo de la devolucion..." required></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-danger">Enviar solicitud</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- Modal Traspaso -->
+<!-- Modal: Solicitar Traspaso -->
 <div class="modal fade" id="modalTraspaso" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <form id="formTraspaso">
-        <div class="modal-header">
-          <h5 class="modal-title">Solicitar traspaso</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-random me-2"></i>Solicitar traspaso</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-secondary py-2 mb-3">
+          <div class="fw-semibold" id="tra-producto">—</div>
+          <small class="text-muted">Asignación: <span id="tra-asignacion-id">—</span></small>
         </div>
-        <div class="modal-body">
-          <input type="hidden" name="asignacion_id" id="tra_asignacion_id">
-          <div class="mb-2">
-            <label class="form-label">Cantidad a traspasar</label>
-            <input type="number" min="1" class="form-control" name="cantidad" id="tra_cantidad" required>
-            <div class="form-text" id="tra_help"></div>
+
+        <div class="row g-2">
+          <div class="col-md-3">
+            <label class="form-label">Cantidad</label>
+            <input type="number" min="1" class="form-control" id="tra-cantidad" value="1" required>
+            <div class="form-text">Máx: <span id="tra-max">1</span></div>
           </div>
-          <div class="mb-2">
+          <div class="col-md-4">
             <label class="form-label">Oficina destino</label>
-            <select class="form-select" name="oficina_destino_id" id="tra_oficina_destino" required>
-              <option value="">Seleccione...</option>
-              {% for o in oficinas %}
-                <option value="{{ o.get('oficina_id') }}">{{ o.get('nombre_oficina') }}</option>
+            <select class="form-select" id="tra-oficina-destino" required>
+              <option value="">Seleccione…</option>
+              {% for o in (oficinas or []) %}
+                {% set oid = (o.id or o.oficina_id or o.OficinaId) %}
+                <option value="{{ oid }}">{{ o.nombre or o.nombre_oficina or o.NombreOficina }}</option>
               {% endfor %}
             </select>
           </div>
-          <div class="mb-2">
-            <label class="form-label">Observaciones</label>
-            <textarea class="form-control" name="observaciones" id="tra_obs" rows="3" placeholder="Observaciones..."></textarea>
+          <div class="col-md-5">
+            <label class="form-label">Usuario destino</label>
+            <input type="text" class="form-control" id="tra-usuario-destino" placeholder="usuario / correo AD" list="ldapUsuariosList" autocomplete="off" required>
+            <datalist id="ldapUsuariosList"></datalist>
+            <div class="form-text">Empieza a escribir (mín. 2 letras) para buscar en Directorio Activo.</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label mt-2">Motivo</label>
+            <input type="text" class="form-control" id="tra-motivo" placeholder="Describe el motivo del traspaso" required>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-warning">Enviar solicitud</button>
-        </div>
-      </form>
+
+        <div class="mt-3" id="tra-msg"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" id="btn-enviar-traspaso">
+          <i class="fas fa-paper-plane me-1"></i> Enviar solicitud
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- Modal: Aprobar/Rechazar -->
+<div class="modal fade" id="modalGestionSolicitud" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-clipboard-check me-2"></i>Gestionar solicitud</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="ges-tipo">
+        <input type="hidden" id="ges-solicitud-id">
+
+        <div class="alert alert-secondary py-2 mb-3" id="ges-resumen">—</div>
+
+        <label class="form-label">Observaciones</label>
+        <textarea class="form-control" id="ges-observaciones" rows="3" placeholder="Opcional"></textarea>
+
+        <div class="mt-3" id="ges-msg"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button class="btn btn-danger" id="btn-rechazar-solicitud"><i class="fas fa-times me-1"></i> Rechazar</button>
+        <button class="btn btn-success" id="btn-aprobar-solicitud"><i class="fas fa-check me-1"></i> Aprobar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
 <script>
-(function () {
-  const modalDev = document.getElementById('modalDevolucion');
-  if (modalDev) {
-    modalDev.addEventListener('show.bs.modal', function (event) {
-      const btn = event.relatedTarget;
-      const asignacionId = btn.getAttribute('data-asignacion-id');
-      const max = parseInt(btn.getAttribute('data-max') || '0', 10);
+(function() {
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-      document.getElementById('dev_asignacion_id').value = asignacionId;
-      const cantidad = document.getElementById('dev_cantidad');
-      cantidad.value = '';
-      cantidad.max = String(max);
-      document.getElementById('dev_help').textContent = 'Max: ' + max;
-      document.getElementById('dev_motivo').value = '';
+  function setHtml(id, html) {
+    const el = $(id);
+    if (el) el.innerHTML = html;
+  }
+  function toast(containerId, type, msg) {
+    const klass = type === 'success' ? 'alert-success' : (type === 'warning' ? 'alert-warning' : 'alert-danger');
+    setHtml(containerId, `<div class="alert ${klass} py-2 mb-0">${msg}</div>`);
+  }
+  function clearToast(containerId) { setHtml(containerId, ''); }
+
+  // Bootstrap modals
+  const modalDevol = $('#modalDevolucion') ? new bootstrap.Modal($('#modalDevolucion')) : null;
+  const modalTras  = $('#modalTraspaso') ? new bootstrap.Modal($('#modalTraspaso')) : null;
+  // --- LDAP autocomplete para usuario destino (traspasos) ---
+  const traUsuarioInput = document.getElementById('tra-usuario-destino');
+  const ldapList = document.getElementById('ldapUsuariosList');
+  let _ldapTimer = null;
+  if (traUsuarioInput && ldapList) {
+    traUsuarioInput.addEventListener('input', () => {
+      const term = (traUsuarioInput.value || '').trim();
+      if (_ldapTimer) clearTimeout(_ldapTimer);
+      if (term.length < 2) { ldapList.innerHTML = ''; return; }
+      _ldapTimer = setTimeout(async () => {
+        try {
+          const resp = await fetch(`/inventario-corporativo/api/ldap/buscar-usuarios?term=${encodeURIComponent(term)}`);
+          const js = await resp.json();
+          ldapList.innerHTML = '';
+          if (js && js.success && Array.isArray(js.users)) {
+            js.users.forEach(u => {
+              const opt = document.createElement('option');
+              opt.value = (u.usuario || '').trim();
+              const label = [u.nombre, u.email].filter(Boolean).join(' - ');
+              if (label) opt.label = label;
+              ldapList.appendChild(opt);
+            });
+          }
+        } catch (e) { /* silencioso */ }
+      }, 250);
     });
   }
+  const modalGes   = $('#modalGestionSolicitud') ? new bootstrap.Modal($('#modalGestionSolicitud')) : null;
 
-  const modalTra = document.getElementById('modalTraspaso');
-  if (modalTra) {
-    modalTra.addEventListener('show.bs.modal', function (event) {
-      const btn = event.relatedTarget;
-      const asignacionId = btn.getAttribute('data-asignacion-id');
-      const max = parseInt(btn.getAttribute('data-max') || '0', 10);
+  let currentAsignacionId = null;
 
-      document.getElementById('tra_asignacion_id').value = asignacionId;
-      const cantidad = document.getElementById('tra_cantidad');
-      cantidad.value = '';
-      cantidad.max = String(max);
-      document.getElementById('tra_help').textContent = 'Max: ' + max;
-      document.getElementById('tra_oficina_destino').value = '';
-      document.getElementById('tra_obs').value = '';
-    });
+  function openDevolucion(asignacionId, maxQty, producto) {
+    currentAsignacionId = asignacionId;
+    $('#dev-asignacion-id').textContent = asignacionId || '—';
+    $('#dev-producto').textContent = producto || '—';
+    $('#dev-max').textContent = String(maxQty || 1);
+    $('#dev-cantidad').value = 1;
+    $('#dev-cantidad').max = maxQty || 1;
+    $('#dev-motivo').value = '';
+    clearToast('#dev-msg');
+    if (modalDevol) modalDevol.show();
   }
 
-  async function postJson(url, payload) {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    return res.json();
+  function openTraspaso(asignacionId, maxQty, producto) {
+    currentAsignacionId = asignacionId;
+    $('#tra-asignacion-id').textContent = asignacionId || '—';
+    $('#tra-producto').textContent = producto || '—';
+    $('#tra-max').textContent = String(maxQty || 1);
+    $('#tra-cantidad').value = 1;
+    $('#tra-cantidad').max = maxQty || 1;
+    $('#tra-oficina-destino').value = '';
+    $('#tra-usuario-destino').value = '';
+    $('#tra-motivo').value = '';
+    clearToast('#tra-msg');
+    if (modalTras) modalTras.show();
   }
 
-  const formDev = document.getElementById('formDevolucion');
-  if (formDev) {
-    formDev.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const payload = {
-        asignacion_id: document.getElementById('dev_asignacion_id').value,
-        cantidad: document.getElementById('dev_cantidad').value,
-        motivo: document.getElementById('dev_motivo').value
-      };
-      try {
-        const data = await postJson("{{ url_for('inventario_corporativo.api_solicitar_devolucion') }}", payload);
-        if (data && data.success) {
-          alert('Solicitud enviada.');
-          window.location.reload();
-        } else {
-          alert((data && (data.error || data.message)) || 'Error enviando solicitud.');
+  // Clicks desde tabla asignaciones
+  $$('#tabla-asignaciones [data-action="devolucion"]').forEach(btn => {
+    btn.addEventListener('click', () => openDevolucion(btn.dataset.asignacionId, parseInt(btn.dataset.max || '1'), btn.dataset.producto));
+  });
+  $$('#tabla-asignaciones [data-action="traspaso"]').forEach(btn => {
+    btn.addEventListener('click', () => openTraspaso(btn.dataset.asignacionId, parseInt(btn.dataset.max || '1'), btn.dataset.producto));
+  });
+
+  // Clicks desde tareas (aquí estaba el bug: algunos items no tenían handler)
+  $$('.task-item[data-task]').forEach(item => {
+    item.addEventListener('click', () => {
+      const task = item.dataset.task;
+      if (task === 'open-devolucion') {
+        // Si el usuario no seleccionó nada, se abre modal vacío (y se guía con mensaje)
+        openDevolucion(currentAsignacionId || '', 1, '');
+        if (!currentAsignacionId) {
+          toast('#dev-msg', 'warning', 'Selecciona una asignación en la tabla para autocompletar, o escribe el motivo y ajusta la cantidad.');
         }
-      } catch (err) {
-        alert('Error enviando solicitud.');
+      } else if (task === 'open-traspaso') {
+        openTraspaso(currentAsignacionId || '', 1, '');
+        if (!currentAsignacionId) {
+          toast('#tra-msg', 'warning', 'Selecciona una asignación en la tabla para autocompletar, o completa los campos manualmente.');
+        }
+      } else if (task === 'go-aprobaciones') {
+        const panel = $('#panel-aprobaciones');
+        if (panel) {
+          panel.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+      }
+    });
+  });
+
+  // Enviar devolución
+  const btnEnviarDev = $('#btn-enviar-devolucion');
+  if (btnEnviarDev) {
+    btnEnviarDev.addEventListener('click', async () => {
+      clearToast('#dev-msg');
+      const asignacionId = parseInt(currentAsignacionId || $('#dev-asignacion-id').textContent || '0');
+      const cantidad = parseInt($('#dev-cantidad').value || '0');
+      const motivo = ($('#dev-motivo').value || '').trim();
+
+      if (!asignacionId) return toast('#dev-msg', 'danger', 'Asignación inválida.');
+      if (!cantidad || cantidad <= 0) return toast('#dev-msg', 'danger', 'Cantidad inválida.');
+      if (!motivo) return toast('#dev-msg', 'danger', 'El motivo es obligatorio.');
+
+      btnEnviarDev.disabled = true;
+      try {
+        const resp = await fetch('{{ url_for("inventario_corporativo.api_solicitar_devolucion") }}', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({asignacion_id: asignacionId, cantidad, motivo})
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (resp.ok && data.success) {
+          toast('#dev-msg', 'success', data.message || 'Solicitud enviada.');
+          setTimeout(() => { if (modalDevol) modalDevol.hide(); location.reload(); }, 800);
+        } else {
+          toast('#dev-msg', 'danger', data.message || 'No se pudo enviar la solicitud.');
+        }
+      } catch (e) {
+        toast('#dev-msg', 'danger', 'Error de red.');
+      } finally {
+        btnEnviarDev.disabled = false;
       }
     });
   }
 
-  const formTra = document.getElementById('formTraspaso');
-  if (formTra) {
-    formTra.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const payload = {
-        asignacion_id: document.getElementById('tra_asignacion_id').value,
-        cantidad: document.getElementById('tra_cantidad').value,
-        oficina_destino_id: document.getElementById('tra_oficina_destino').value,
-        observaciones: document.getElementById('tra_obs').value
-      };
+  // Enviar traspaso
+  const btnEnviarTra = $('#btn-enviar-traspaso');
+  if (btnEnviarTra) {
+    btnEnviarTra.addEventListener('click', async () => {
+      clearToast('#tra-msg');
+      const asignacionId = parseInt(currentAsignacionId || $('#tra-asignacion-id').textContent || '0');
+      const cantidad = parseInt($('#tra-cantidad').value || '0');
+      const oficinaDestinoId = parseInt($('#tra-oficina-destino').value || '0');
+      const destinoUsuario = ($('#tra-usuario-destino').value || '').trim();
+      const motivo = ($('#tra-motivo').value || '').trim();
+
+      if (!asignacionId) return toast('#tra-msg', 'danger', 'Asignación inválida.');
+      if (!cantidad || cantidad <= 0) return toast('#tra-msg', 'danger', 'Cantidad inválida.');
+      if (!oficinaDestinoId) return toast('#tra-msg', 'danger', 'Debe seleccionar la oficina destino.');
+      if (!destinoUsuario) return toast('#tra-msg', 'danger', 'Debe ingresar el usuario destino.');
+
+      btnEnviarTra.disabled = true;
       try {
-        const data = await postJson("{{ url_for('inventario_corporativo.api_solicitar_traspaso') }}", payload);
-        if (data && data.success) {
-          alert('Solicitud enviada.');
-          window.location.reload();
+        const resp = await fetch('{{ url_for("inventario_corporativo.api_solicitar_traspaso") }}', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({asignacion_id: asignacionId, cantidad, oficina_destino_id: oficinaDestinoId, destino_usuario: destinoUsuario, motivo})
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (resp.ok && data.success) {
+          toast('#tra-msg', 'success', data.message || 'Solicitud enviada.');
+          setTimeout(() => { if (modalTras) modalTras.hide(); location.reload(); }, 800);
         } else {
-          alert((data && (data.error || data.message)) || 'Error enviando solicitud.');
+          toast('#tra-msg', 'danger', data.message || 'No se pudo enviar la solicitud.');
         }
-      } catch (err) {
-        alert('Error enviando solicitud.');
+      } catch (e) {
+        toast('#tra-msg', 'danger', 'Error de red.');
+      } finally {
+        btnEnviarTra.disabled = false;
       }
     });
   }
+
+  // Filtros client-side para tabla productos (si existe)
+  function aplicarFiltrosProductos() {
+    const t = ($('#filtro-texto')?.value || '').toLowerCase().trim();
+    const cat = ($('#filtro-categoria')?.value || '').toLowerCase().trim();
+    const prov = ($('#filtro-proveedor')?.value || '').toLowerCase().trim();
+
+    $$('#tabla-productos tbody tr').forEach(row => {
+      const codigo = (row.querySelector('.codigo')?.textContent || '').toLowerCase();
+      const nombre = (row.querySelector('.nombre')?.textContent || '').toLowerCase();
+      const categoria = (row.querySelector('.categoria')?.textContent || '').toLowerCase();
+      const proveedor = (row.querySelector('.proveedor')?.textContent || '').toLowerCase();
+
+      const okTexto = !t || (codigo.includes(t) || nombre.includes(t));
+      const okCat = !cat || categoria.includes(cat);
+      const okProv = !prov || proveedor.includes(prov);
+
+      row.style.display = (okTexto && okCat && okProv) ? '' : 'none';
+    });
+  }
+
+  ['#filtro-texto', '#filtro-categoria', '#filtro-proveedor'].forEach(sel => {
+    const el = $(sel);
+    if (el) el.addEventListener('input', aplicarFiltrosProductos);
+    if (el) el.addEventListener('change', aplicarFiltrosProductos);
+  });
+
+  // ----------- Pendientes de aprobación -----------
+  async function cargarPendientes() {
+    const tbody = $('#tabla-pendientes tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">Cargando…</td></tr>`;
+    try {
+      const resp = await fetch('{{ url_for("inventario_corporativo.api_solicitudes_pendientes_inventario") }}', { headers: {'Accept': 'application/json'} });
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok || !json.success) throw new Error(json.message || 'Error');
+
+      const items = json.data || [];
+      $('#badge-pendientes') && ($('#badge-pendientes').textContent = String(items.length));
+      $('#badge-tareas-total') && ($('#badge-tareas-total').textContent = String(items.length));
+
+      if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">No hay solicitudes pendientes.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = items.map(it => {
+        const tipoLabel = it.tipo === 'TRASPASO' ? 'Traspaso' : 'Devolución';
+        const destino = it.oficina_destino_nombre || '—';
+        const fecha = it.fecha_solicitud ? new Date(it.fecha_solicitud).toLocaleString() : '—';
+
+        const resumen = `${tipoLabel} • ${it.producto_nombre} • ${it.oficina_origen_nombre}${it.tipo==='TRASPASO' ? ' → ' + destino : ''} • Cant: ${it.cantidad}`;
+        return `
+          <tr>
+            <td><span class="badge ${it.tipo==='TRASPASO' ? 'bg-secondary' : 'bg-primary'}">${tipoLabel}</span></td>
+            <td>
+              <div class="fw-semibold">${it.producto_nombre || '—'}</div>
+              <small class="text-muted">${(it.motivo || '').slice(0, 80)}</small>
+            </td>
+            <td>${it.oficina_origen_nombre || '—'}</td>
+            <td>${destino}</td>
+            <td class="text-center">${it.cantidad || '—'}</td>
+            <td>${it.usuario_solicita || '—'}</td>
+            <td class="nowrap">${fecha}</td>
+            <td class="text-end nowrap">
+              <button class="btn btn-sm btn-outline-success btn-gestionar" data-op="aprobar" data-tipo="${it.tipo}" data-id="${it.solicitud_id}" data-resumen="${encodeURIComponent(resumen)}"><i class="fas fa-check"></i></button>
+              <button class="btn btn-sm btn-outline-danger btn-gestionar" data-op="rechazar" data-tipo="${it.tipo}" data-id="${it.solicitud_id}" data-resumen="${encodeURIComponent(resumen)}"><i class="fas fa-times"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      $$('.btn-gestionar', tbody).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const op = btn.dataset.op;
+          const tipo = btn.dataset.tipo;
+          const id = btn.dataset.id;
+          const resumen = decodeURIComponent(btn.dataset.resumen || '');
+          $('#ges-tipo').value = tipo;
+          $('#ges-solicitud-id').value = id;
+          $('#ges-observaciones').value = '';
+          $('#ges-resumen').textContent = resumen;
+          clearToast('#ges-msg');
+          $('#btn-aprobar-solicitud').style.display = op === 'rechazar' ? 'none' : '';
+          $('#btn-rechazar-solicitud').style.display = op === 'aprobar' ? 'none' : '';
+          if (modalGes) modalGes.show();
+        });
+      });
+
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">No se pudieron cargar las solicitudes pendientes.</td></tr>`;
+      $('#badge-pendientes') && ($('#badge-pendientes').textContent = '0');
+    }
+  }
+
+  const btnRecargar = $('#btn-recargar-pendientes');
+  if (btnRecargar) btnRecargar.addEventListener('click', cargarPendientes);
+
+  // Aprobación/rechazo
+  async function gestionarSolicitud(accion) {
+    clearToast('#ges-msg');
+    const tipo = ($('#ges-tipo').value || '').trim();
+    const solicitudId = parseInt($('#ges-solicitud-id').value || '0');
+    const observaciones = ($('#ges-observaciones').value || '').trim();
+
+    if (!tipo || !solicitudId) return toast('#ges-msg', 'danger', 'Solicitud inválida.');
+
+    const url = accion === 'aprobar'
+      ? '{{ url_for("inventario_corporativo.api_aprobar_solicitud_inventario") }}'
+      : '{{ url_for("inventario_corporativo.api_rechazar_solicitud_inventario") }}';
+
+    const btn = accion === 'aprobar' ? $('#btn-aprobar-solicitud') : $('#btn-rechazar-solicitud');
+    if (btn) btn.disabled = true;
+
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tipo: tipo, solicitud_id: solicitudId, observaciones})
+      });
+      const json = await resp.json().catch(() => ({}));
+      if (resp.ok && json.success) {
+        toast('#ges-msg', 'success', json.message || 'OK');
+        setTimeout(() => { if (modalGes) modalGes.hide(); cargarPendientes(); }, 700);
+      } else {
+        toast('#ges-msg', 'danger', json.message || 'Error al procesar.');
+      }
+    } catch (e) {
+      toast('#ges-msg', 'danger', 'Error de red.');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  const btnAprobar = $('#btn-aprobar-solicitud');
+  if (btnAprobar) btnAprobar.addEventListener('click', () => gestionarSolicitud('aprobar'));
+  const btnRechazar = $('#btn-rechazar-solicitud');
+  if (btnRechazar) btnRechazar.addEventListener('click', () => gestionarSolicitud('rechazar'));
+
+  // Cargar pendientes al inicio (si panel existe)
+  if ($('#panel-aprobaciones')) cargarPendientes();
+
 })();
 </script>
 {% endblock %}

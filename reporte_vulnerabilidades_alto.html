@@ -221,7 +221,7 @@
     <div class="container">
         <h1>🔒 Reporte de Validación de Vulnerabilidades de Alto Riesgo</h1>
         <p><strong>Aplicación:</strong> SUGIPQ-V1</p>
-        <p><strong>Fecha de validación:</strong> 2026-01-20 16:58:09</p>
+        <p><strong>Fecha de validación:</strong> 2026-01-21 12:24:13</p>
         
         <div style="background-color: #e7f3ff; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #2196F3;">
             <h3 style="margin-top: 0; color: #1976D2;">ℹ️ Configuración del Análisis</h3>
@@ -237,7 +237,7 @@
             </div>
             <div class="stat-card corregido">
                 <div class="stat-label">Vulnerabilidades Corregidas</div>
-                <div class="stat-number">101</div>
+                <div class="stat-number">112</div>
             </div>
             <div class="stat-card archivos">
                 <div class="stat-label">Archivos Afectados</div>
@@ -245,7 +245,7 @@
             </div>
             <div class="stat-card total">
                 <div class="stat-label">Total Validaciones</div>
-                <div class="stat-number">190</div>
+                <div class="stat-number">210</div>
             </div>
         </div>
         
@@ -765,6 +765,78 @@
 
                 <tr class="fila-resultado" data-estado="revisar">
                     <td>CWE-209: Information Exposure</td>
+                    <td><code>blueprints\inventario_corporativo.py</code></td>
+                    <td><strong>318</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="revisar">
+                    <td>CWE-209: Information Exposure</td>
+                    <td><code>blueprints\inventario_corporativo.py</code></td>
+                    <td><strong>373</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="revisar">
+                    <td>CWE-209: Information Exposure</td>
+                    <td><code>blueprints\inventario_corporativo.py</code></td>
+                    <td><strong>398</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="revisar">
+                    <td>CWE-209: Information Exposure</td>
+                    <td><code>blueprints\inventario_corporativo.py</code></td>
+                    <td><strong>500</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="revisar">
+                    <td>CWE-209: Information Exposure</td>
+                    <td><code>blueprints\inventario_corporativo.py</code></td>
+                    <td><strong>524</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="revisar">
+                    <td>CWE-209: Information Exposure</td>
+                    <td><code>blueprints\inventario_corporativo.py</code></td>
+                    <td><strong>564</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="revisar">
+                    <td>CWE-209: Information Exposure</td>
+                    <td><code>blueprints\inventario_corporativo.py</code></td>
+                    <td><strong>598</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="revisar">
+                    <td>CWE-209: Information Exposure</td>
+                    <td><code>blueprints\inventario_corporativo.py</code></td>
+                    <td><strong>622</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="revisar">
+                    <td>CWE-209: Information Exposure</td>
+                    <td><code>blueprints\inventario_corporativo.py</code></td>
+                    <td><strong>652</strong></td>
+                    <td><span class="badge revisar">REVISAR</span></td>
+                    <td>Excepción en log sin sanitizar</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="revisar">
+                    <td>CWE-209: Information Exposure</td>
                     <td><code>blueprints\materiales.py</code></td>
                     <td><strong>50</strong></td>
                     <td><span class="badge revisar">REVISAR</span></td>
@@ -1081,134 +1153,6 @@
                     <td><strong>28</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>IP 10.60.0.31 cargada desde variable de entorno</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>963</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>971</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>979</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>987</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>995</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>1003</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>1011</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>1019</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>1027</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>1035</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>1043</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>1051</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>1059</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>1067</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>1075</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
-                </tr>
-
-                <tr class="fila-resultado" data-estado="corregido">
-                    <td>CWE-1022: Tabnabbing</td>
-                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
-                    <td><strong>1083</strong></td>
-                    <td><span class="badge corregido">CORREGIDO</span></td>
-                    <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
 
                 <tr class="fila-resultado" data-estado="corregido">
@@ -1783,6 +1727,222 @@
                     <td>CWE-1022: Tabnabbing</td>
                     <td><code>reporte_vulnerabilidades_alto.html</code></td>
                     <td><strong>1659</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1667</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1675</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1683</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1691</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1699</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1707</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1715</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1723</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1731</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1739</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1747</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1755</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1763</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1771</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1779</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1787</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1795</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1803</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1811</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1819</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1827</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1835</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1843</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1851</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1859</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1867</strong></td>
+                    <td><span class="badge corregido">CORREGIDO</span></td>
+                    <td>target="_blank" con rel="noopener noreferrer"</td>
+                </tr>
+
+                <tr class="fila-resultado" data-estado="corregido">
+                    <td>CWE-1022: Tabnabbing</td>
+                    <td><code>reporte_vulnerabilidades_alto.html</code></td>
+                    <td><strong>1875</strong></td>
                     <td><span class="badge corregido">CORREGIDO</span></td>
                     <td>target="_blank" con rel="noopener noreferrer"</td>
                 </tr>
