@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es"> 
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,7 @@
 </head>
 <body>
     {% extends "base.html" %}
-    
+
     {% block content %}
     <div class="container-fluid py-4">
         <div class="row mb-4">
@@ -37,30 +37,30 @@
                         <h5 class="mb-0">Información del Usuario</h5>
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="{{ url_for('usuarios.editar_usuario', usuario_id=usuario.id) }}">
+                        <form method="POST" action="{{ url_for('usuarios.editar_usuario', usuario_id=usuario.id) }}" autocomplete="off">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Usuario</label>
                                         <input type="text" class="form-control" value="{{ usuario.nombre_usuario }}" readonly>
                                         <div class="form-text">
-                                            Tipo: 
+                                            Tipo:
                                             <span class="badge {% if usuario.tipo_auth == 'LDAP' %}bg-primary{% else %}bg-success{% endif %}">
                                                 {{ usuario.tipo_auth }}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="email" class="form-label">Correo Electrónico</label>
-                                        <input type="email" class="form-control" id="email" 
+                                        <input type="email" class="form-control" id="email"
                                                name="email" value="{{ usuario.email or '' }}">
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
@@ -75,7 +75,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="oficina_id" class="form-label">Oficina</label>
@@ -90,7 +90,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
@@ -105,16 +105,16 @@
                                         </select>
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <div class="mb-3 form-check">
-                                        <input type="checkbox" class="form-check-input" id="activo" 
+                                        <input type="checkbox" class="form-check-input" id="activo"
                                                name="activo" {% if usuario.activo %}checked{% endif %}>
                                         <label class="form-check-label" for="activo">Usuario Activo</label>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="bi bi-check-circle"></i> Guardar Cambios
@@ -124,7 +124,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-lg-4">
                 {% if usuario.tipo_auth == 'LOCAL' %}
                 <div class="card mb-4">
@@ -133,19 +133,19 @@
                     </div>
                     <div class="card-body">
                         <form method="POST" action="{{ url_for('usuarios.cambiar_contrasena', usuario_id=usuario.id) }}"
-                              onsubmit="return validarContrasena()">
+                              onsubmit="return validarContrasena()" autocomplete="off">
                             <div class="mb-3">
                                 <label for="nueva_contrasena" class="form-label">Nueva Contraseña</label>
-                                <input type="password" class="form-control" id="nueva_contrasena" 
+                                <input type="password" class="form-control" id="nueva_contrasena" autocomplete="off"
                                        name="nueva_contrasena" required>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label for="confirmar_contrasena" class="form-label">Confirmar Contraseña</label>
-                                <input type="password" class="form-control" id="confirmar_contrasena" 
+                                <input type="password" class="form-control" id="confirmar_contrasena" autocomplete="off"
                                        name="confirmar_contrasena" required>
                             </div>
-                            
+
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-warning">
                                     <i class="bi bi-key"></i> Cambiar Contraseña
@@ -155,7 +155,7 @@
                     </div>
                 </div>
                 {% endif %}
-                
+
                 <div class="card">
                     <div class="card-header bg-danger text-white">
                         <h5 class="mb-0">Zona de Peligro</h5>
@@ -165,23 +165,23 @@
                             <i class="bi bi-exclamation-triangle"></i>
                             <strong>Acciones irreversibles</strong>
                         </div>
-                        
+
                         {% if usuario.activo %}
                         <form method="POST" action="{{ url_for('usuarios.desactivar_usuario', usuario_id=usuario.id) }}"
-                              onsubmit="return confirm('¿Desactivar usuario {{ usuario.nombre_usuario }}?')">
+                              onsubmit="return confirm('¿Desactivar usuario {{ usuario.nombre_usuario }}?')" autocomplete="off">
                             <button type="submit" class="btn btn-outline-warning w-100 mb-2">
                                 <i class="bi bi-person-dash"></i> Desactivar Usuario
                             </button>
                         </form>
                         {% else %}
-                        <form method="POST" action="{{ url_for('usuarios.reactivar_usuario', usuario_id=usuario.id) }}">
+                        <form method="POST" action="{{ url_for('usuarios.reactivar_usuario', usuario_id=usuario.id) }}" autocomplete="off">
                             <button type="submit" class="btn btn-outline-success w-100 mb-2">
                                 <i class="bi bi-person-check"></i> Reactivar Usuario
                             </button>
                         </form>
-                        
+
                         <form method="POST" action="{{ url_for('usuarios.eliminar_usuario', usuario_id=usuario.id) }}"
-                              onsubmit="return confirm('¿ELIMINAR permanentemente a {{ usuario.nombre_usuario }}?\\n\\n?? Esta acción NO se puede deshacer.')">
+                              onsubmit="return confirm('¿ELIMINAR permanentemente a {{ usuario.nombre_usuario }}?\\n\\n?? Esta acción NO se puede deshacer.')" autocomplete="off">
                             <button type="submit" class="btn btn-outline-danger w-100">
                                 <i class="bi bi-trash"></i> Eliminar Permanentemente
                             </button>
@@ -193,23 +193,23 @@
         </div>
     </div>
     {% endblock %}
-    
+
     {% block scripts %}
     <script>
         function validarContrasena() {
             const nueva = document.getElementById('nueva_contrasena').value;
             const confirmar = document.getElementById('confirmar_contrasena').value;
-            
+
             if (nueva !== confirmar) {
                 alert('Las contraseñas no coinciden');
                 return false;
             }
-            
+
             if (nueva.length < 6) {
                 alert('La contraseña debe tener al menos 6 caracteres');
                 return false;
             }
-            
+
             return confirm('¿Está seguro de cambiar la contraseña?');
         }
     </script>

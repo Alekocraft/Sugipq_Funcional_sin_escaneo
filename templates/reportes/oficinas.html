@@ -206,16 +206,16 @@
                                 </td>
                                 <td class="small">{{ movimiento.usuario }}</td>
                                 <td class="small text-muted" style="max-width: 200px;">
-                                    <span class="text-truncate d-inline-block" style="max-width: 180px;" 
+                                    <span class="text-truncate d-inline-block" style="max-width: 180px;"
                                           title="{{ movimiento.observaciones }}">
                                         {{ movimiento.observaciones }}
                                     </span>
                                 </td>
                                 <td class="text-center">
                                     {% if movimiento.accion == 'CONFIRMACION' and movimiento.asignacion_id %}
-                                        <a href="/reportes/certificado/{{ movimiento.asignacion_id }}" 
-                                           class="btn btn-success btn-sm" 
-                                           target="_blank"
+                                        <a href="/reportes/certificado/{{ movimiento.asignacion_id }}"
+                                           class="btn btn-success btn-sm"
+                                           target="_blank" rel="noopener noreferrer"
                                            title="Descargar certificado de asignación">
                                             <i class="fas fa-file-pdf"></i>
                                         </a>

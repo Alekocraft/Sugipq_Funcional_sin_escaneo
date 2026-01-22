@@ -216,6 +216,48 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
+// Navegación segura (evita Open Redirect). Solo permite rutas relativas dentro de la app.
+function safeNavigate(dest) {
+    try {
+        if (typeof dest !== 'string') return;
+
+        const d = dest.trim();
+
+        // Permitir solo rutas relativas absolutas de la app: "/..."
+        if (!d.startsWith('/') || d.startsWith('//')) return;
+
+        // Bloquear backslashes/control chars
+        if (d.includes('\') || /[
+	]/.test(d)) return;
+
+        // Lista blanca de caracteres comunes en rutas + query/hash
+        if (!/^\/[A-Za-z0-9\-._~\/?#[\]@!$&'()*+,;=%]*$/.test(d)) return;
+
+        safeNavigate(d);
+    } catch (e) {
+        // no-op
+    }
+}
+else if (typeof dest === 'string') {
+            // permitir solo rutas relativas (misma app)
+            if (dest.startsWith('/') && !dest.startsWith('//')) {
+                safeNavigate(dest);
+                return;
+            }
+            url = new URL(dest, window.location.origin);
+        } else {
+            return;
+        }
+
+        // Solo permitir same-origin
+        if (url.origin === window.location.origin) {
+            safeNavigate(url.pathname + url.search + url.hash);
+        }
+    } catch (e) {
+        // no-op
+    }
+}
+
 function exportarExcel() {
     try {
         const tabla = document.getElementById('tablaSolicitudes');
@@ -367,11 +409,11 @@ function aplicarFiltroEstado(estado) {
     if (material) url.searchParams.set('material', material);
     if (solicitante) url.searchParams.set('solicitante', solicitante);
 
-    window.location.href = url.toString();
+    safeNavigate(url.pathname + url.search + url.hash);
 }
 
 function limpiarFiltros() {
-    window.location.href = '/reportes/solicitudes';
+    safeNavigate('/reportes/solicitudes');
 }
 
 document.addEventListener('DOMContentLoaded', function() {

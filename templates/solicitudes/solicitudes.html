@@ -583,6 +583,47 @@
 // Variables globales
 let solicitudActualId = null;
 
+// Navegación segura (evita Open Redirect)
+// Navegación segura (evita Open Redirect). Solo permite rutas relativas dentro de la app.
+function safeNavigate(dest) {
+    try {
+        if (typeof dest !== 'string') return;
+
+        const d = dest.trim();
+
+        // Permitir solo rutas relativas absolutas de la app: "/..."
+        if (!d.startsWith('/') || d.startsWith('//')) return;
+
+        // Bloquear backslashes/control chars
+        if (d.includes('\') || /[
+	]/.test(d)) return;
+
+        // Lista blanca de caracteres comunes en rutas + query/hash
+        if (!/^\/[A-Za-z0-9\-._~\/?#[\]@!$&'()*+,;=%]*$/.test(d)) return;
+
+        safeNavigate(d);
+    } catch (e) {
+        // no-op
+    }
+}
+else if (typeof dest === 'string') {
+            if (dest.startsWith('/') && !dest.startsWith('//')) {
+                safeNavigate(dest);
+                return;
+            }
+            url = new URL(dest, window.location.origin);
+        } else {
+            return;
+        }
+
+        if (url.origin === window.location.origin) {
+            safeNavigate(url.toString());
+        }
+    } catch (e) {
+        // no-op
+    }
+}
+
 // Función para filtrar por estado
 function filtrarPorEstado(estado) {
     const url = new URL(window.location.href);
@@ -591,7 +632,7 @@ function filtrarPorEstado(estado) {
     } else {
         url.searchParams.delete('estado');
     }
-    window.location.href = url.toString();
+    safeNavigate(url.pathname + url.search + url.hash);
 }
 
 // Función para filtrar todas las novedades
@@ -602,7 +643,7 @@ function filtrarTodasNovedades() {
     // Podemos usar un valor especial o dejarlo vacío para que el backend haga la lógica
     url.searchParams.set('estado', 'todas_novedades');
     
-    window.location.href = url.toString();
+    safeNavigate(url.pathname + url.search + url.hash);
 }
 
 // Función para cargar detalles de solicitud

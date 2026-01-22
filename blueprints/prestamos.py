@@ -19,6 +19,43 @@ import pandas as pd
 import tempfile
 import os
 from werkzeug.utils import secure_filename
+from jinja2 import TemplateNotFound
+
+# Helpers seguros (sanitización / formato) con fallback defensivo
+try:
+    from utils.helpers import sanitizar_log_text, format_currency, format_date
+except Exception:
+    def sanitizar_log_text(value, max_len=500):
+        if value is None:
+            return ''
+        try:
+            s = str(value)
+        except Exception:
+            return '[texto-protegido]'
+        s = s.replace('\r', '\\r').replace('\n', '\\n').replace('\t', '\\t')
+        # Remover otros controles ASCII (<32) excepto espacio
+        s = ''.join(ch for ch in s if (ord(ch) >= 32) or ch == ' ')
+        if max_len and len(s) > max_len:
+            s = s[:max_len] + '...'
+        return s
+
+    def format_currency(value):
+        try:
+            if value is None:
+                return "$0"
+            return f"${float(value):,.0f}".replace(",", ".")
+        except Exception:
+            return "$0"
+
+    def format_date(date_value, format_str='%d/%m/%Y'):
+        try:
+            if not date_value:
+                return ""
+            if isinstance(date_value, str):
+                return date_value
+            return date_value.strftime(format_str)
+        except Exception:
+            return str(date_value) if date_value else ""
 
 # Import defensivo para dependencias opcionales
 try:
@@ -52,6 +89,107 @@ logger = logging.getLogger(__name__)
 prestamos_bp = Blueprint('prestamos', __name__)
 
 # =========================
+# Render seguro de templates + reparación UTF-8 (patrón del sistema)
+# =========================
+
+def _project_root():
+    """Determina la raíz del proyecto para ubicar /templates/ de forma robusta."""
+    here = os.path.abspath(os.path.dirname(__file__))
+    if os.path.basename(here).lower() == 'blueprints':
+        return os.path.abspath(os.path.join(here, '..'))
+    return here
+
+def _template_path(template_name: str) -> str:
+    return os.path.join(_project_root(), 'templates', template_name)
+
+def _ensure_template_utf8(template_name: str):
+    """Intenta convertir una plantilla a UTF-8 (útil en Windows/cp1252)."""
+    path = _template_path(template_name)
+    if not os.path.exists(path):
+        return False, "template_not_found"
+
+    # 1) Si ya es UTF-8, no hacer nada
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            f.read()
+        return True, "already_utf8"
+    except UnicodeDecodeError:
+        pass
+
+    # 2) Intentar encodings típicos
+    for enc in ('cp1252', 'latin-1'):
+        try:
+            with open(path, 'r', encoding=enc, errors='strict') as f:
+                content = f.read()
+            with open(path, 'w', encoding='utf-8', newline='\n') as f:
+                f.write(content)
+            return True, f"converted_from_{enc}"
+        except Exception:
+            continue
+
+    # 3) Último intento: reemplazo de caracteres inválidos
+    try:
+        with open(path, 'r', encoding='cp1252', errors='replace') as f:
+            content = f.read()
+        with open(path, 'w', encoding='utf-8', newline='\n') as f:
+            f.write(content)
+        return True, "converted_with_replacement"
+    except Exception as e:
+        return False, f"convert_failed:{type(e).__name__}"
+
+def safe_render_template(template_name: str, **context):
+    """
+    Renderiza una plantilla de forma segura:
+    - Si hay UnicodeDecodeError, intenta convertir la plantilla a UTF-8 y reintenta.
+    - Evita 500 por TemplateNotFound con un fallback mínimo (UTF-8).
+    - Inyecta helpers comunes (format_currency/format_date) para evitar UndefinedError en templates.
+    """
+    try:
+        context.setdefault('format_currency', format_currency)
+        context.setdefault('format_date', format_date)
+        return render_template(template_name, **context)
+    except UnicodeDecodeError:
+        ok, info = _ensure_template_utf8(template_name)
+        if ok:
+            try:
+                return render_template(template_name, **context)
+            except Exception as e:
+                logger.error(
+                    "Error renderizando template '%s' tras reparación UTF-8: [error](%s)",
+                    sanitizar_log_text(template_name),
+                    type(e).__name__
+                )
+        else:
+            logger.error(
+                "No se pudo reparar UTF-8 para template '%s': %s",
+                sanitizar_log_text(template_name),
+                sanitizar_log_text(info)
+            )
+        return (
+            """<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Error</title></head>
+            <body><h3>Error interno</h3><p>No fue posible renderizar la vista solicitada.</p></body></html>""",
+            500
+        )
+    except TemplateNotFound:
+        logger.error("Template no encontrada: %s", sanitizar_log_text(template_name))
+        return (
+            """<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Error</title></head>
+            <body><h3>Error interno</h3><p>Vista no disponible.</p></body></html>""",
+            500
+        )
+    except Exception as e:
+        logger.error(
+            "Error renderizando template '%s': [error](%s)",
+            sanitizar_log_text(template_name),
+            type(e).__name__
+        )
+        return (
+            """<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Error</title></head>
+            <body><h3>Error interno</h3><p>No fue posible procesar la solicitud.</p></body></html>""",
+            500
+        )
+
+# =========================
 # Helpers de sesión / permisos
 # =========================
 def _require_login():
@@ -60,6 +198,13 @@ def _require_login():
 def _has_role(*roles):
     rol = (session.get('rol', '') or '').strip().lower()
     return rol in [r.lower() for r in roles]
+
+def _redirect_login():
+    """Redirección consistente al login del sistema."""
+    try:
+        return redirect(url_for('auth_bp.login', next=request.url))
+    except Exception:
+        return redirect('/auth/login')
 
 # =========================
 # Helpers de imágenes
@@ -156,7 +301,7 @@ def _fetch_estados_distintos():
         """)
         return [row[0] for row in cur.fetchall() if row and row[0]]
     except Exception as e:
-        logger.info("Error leyendo estados:", e)
+        logger.error("Error leyendo estados: [error](%s)", type(e).__name__)
         return []
     finally:
         try:
@@ -191,7 +336,8 @@ def _fetch_prestamos(estado=None, oficina_id=None):
                 pe.UsuarioRechazador        AS UsuarioRechazador,
                 pe.FechaRechazo             AS FechaRechazo,
                 pe.UsuarioDevolucion        AS UsuarioDevolucion,
-                pe.FechaDevolucionReal      AS FechaDevolucionReal
+                pe.FechaDevolucionReal      AS FechaDevolucionReal,
+                pe.OficinaId               AS OficinaId
             FROM dbo.PrestamosElementos pe
             INNER JOIN dbo.ElementosPublicitarios el
                 ON el.ElementoId = pe.ElementoId
@@ -230,6 +376,7 @@ def _fetch_prestamos(estado=None, oficina_id=None):
                 'subtotal': subtotal,
                 'solicitante_nombre': r[5] or 'N/A',
                 'oficina_nombre': r[6] or 'N/A',
+                'oficina_id': int(r[17]) if len(r) > 17 and r[17] is not None else None,
                 'fecha': r[7],
                 'fecha_prevista': r[8],
                 'estado': r[9] or '',
@@ -242,8 +389,8 @@ def _fetch_prestamos(estado=None, oficina_id=None):
                 'fecha_devolucion_real': r[16]
             })
     except Exception as e:
-        logger.info("Error leyendo préstamos:", e)
-        flash(f"Error leyendo préstamos: {e}", "danger")
+        logger.error("Error leyendo préstamos: [error](%s)", type(e).__name__)
+        flash("Error interno al leer préstamos. Intenta de nuevo o contacta al administrador.", "danger")
     finally:
         try:
             if cur: cur.close()
@@ -315,7 +462,7 @@ def _fetch_detalle(prestamo_id: int):
             'observaciones_aprobacion': row[18] or ''
         }
     except Exception as e:
-        logger.info("Error leyendo detalle:", e)
+        logger.error("Error leyendo detalle: [error](%s)", type(e).__name__)
         return None
     finally:
         try:
@@ -347,7 +494,7 @@ def filtrar_por_oficina_usuario_prestamos(prestamos, campo_oficina='oficina_id')
 def listar_prestamos():
     """Listar todos los préstamos"""
     if not _require_login():
-        return redirect('/login')
+        return _redirect_login()
 
     estado = request.args.get('estado', '').strip() or None
     
@@ -357,7 +504,7 @@ def listar_prestamos():
     prestamos = _fetch_prestamos(estado, oficina_id)
     estados = _fetch_estados_distintos()
 
-    return render_template(
+    return safe_render_template(
         'prestamos/listar.html',
         prestamos=prestamos,
         filtro_estado=estado or '',
@@ -368,7 +515,7 @@ def listar_prestamos():
 def crear_prestamo():
     """Crear nuevo préstamo"""
     if not _require_login():
-        return redirect('/login')
+        return _redirect_login()
     
     if not can_access('prestamos', 'create'):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -504,8 +651,8 @@ def crear_prestamo():
             
             logger.info("❌ Error en crear_prestamo: [error](%s)", type(e).__name__)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({'success': False, 'message': f'Error al crear préstamo: {str(e)}'})
-            flash(f'Error al crear préstamo: {e}', 'danger')
+                return jsonify({'success': False, 'message': 'Error interno al crear el préstamo. Intenta nuevamente.'}), 500
+            flash('Error interno al crear el préstamo. Intenta nuevamente.', 'danger')
             return redirect('/prestamos/crear')
         finally:
             try:
@@ -562,8 +709,8 @@ def crear_prestamo():
                     'imagen': None
                 })
     except Exception as e:
-        logger.info("Error cargando elementos:", e)
-        flash(f"Error al cargar elementos: {e}", "danger")
+        logger.error("Error cargando elementos: [error](%s)", type(e).__name__)
+        flash("Error interno al cargar elementos. Intenta de nuevo o contacta al administrador.", "danger")
     finally:
         try:
             if cur: cur.close()
@@ -571,7 +718,7 @@ def crear_prestamo():
         except:
             pass
 
-    return render_template(
+    return safe_render_template(
         'prestamos/crear.html',
         elementos=elementos,
         solicitante_id=solicitante_id,
@@ -662,7 +809,7 @@ def aprobar_prestamo(prestamo_id):
             pass
         
         logger.info("❌ Error aprobando préstamo {prestamo_id}: [error](%s)", type(e).__name__)
-        return jsonify({'success': False, 'message': f'Error al aprobar préstamo: {str(e)}'}), 500
+        return jsonify({'success': False, 'message': 'Error interno al aprobar el préstamo.'}), 500
     finally:
         try:
             if cur: cur.close()
@@ -804,7 +951,7 @@ def aprobar_parcial_prestamo(prestamo_id):
             pass
         
         logger.info("❌ Error aprobando parcialmente préstamo {prestamo_id}: [error](%s)", type(e).__name__)
-        return jsonify({'success': False, 'message': f'Error al aprobar parcialmente: {str(e)}'}), 500
+        return jsonify({'success': False, 'message': 'Error interno al aprobar parcialmente.'}), 500
     finally:
         try:
             if cur: cur.close()
@@ -907,7 +1054,7 @@ def rechazar_prestamo(prestamo_id):
             pass
         
         logger.info("❌ Error rechazando préstamo {prestamo_id}: [error](%s)", type(e).__name__)
-        return jsonify({'success': False, 'message': f'Error al rechazar préstamo: {str(e)}'}), 500
+        return jsonify({'success': False, 'message': 'Error interno al rechazar el préstamo.'}), 500
     finally:
         try:
             if cur: cur.close()
@@ -1006,7 +1153,7 @@ def registrar_devolucion_prestamo(prestamo_id):
             pass
         
         logger.info("❌ Error registrando devolución préstamo {prestamo_id}: [error](%s)", type(e).__name__)
-        return jsonify({'success': False, 'message': f'Error al registrar devolución: {str(e)}'}), 500
+        return jsonify({'success': False, 'message': 'Error interno al registrar la devolución.'}), 500
     finally:
         try:
             if cur: cur.close()
@@ -1021,14 +1168,14 @@ def registrar_devolucion_prestamo(prestamo_id):
 def ver_prestamo(prestamo_id):
     """Ver detalles de un préstamo específico"""
     if not _require_login():
-        return redirect('/login')
+        return _redirect_login()
     
     detalle = _fetch_detalle(prestamo_id)
     if not detalle:
         flash('Préstamo no encontrado', 'danger')
         return redirect('/prestamos')
     
-    return render_template('prestamos/detalle.html', prestamo=detalle)
+    return safe_render_template('prestamos/detalle.html', prestamo=detalle)
 
 # =========================
 # Ruta: Crear Material (AJAX + Tradicional)
@@ -1039,7 +1186,7 @@ def crear_material_prestamo():
     if not _require_login():
         if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({'success': False, 'message': 'No autorizado'}), 401
-        return redirect('/login')
+        return _redirect_login()
     
     if not can_access('materiales', 'create'):
         if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1057,7 +1204,7 @@ def crear_material_prestamo():
         return redirect('/prestamos')
     
     if request.method == 'GET':
-        return render_template('prestamos/elemento_crear.html')
+        return safe_render_template('prestamos/elemento_crear.html')
 
     # POST: Crear material
     nombre_elemento_raw = (request.form.get('nombre_elemento') or '').strip()
@@ -1112,7 +1259,7 @@ def crear_material_prestamo():
 
             ruta_imagen = f'uploads/elementos/{filename}'
         except Exception as e:
-            msg = f'Error al guardar la imagen: {str(e)}'
+            msg = 'Error interno al guardar la imagen'
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({'success': False, 'message': msg}), 500
             flash(msg, 'danger')
@@ -1161,8 +1308,8 @@ def crear_material_prestamo():
             VALUES ({", ".join(["?"] * len(columnas))})
         """
 
-        logger.info(f"🔍 Ejecutando SQL: {sql}")
-        logger.info(f"🔍 Valores: {valores}")
+        logger.debug("Ejecutando SQL inserción ElementosPublicitarios (cols=%s)", columnas)
+        logger.debug("Valores de inserción ElementosPublicitarios preparados (len=%s)", len(valores))
         cur.execute(sql, tuple(valores))
         conn.commit()
 
@@ -1187,9 +1334,9 @@ def crear_material_prestamo():
             pass
 
         error_str = str(e)
-        error_message = f'Error al crear material: {error_str}'
+        error_message = 'Error interno al crear material.'
 
-        logger.info(f"❌ Error en crear_material_prestamo: {error_str}")
+        logger.error("Error en crear_material_prestamo: [error](%s)", type(e).__name__)
         # Si es error de duplicado, mensaje más específico
         if 'duplicate' in error_str.lower() or 'unique' in error_str.lower():
             error_message = f'Ya existe un material con el nombre "{nombre_elemento}" en esta oficina'
@@ -1216,7 +1363,7 @@ def exportar_prestamos_excel():
     Exporta los préstamos filtrados a Excel.
     Permiso sugerido: leer/exportar préstamos.
     """
-    if not can_access('prestamos', 'read'):
+    if not (can_access('prestamos', 'view') or can_access('prestamos', 'view_all') or can_access('prestamos', 'view_own')):
         flash('❌ No tienes permisos para exportar préstamos', 'danger')
         return redirect('/prestamos')
 
@@ -1303,7 +1450,7 @@ def exportar_prestamos_pdf():
     Exporta los préstamos filtrados a PDF (WeasyPrint).
     Permiso sugerido: leer/exportar préstamos.
     """
-    if not can_access('prestamos', 'read'):
+    if not (can_access('prestamos', 'view') or can_access('prestamos', 'view_all') or can_access('prestamos', 'view_own')):
         flash('❌ No tienes permisos para exportar préstamos', 'danger')
         return redirect('/prestamos')
 
@@ -1454,7 +1601,7 @@ def api_elemento_info(elemento_id: int):
             
     except Exception as e:
         logger.info("Error en api_elemento_info: [error](%s)", type(e).__name__)
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return jsonify({'ok': False, 'error': 'Error interno'}), 500
     finally:
         try:
             if cur: cur.close()
@@ -1466,10 +1613,10 @@ def api_elemento_info(elemento_id: int):
 def crear_material():
     """Ruta simple para crear material - SOLO GET"""
     if not _require_login():
-        return redirect('/login')
+        return _redirect_login()
     
     if not can_access('prestamos', 'manage_materials'):
         flash('No tienes permisos para crear materiales', 'danger')
         return redirect('/prestamos')
 
-    return render_template('prestamos/elemento_crear.html')
+    return safe_render_template('prestamos/elemento_crear.html')

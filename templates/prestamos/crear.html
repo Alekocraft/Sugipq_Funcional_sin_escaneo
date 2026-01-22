@@ -116,78 +116,87 @@
     </form>
 </div>
 
+{% endblock %}
+
 {% block scripts %}
 <script>
-    (function () {
-        const elementoSelect = document.getElementById('elemento_id');
-        const cantidadInput = document.getElementById('cantidad');
-        const dispHint = document.getElementById('disp_hint');
-        const imagenElemento = document.getElementById('img_elemento');
-        const imagenPlaceholder = document.getElementById('img_placeholder');
-        const valorUnitarioSpan = document.getElementById('vu');
-        const subtotalSpan = document.getElementById('subt');
-        const disponibleSpan = document.getElementById('disp');
-        const fechaInput = document.getElementById('fecha_prevista');
-        const prestamoForm = document.getElementById('prestamoForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const messageContainer = document.getElementById('message-container');
+(function () {
+    "use strict";
 
-        let valorUnitario = 0;
-        let disponible = 0;
+    // Navegación segura (evita Open Redirect). Solo permite same-origin.
+    function safeNavigate(dest) {
+        try {
+            if (typeof dest !== "string") return;
+            const d = dest.trim();
+            if (!d) return;
 
-        if (fechaInput) {
-            const today = new Date().toISOString().split('T')[0];
-            fechaInput.min = today;
-            
-            if (!fechaInput.value) {
-                const nextWeek = new Date();
-                nextWeek.setDate(nextWeek.getDate() + 7);
-                fechaInput.value = nextWeek.toISOString().split('T')[0];
-            }
+            // Bloquear backslashes y caracteres de control (CR/LF/TAB)
+            if (/[\\\r\n\t]/.test(d)) return;
+
+            const url = new URL(d, window.location.origin);
+
+            // Solo permitir same-origin
+            if (url.origin !== window.location.origin) return;
+
+            // Redirigir solo a path+query+hash (sin permitir "javascript:" ni externos)
+            window.location.assign(url.pathname + url.search + url.hash);
+        } catch (_) {
+            // no-op
         }
+    }
 
-        function formatearNumero(n) {
-            return (Math.round(n * 100) / 100).toFixed(2);
+    const elementoSelect = document.getElementById('elemento_id');
+    const cantidadInput = document.getElementById('cantidad');
+    const dispHint = document.getElementById('disp_hint');
+    const imagenElemento = document.getElementById('img_elemento');
+    const imagenPlaceholder = document.getElementById('img_placeholder');
+    const valorUnitarioSpan = document.getElementById('vu');
+    const subtotalSpan = document.getElementById('subt');
+    const disponibleSpan = document.getElementById('disp');
+    const fechaInput = document.getElementById('fecha_prevista');
+    const prestamoForm = document.getElementById('prestamoForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const messageContainer = document.getElementById('message-container');
+
+    let valorUnitario = 0;
+    let disponible = 0;
+
+    if (fechaInput) {
+        const today = new Date().toISOString().split('T')[0];
+        fechaInput.min = today;
+
+        if (!fechaInput.value) {
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            fechaInput.value = nextWeek.toISOString().split('T')[0];
         }
+    }
 
-        function cargarInformacionElemento() {
-            const opcionSeleccionada = elementoSelect.options[elementoSelect.selectedIndex];
-            
-            if (!opcionSeleccionada || !opcionSeleccionada.value) {
-                resetearInformacionElemento();
-                return;
-            }
+    function formatearNumero(n) {
+        return (Math.round(n * 100) / 100).toFixed(2);
+    }
 
-            valorUnitario = parseFloat(opcionSeleccionada.getAttribute('data-valor')) || 0;
-            disponible = parseInt(opcionSeleccionada.getAttribute('data-disponible')) || 0;
-            const imagenUrl = opcionSeleccionada.getAttribute('data-imagen');
+    function resetearInformacionElemento() {
+        if (dispHint) dispHint.textContent = '';
+        if (imagenElemento) imagenElemento.style.display = 'none';
+        if (imagenPlaceholder) imagenPlaceholder.style.display = 'flex';
+        if (valorUnitarioSpan) valorUnitarioSpan.textContent = '0.00';
+        if (subtotalSpan) subtotalSpan.textContent = '0.00';
+        if (disponibleSpan) disponibleSpan.textContent = '0';
+        valorUnitario = 0;
+        disponible = 0;
+    }
 
-            actualizarInterfaz(imagenUrl);
-            calcularSubtotal();
-        }
+    function actualizarInterfaz(imagenUrl) {
+        if (valorUnitarioSpan) valorUnitarioSpan.textContent = formatearNumero(valorUnitario);
+        if (disponibleSpan) disponibleSpan.textContent = disponible;
 
-        function resetearInformacionElemento() {
-            dispHint.textContent = '';
-            imagenElemento.style.display = 'none';
-            imagenPlaceholder.style.display = 'flex';
-            valorUnitarioSpan.textContent = '0.00';
-            subtotalSpan.textContent = '0.00';
-            disponibleSpan.textContent = '0';
-            valorUnitario = 0;
-            disponible = 0;
-        }
-
-        function actualizarInterfaz(imagenUrl) {
-            valorUnitarioSpan.textContent = formatearNumero(valorUnitario);
-            disponibleSpan.textContent = disponible;
+        if (dispHint) {
             dispHint.textContent = `Disponible: ${disponible}`;
+            dispHint.className = (disponible > 0) ? 'small text-success' : 'small text-danger';
+        }
 
-            if (disponible > 0) {
-                dispHint.className = 'small text-success';
-            } else {
-                dispHint.className = 'small text-danger';
-            }
-
+        if (imagenElemento && imagenPlaceholder) {
             if (imagenUrl && imagenUrl.trim() !== '') {
                 imagenElemento.src = imagenUrl;
                 imagenElemento.style.display = 'block';
@@ -202,53 +211,70 @@
                 imagenPlaceholder.style.display = 'flex';
             }
         }
+    }
 
-        function calcularSubtotal() {
-            const cantidad = parseInt(cantidadInput.value || '0', 10);
-            const subtotal = (valorUnitario || 0) * (cantidad || 0);
-            subtotalSpan.textContent = formatearNumero(subtotal);
+    function calcularSubtotal() {
+        const cantidad = parseInt((cantidadInput && cantidadInput.value) ? cantidadInput.value : '0', 10);
+        const subtotal = (valorUnitario || 0) * (cantidad || 0);
+        if (subtotalSpan) subtotalSpan.textContent = formatearNumero(subtotal);
 
-            if (cantidad > disponible) {
-                cantidadInput.classList.add('is-invalid');
-                cantidadInput.setCustomValidity('La cantidad supera el stock disponible');
-                dispHint.classList.add('text-danger');
-            } else if (cantidad <= 0) {
-                cantidadInput.classList.add('is-invalid');
-                cantidadInput.setCustomValidity('La cantidad debe ser mayor a 0');
-            } else {
-                cantidadInput.classList.remove('is-invalid');
-                cantidadInput.setCustomValidity('');
-                if (disponible > 0) {
-                    dispHint.classList.remove('text-danger');
-                    dispHint.classList.add('text-success');
-                }
-            }
+        if (!cantidadInput) return;
+
+        if (cantidad > disponible) {
+            cantidadInput.classList.add('is-invalid');
+            cantidadInput.setCustomValidity('La cantidad supera el stock disponible');
+            if (dispHint) dispHint.classList.add('text-danger');
+        } else if (cantidad <= 0) {
+            cantidadInput.classList.add('is-invalid');
+            cantidadInput.setCustomValidity('La cantidad debe ser mayor a 0');
+        } else {
+            cantidadInput.classList.remove('is-invalid');
+            cantidadInput.setCustomValidity('');
+        }
+    }
+
+    function cargarInformacionElemento() {
+        if (!elementoSelect) return;
+
+        const opcionSeleccionada = elementoSelect.options[elementoSelect.selectedIndex];
+
+        if (!opcionSeleccionada || !opcionSeleccionada.value) {
+            resetearInformacionElemento();
+            return;
         }
 
-        function mostrarMensaje(tipo, mensaje) {
-            messageContainer.innerHTML = '';
-            
-            const alertaDiv = document.createElement('div');
-            alertaDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
-            alertaDiv.role = 'alert';
-            alertaDiv.innerHTML = `
-                ${mensaje}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-            `;
-            messageContainer.appendChild(alertaDiv);
-            
-            if (tipo !== 'danger') {
-                setTimeout(() => {
-                    if (alertaDiv.parentNode) {
-                        alertaDiv.remove();
-                    }
-                }, 5000);
-            }
-        }
+        valorUnitario = parseFloat(opcionSeleccionada.getAttribute('data-valor')) || 0;
+        disponible = parseInt(opcionSeleccionada.getAttribute('data-disponible')) || 0;
+        const imagenUrl = opcionSeleccionada.getAttribute('data-imagen') || '';
 
+        actualizarInterfaz(imagenUrl);
+        calcularSubtotal();
+    }
+
+    function mostrarMensaje(tipo, mensaje) {
+        if (!messageContainer) return;
+        messageContainer.innerHTML = '';
+
+        const alertaDiv = document.createElement('div');
+        alertaDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+        alertaDiv.role = 'alert';
+        alertaDiv.innerHTML = `
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        `;
+        messageContainer.appendChild(alertaDiv);
+
+        if (tipo !== 'danger') {
+            setTimeout(() => {
+                if (alertaDiv.parentNode) alertaDiv.remove();
+            }, 5000);
+        }
+    }
+
+    if (prestamoForm && submitBtn) {
         prestamoForm.addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             if (!prestamoForm.checkValidity()) {
                 prestamoForm.classList.add('was-validated');
                 return;
@@ -260,53 +286,51 @@
 
             try {
                 const formData = new FormData(prestamoForm);
-                
-                const headers = {
-                    'X-Requested-With': 'XMLHttpRequest'
-                };
-                
-                const respuesta = await fetch('/prestamos/crear', {
+
+                const resp = await fetch('/prestamos/crear', {
                     method: 'POST',
-                    headers: headers,
-                    body: formData
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData,
+                    credentials: 'same-origin'
                 });
 
-                const resultado = await respuesta.json();
-                
-                if (resultado.success) {
-                    mostrarMensaje('success', resultado.message);
-                    
+                const json = await resp.json();
+
+                if (json && json.success) {
+                    mostrarMensaje('success', json.message || 'Préstamo registrado.');
+
                     prestamoForm.reset();
                     resetearInformacionElemento();
-                    
-                    const nextWeek = new Date();
-                    nextWeek.setDate(nextWeek.getDate() + 7);
-                    fechaInput.value = nextWeek.toISOString().split('T')[0];
-                    
-                    elementoSelect.selectedIndex = 0;
+
+                    if (fechaInput) {
+                        const nextWeek = new Date();
+                        nextWeek.setDate(nextWeek.getDate() + 7);
+                        fechaInput.value = nextWeek.toISOString().split('T')[0];
+                    }
+
+                    if (elementoSelect) elementoSelect.selectedIndex = 0;
                     cargarInformacionElemento();
-                    
-                    if (resultado.redirect) {
-                        setTimeout(() => {
-                            window.location.href = resultado.redirect;
-                        }, 3000);
+
+                    if (json.redirect) {
+                        setTimeout(() => safeNavigate(json.redirect), 1500);
                     }
                 } else {
-                    mostrarMensaje('danger', resultado.message || 'Error al registrar el préstamo');
+                    mostrarMensaje('danger', (json && json.message) ? json.message : 'Error al registrar el préstamo');
                 }
-            } catch (error) {
+            } catch (_) {
                 mostrarMensaje('danger', 'Error de conexión. Por favor, intente nuevamente.');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = textoOriginal;
             }
         });
+    }
 
-        elementoSelect?.addEventListener('change', cargarInformacionElemento);
-        cantidadInput?.addEventListener('input', calcularSubtotal);
+    if (elementoSelect) elementoSelect.addEventListener('change', cargarInformacionElemento);
+    if (cantidadInput) cantidadInput.addEventListener('input', calcularSubtotal);
 
-        cargarInformacionElemento();
-    })();
+    cargarInformacionElemento();
+})();
 </script>
 {% endblock %}
-{% endblock %}
+

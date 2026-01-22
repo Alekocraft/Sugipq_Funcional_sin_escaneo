@@ -508,7 +508,8 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
-                }
+                },
+                credentials: 'same-origin'
             })
             .then(response => response.json())
             .then(data => {
@@ -516,7 +517,7 @@
                     mostrarNotificacion('Prestamo aprobado correctamente', 'success');
                     actualizarEstadoPrestamo(prestamoId, data.estado);
                 } else {
-                    mostrarNotificacion('Error al aprobar el prestamo: ' + data.message, 'error');
+                    mostrarNotificacion(data.message || 'No se pudo aprobar el préstamo', 'error');
                 }
             })
             .catch(error => {
@@ -565,7 +566,7 @@
                 const modal = bootstrap.Modal.getInstance(document.getElementById('aprobarParcialModal'));
                 modal.hide();
             } else {
-                mostrarNotificacion('Error al aprobar parcialmente: ' + data.message, 'error');
+                mostrarNotificacion(data.message || 'No se pudo aprobar parcialmente', 'error');
             }
         })
         .catch(error => {
@@ -611,7 +612,7 @@
                 const modal = bootstrap.Modal.getInstance(document.getElementById('rechazarModal'));
                 modal.hide();
             } else {
-                mostrarNotificacion('Error al rechazar el prestamo: ' + data.message, 'error');
+                mostrarNotificacion(data.message || 'No se pudo rechazar el préstamo', 'error');
             }
         })
         .catch(error => {
@@ -652,7 +653,7 @@
                 const modal = bootstrap.Modal.getInstance(document.getElementById('devolucionModal'));
                 modal.hide();
             } else {
-                mostrarNotificacion('Error al registrar la devolucion: ' + data.message, 'error');
+                mostrarNotificacion(data.message || 'No se pudo registrar la devolución', 'error');
             }
         })
         .catch(error => {

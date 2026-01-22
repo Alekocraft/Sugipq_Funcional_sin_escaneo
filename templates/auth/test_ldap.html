@@ -56,20 +56,20 @@
                             2. Ingrese su contraseña de dominio<br>
                             3. El sistema probará autenticación y sincronización
                         </div>
-                        
-                        <form method="POST" id="ldapForm">
+
+                        <form method="POST" id="ldapForm" autocomplete="off">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Usuario AD</label>
-                                <input type="text" class="form-control" id="username" name="username" 
+                                <input type="text" class="form-control" id="username" name="username" autocomplete="off"
                                        placeholder="ej: jperez" required>
                                 <div class="form-text">Solo el nombre de usuario, ej: "jperez" no "jperez@qualitascolombia.com.co"</div>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label for="password" class="form-label">Contraseña AD</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
+                                <input type="password" class="form-control" id="password" name="password" required autocomplete="off">
                             </div>
-                            
+
                             <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-primary">Probar Autenticación LDAP</button>
                                 <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Volver al Login</a>
@@ -78,7 +78,7 @@
                                 {% endif %}
                             </div>
                         </form>
-                        
+
                         {% if result %}
                         <div class="result-card">
                             <div class="card mt-4">
@@ -89,7 +89,7 @@
                                     <div class="alert {% if result.success %}alert-success{% else %}alert-danger{% endif %}">
                                         <strong>{{ result.message }}</strong>
                                     </div>
-                                    
+
                                     <div class="row">
                                         <div class="col-md-6">
                                             <h6>Configuración LDAP:</h6>
@@ -100,7 +100,7 @@
                                                 <li><strong>Usuario probado:</strong> {{ result.username }}</li>
                                             </ul>
                                         </div>
-                                        
+
                                         {% if result.user_info %}
                                         <div class="col-md-6">
                                             <h6>Información del Usuario:</h6>
@@ -115,7 +115,7 @@
                                         </div>
                                         {% endif %}
                                     </div>
-                                    
+
                                     {% if result.sync_info %}
                                     <div class="alert alert-success mt-3">
                                         <h6>Sincronización Exitosa:</h6>
@@ -127,14 +127,14 @@
                                         <p class="mb-0"><strong>⚠️ Importante:</strong> Ahora puede iniciar sesión con sus credenciales de dominio.</p>
                                     </div>
                                     {% endif %}
-                                    
+
                                     {% if result.sync_error %}
                                     <div class="alert alert-warning mt-3">
                                         <h6>Error en Sincronización:</h6>
                                         <p>{{ result.sync_error }}</p>
                                     </div>
                                     {% endif %}
-                                    
+
                                     {% if result.traceback %}
                                     <div class="mt-3">
                                         <h6>Detalles del Error:</h6>
@@ -145,7 +145,7 @@
                             </div>
                         </div>
                         {% endif %}
-                        
+
                         <div class="card mt-4">
                             <div class="card-header bg-info text-white">
                                 <h5 class="mb-0">Mapeo de Roles AD → Sistema</h5>
@@ -203,20 +203,20 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="text-center mt-3 text-muted">
                     <small>Sistema de Gestión de Inventarios - Qualitas Colombia © 2025</small>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Auto-enfocar el campo de usuario
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('username').focus();
-            
+
             // Limpiar el formulario después de enviar
             const form = document.getElementById('ldapForm');
             if (form) {

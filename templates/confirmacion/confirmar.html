@@ -83,7 +83,7 @@
                     <div class="card-header bg-primary text-white">
                         <h4 class="mb-0"><i class="bi bi-box-seam me-2"></i> Confirmar Recepción de Activo</h4>
                     </div>
-                    
+
                     <div class="card-body">
                         <!-- Información de la asignación -->
                         <div class="info-box">
@@ -92,7 +92,7 @@
                             <p><strong>Oficina:</strong> {{ asignacion.oficina_nombre }}</p>
                             <p><strong>Asignado a:</strong> {{ asignacion.usuario_ad_nombre or asignacion.usuario_email }}</p>
                             <p><strong>Fecha de Asignación:</strong> {{ asignacion.fecha_asignacion.strftime('%d/%m/%Y %H:%M') }}</p>
-                            <p><strong>Días restantes para confirmar:</strong> 
+                            <p><strong>Días restantes para confirmar:</strong>
                                 {% if asignacion.dias_restantes > 3 %}
                                     <span class="badge bg-success">{{ asignacion.dias_restantes }} días</span>
                                 {% elif asignacion.dias_restantes > 0 %}
@@ -104,9 +104,9 @@
                         </div>
 
                         <!-- Formulario de confirmación -->
-                        <form method="POST" action="">
+                        <form method="POST" action="" autocomplete="off">
                             <input type="hidden" name="token" value="{{ token }}">
-                            
+
                             <div class="mb-4">
                                 <h5><i class="bi bi-shield-lock me-2"></i> Autenticación</h5>
                                 <div class="row">
@@ -114,20 +114,20 @@
                                         <label for="usuario_ad_username" class="form-label">
                                             <i class="bi bi-person-badge me-1"></i> Usuario Active Directory
                                         </label>
-                                        <input type="text" class="form-control" id="usuario_ad_username" 
+                                        <input type="text" class="form-control" id="usuario_ad_username"
                                                name="usuario_ad_username" required
                                                placeholder="Ej: jperez"
-                                               value="{{ request.form.usuario_ad_username if request.form }}">
+                                               value="{{ request.form.usuario_ad_username if request.form }}" autocomplete="off">
                                         <div class="form-text">
                                             Nombre de usuario de su cuenta corporativa (sin dominio)
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-6 mb-3">
                                         <label for="usuario_ad_password" class="form-label">
                                             <i class="bi bi-key me-1"></i> Contraseña AD
                                         </label>
-                                        <input type="password" class="form-control" id="usuario_ad_password" 
+                                        <input type="password" class="form-control" id="usuario_ad_password" autocomplete="off"
                                                name="usuario_ad_password" required
                                                placeholder="Ingrese su contraseña">
                                         <div class="form-text">
@@ -136,7 +136,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="mb-4">
                                 <h5><i class="bi bi-card-text me-2"></i> Identificación</h5>
                                 <div class="row">
@@ -144,9 +144,9 @@
                                         <label for="numero_identificacion" class="form-label">
                                             <i class="bi bi-person-vcard me-1"></i> Número de Cédula
                                         </label>
-                                        <input type="text" class="form-control" id="numero_identificacion" 
+                                        <input type="text" class="form-control" id="numero_identificacion"
                                                name="numero_identificacion" required
-                                               placeholder="Ej: 12345678" 
+                                               placeholder="Ej: 12345678"
                                                pattern="[0-9]{8,10}"
                                                title="Ingrese 8 o 10 dígitos"
                                                value="{{ request.form.numero_identificacion if request.form }}">
@@ -169,7 +169,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="alert alert-warning">
                                 <h6><i class="bi bi-exclamation-triangle"></i> Declaración de Responsabilidad</h6>
                                 <p class="mb-0">
@@ -180,10 +180,10 @@
                                     4. La información proporcionada es verídica y completa.
                                 </p>
                             </div>
-                            
+
                             <div class="d-grid gap-2 mt-4">
                                 <button type="submit" class="btn btn-qualitas btn-lg py-3">
-                                    <i class="bi bi-check-circle-fill me-2"></i> 
+                                    <i class="bi bi-check-circle-fill me-2"></i>
                                     <strong>CONFIRMAR RECEPCIÓN DEL ACTIVO</strong>
                                 </button>
                                 <a href="javascript:history.back()" class="btn btn-outline-secondary">
@@ -192,21 +192,21 @@
                             </div>
                         </form>
                     </div>
-                    
+
                     <div class="card-footer text-muted">
                         <small>
-                            <i class="bi bi-shield-check text-primary"></i> 
+                            <i class="bi bi-shield-check text-primary"></i>
                             <strong>Sistema Seguro:</strong> Su autenticación se valida contra Active Directory de Quálitas.<br>
-                            <i class="bi bi-file-earmark-text text-success"></i> 
+                            <i class="bi bi-file-earmark-text text-success"></i>
                             Esta confirmación genera un registro permanente en el sistema de inventarios.
                         </small>
                     </div>
                 </div>
-                
+
                 <div class="text-center mt-4">
                     <p class="text-muted">
                         <small>
-                            <i class="bi bi-telephone"></i> Soporte Técnico: Ext. 5000 | 
+                            <i class="bi bi-telephone"></i> Soporte Técnico: Ext. 5000 |
                             <i class="bi bi-envelope"></i> inventarios@qualitascolombia.com.co
                         </small>
                     </p>
@@ -221,19 +221,19 @@
         document.getElementById('numero_identificacion').addEventListener('input', function(e) {
             // Permitir solo números
             this.value = this.value.replace(/[^\d]/g, '');
-            
+
             // Validar longitud
             if (this.value.length > 10) {
                 this.value = this.value.slice(0, 10);
             }
         });
-        
+
         // Validación de usuario AD (solo letras, números y puntos)
         document.getElementById('usuario_ad_username').addEventListener('input', function(e) {
             // Remover espacios y caracteres especiales
             this.value = this.value.toLowerCase().replace(/[^a-z0-9.]/g, '');
         });
-        
+
         // Mostrar/ocultar contraseña (opcional)
         document.addEventListener('DOMContentLoaded', function() {
             const togglePassword = document.createElement('button');
@@ -241,11 +241,11 @@
             togglePassword.className = 'btn btn-outline-secondary btn-sm position-absolute end-0 top-50 translate-middle-y';
             togglePassword.style.right = '10px';
             togglePassword.innerHTML = '<i class="bi bi-eye"></i>';
-            
+
             const passwordField = document.getElementById('usuario_ad_password');
             passwordField.parentElement.classList.add('position-relative');
             passwordField.parentElement.appendChild(togglePassword);
-            
+
             togglePassword.addEventListener('click', function() {
                 const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
                 passwordField.setAttribute('type', type);

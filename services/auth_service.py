@@ -8,6 +8,7 @@ from flask_login import login_user
 import bcrypt
 import logging
 
+from utils.helpers import sanitizar_username, sanitizar_log_text
 logger = logging.getLogger(__name__)
 
 class AuthService:
@@ -32,23 +33,23 @@ class AuthService:
             tuple: (success, user, message)
         """
         # 1. Intentar autenticación LDAP
-        logger.info(f"🔐 Intentando autenticación LDAP para: {username}")
+        logger.info("🔐 Intentando autenticación LDAP para: %s", sanitizar_username(username))
         
         try:
             user_data = self.ad_auth.authenticate_user(username, password)
             
             if user_data:
-                logger.info(f"✅ LDAP: Autenticación exitosa para {username}")
+                logger.info("✅ LDAP: Autenticación exitosa para %s", sanitizar_username(username))
                 
                 # Buscar o crear usuario en base de datos
                 user = UsuarioModel.get_by_username(username)
                 
                 if not user:
-                    logger.info(f"📝 Creando nuevo usuario desde LDAP: {username}")
+                    logger.info("📝 Creando nuevo usuario desde LDAP: %s", sanitizar_username(username))
                     # Crear nuevo usuario desde LDAP
                     user = UsuarioModel.create_from_ldap(user_data)
                 else:
-                    logger.info(f"🔄 Actualizando usuario existente desde LDAP: {username}")
+                    logger.info("🔄 Actualizando usuario existente desde LDAP: %s", sanitizar_username(username))
                     # Actualizar información desde LDAP
                     user.update_from_ldap(user_data)
                 
@@ -61,16 +62,16 @@ class AuthService:
                 return True, user, "Autenticación LDAP exitosa"
         
         except Exception as ldap_error:
-            logger.warning(f"⚠️ LDAP falló para {username}: {ldap_error}")
+            logger.warning("⚠️ LDAP falló para %s: %s", sanitizar_username(username), sanitizar_log_text(str(ldap_error)))
         
         # 2. Fallback a autenticación de base de datos local
-        logger.info(f"🔄 Intentando autenticación local para {username}")
+        logger.info("🔄 Intentando autenticación local para %s", sanitizar_username(username))
         
         try:
             user = UsuarioModel.get_by_username(username)
             
             if user and user.check_password(password):
-                logger.info(f"✅ Autenticación local exitosa para {username}")
+                logger.info("✅ Autenticación local exitosa para %s", sanitizar_username(username))
                 
                 # Login con Flask-Login (si está configurado)
                 try:
@@ -81,10 +82,10 @@ class AuthService:
                 return True, user, "Autenticación local exitosa"
         
         except Exception as db_error:
-            logger.error(f"❌ Error en autenticación local: {db_error}")
+            logger.error("❌ Error en autenticación local: %s", sanitizar_log_text(str(db_error)))
         
         # 3. Autenticación fallida
-        logger.warning(f"❌ Autenticación fallida para {username}")
+        logger.warning("❌ Autenticación fallida para %s", sanitizar_username(username))
         return False, None, "Credenciales inválidas"
     
     def test_ldap_connection(self):

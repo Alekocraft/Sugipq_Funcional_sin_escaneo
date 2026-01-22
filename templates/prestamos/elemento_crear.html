@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         } catch (error) {
-            console.error("Error en creación de material:", error);
+            console.error("Error en creación de material");
             mostrarAlerta("Error inesperado del servidor", "danger");
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Crear Material';

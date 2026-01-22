@@ -304,7 +304,7 @@ def crear_usuario():
                 cursor.execute("SELECT COUNT(*) FROM Usuarios WHERE NombreUsuario = ?", 
                               (usuario_data['usuario'],))
                 if cursor.fetchone()[0] > 0:
-                    logger.warning(f"Intento de crear usuario existente: {usuario_sanitizado}")
+                    logger.warning(f"Intento de crear usuario existente: {sanitizar_log_text(usuario_sanitizado)}")
                     flash('El nombre de usuario ya existe', 'danger')
                     return redirect('/usuarios/crear')
                 
@@ -335,11 +335,11 @@ def crear_usuario():
                         ))
                         conn.commit()
                     
-                    logger.info(f"Usuario local creado exitosamente: {usuario_sanitizado}")
+                    logger.info(f"Usuario local creado exitosamente: {sanitizar_log_text(usuario_sanitizado)}")
                     flash('Usuario local creado exitosamente', 'success')
                     return redirect('/usuarios')
                 else:
-                    logger.error(f"Error al crear usuario local: {usuario_sanitizado}")
+                    logger.error(f"Error al crear usuario local: {sanitizar_log_text(usuario_sanitizado)}")
                     flash('Error al crear el usuario local', 'danger')
                     return redirect('/usuarios/crear')
             
@@ -360,7 +360,7 @@ def crear_usuario():
                 # Verificar si ya existe
                 cursor.execute("SELECT COUNT(*) FROM Usuarios WHERE NombreUsuario = ?", (usuario_ldap,))
                 if cursor.fetchone()[0] > 0:
-                    logger.warning(f"Usuario LDAP ya existe en el sistema: {usuario_ldap_sanitizado}")
+                    logger.warning(f"Usuario LDAP ya existe en el sistema: {sanitizar_log_text(usuario_ldap_sanitizado)}")
                     flash('El usuario LDAP ya existe en el sistema', 'warning')
                     return redirect('/usuarios/crear')
                 
@@ -373,11 +373,11 @@ def crear_usuario():
                 })
                 
                 if usuario_creado:
-                    logger.info(f"Usuario LDAP creado exitosamente: {usuario_ldap_sanitizado}")
+                    logger.info(f"Usuario LDAP creado exitosamente: {sanitizar_log_text(usuario_ldap_sanitizado)}")
                     flash(f'Usuario LDAP "{usuario_ldap}" creado exitosamente. Debe autenticarse primero con sus credenciales de dominio para activarse.', 'success')
                     return redirect('/usuarios')
                 else:
-                    logger.error(f"Error al crear usuario LDAP: {usuario_ldap_sanitizado}")
+                    logger.error(f"Error al crear usuario LDAP: {sanitizar_log_text(usuario_ldap_sanitizado)}")
                     flash('Error al crear el usuario LDAP', 'danger')
                     return redirect('/usuarios/crear')
             
@@ -503,7 +503,7 @@ def editar_usuario(usuario_id):
                 
                 if cursor.fetchone()[0] == 0:
                     # ✅ CORRECCIÓN: Log sanitizado
-                    logger.warning(f"Intento de desactivar último administrador: {username_sanitizado}")
+                    logger.warning(f"Intento de desactivar último administrador: {sanitizar_log_text(username_sanitizado)}")
                     flash('No se puede desactivar el último administrador activo', 'danger')
                     return redirect(f'/usuarios/editar/{usuario_id}')
             
@@ -528,7 +528,7 @@ def editar_usuario(usuario_id):
             conn.commit()
             
             # ✅ CORRECCIÓN: Log sanitizado
-            logger.info(f"Usuario actualizado exitosamente: {username_sanitizado} -> Rol:{sanitizar_log_text(nuevo_rol)}")
+            logger.info(f"Usuario actualizado exitosamente: {sanitizar_log_text(username_sanitizado)} -> Rol:{sanitizar_log_text(nuevo_rol)}")
             flash('Usuario actualizado exitosamente', 'success')
             return redirect('/usuarios')
             
@@ -607,7 +607,7 @@ def cambiar_contrasena(usuario_id):
         conn.commit()
         
         # ✅ CORRECCIÓN: Log sanitizado
-        logger.info(f"Contraseña actualizada para usuario: {username_sanitizado}")
+        logger.info(f"Contraseña actualizada para usuario: {sanitizar_log_text(username_sanitizado)}")
         flash('Contraseña actualizada exitosamente', 'success')
         return redirect('/usuarios')
         
@@ -659,7 +659,7 @@ def desactivar_usuario(usuario_id):
             
             if cursor.fetchone()[0] == 0:
                 # ✅ CORRECCIÓN: Log sanitizado
-                logger.warning(f"Intento de desactivar último administrador activo: {username_sanitizado}")
+                logger.warning(f"Intento de desactivar último administrador activo: {sanitizar_log_text(username_sanitizado)}")
                 flash('No se puede desactivar el último administrador activo', 'danger')
                 return redirect('/usuarios')
         
@@ -673,7 +673,7 @@ def desactivar_usuario(usuario_id):
         conn.commit()
         
         # ✅ CORRECCIÓN: Log sanitizado
-        logger.info(f"Usuario desactivado: {username_sanitizado}")
+        logger.info(f"Usuario desactivado: {sanitizar_log_text(username_sanitizado)}")
         flash('Usuario desactivado exitosamente', 'success')
         return redirect('/usuarios')
         
@@ -726,7 +726,7 @@ def reactivar_usuario(usuario_id):
         conn.commit()
         
         # ✅ CORRECCIÓN: Log sanitizado
-        logger.info(f"Usuario reactivado: {username_sanitizado}")
+        logger.info(f"Usuario reactivado: {sanitizar_log_text(username_sanitizado)}")
         flash('Usuario reactivado exitosamente', 'success')
         return redirect('/usuarios')
         
@@ -784,7 +784,7 @@ def eliminar_usuario(usuario_id):
             
             if cursor.fetchone()[0] == 0:
                 # ✅ CORRECCIÓN: Log sanitizado
-                logger.warning(f"Intento de eliminar único administrador: {username_sanitizado}")
+                logger.warning(f"Intento de eliminar único administrador: {sanitizar_log_text(username_sanitizado)}")
                 flash('No se puede eliminar el único administrador del sistema', 'danger')
                 return redirect('/usuarios')
         
@@ -794,7 +794,7 @@ def eliminar_usuario(usuario_id):
         conn.commit()
         
         # ✅ CORRECCIÓN: Log sanitizado
-        logger.info(f"Usuario eliminado permanentemente: {username_sanitizado}")
+        logger.info(f"Usuario eliminado permanentemente: {sanitizar_log_text(username_sanitizado)}")
         flash('Usuario eliminado permanentemente', 'success')
         return redirect('/usuarios')
         
@@ -874,7 +874,7 @@ def sincronizar_usuario_ldap(username):
         # ✅ CORRECCIÓN: Log sanitizado
         username_sanitizado = sanitizar_username(username)
         error_sanitizado = sanitizar_log_text(str(e))
-        logger.error(f"Error sincronizando usuario LDAP: {username_sanitizado}: {error_sanitizado}")
+        logger.error(f"Error sincronizando usuario LDAP: {sanitizar_log_text(username_sanitizado)}: {error_sanitizado}")
         flash('Error sincronizando usuario', 'danger')
         return redirect('/usuarios')
 

@@ -5,6 +5,7 @@ CORREGIDO: Usa authenticate_user en lugar de authenticate
 """
 from database import get_database_connection
 import logging
+from utils.helpers import sanitizar_username, sanitizar_log_text
 import secrets
 import hashlib
 from datetime import datetime, timedelta
@@ -108,7 +109,7 @@ class ConfirmacionAsignacionesModel:
             }
         
         try:
-            logger.info(f"Intentando autenticar usuario AD: {username}")
+            logger.info("Intentando autenticar usuario AD: %s", sanitizar_username(username))
             
             # CORREGIDO: Usar authenticate_user en lugar de authenticate
             user_info = ad_auth.authenticate_user(username, password)
@@ -120,7 +121,7 @@ class ConfirmacionAsignacionesModel:
                     'user_info': user_info
                 }
             else:
-                logger.warning(f"Autenticación fallida para usuario: {username}")
+                logger.warning("Autenticación fallida para usuario: %s", sanitizar_username(username))
                 return {
                     'success': False,
                     'message': 'Credenciales inválidas'
@@ -130,7 +131,7 @@ class ConfirmacionAsignacionesModel:
             logger.error("Error autenticando usuario AD: [error](%s)", type(e).__name__)
             return {
                 'success': False,
-                'message': f'Error de autenticación: {str(e)}'
+                'message': f'Error de autenticación: {sanitizar_log_text(str(e))}'
             }
     
     @staticmethod

@@ -52,7 +52,7 @@
                     <h5 class="mb-0"><i class="fas fa-share-square me-2"></i>Asignar Producto</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" id="formAsignacion">
+                    <form method="POST" id="formAsignacion" autocomplete="off">
                         <div class="row">
                             <!-- Oficina Destino -->
                             <div class="col-md-6">
@@ -145,9 +145,9 @@
                                 </div>
                                 
                                 <!-- Campos ocultos para datos del usuario -->
-                                <input type="hidden" name="usuario_ad_username" id="usuario_ad_username">
+                                <input type="hidden" name="usuario_ad_username" id="usuario_ad_username" autocomplete="off">
                                 <input type="hidden" name="usuario_ad_nombre" id="usuario_ad_nombre">
-                                <input type="hidden" name="usuario_ad_email" id="usuario_ad_email">
+                                <input type="hidden" name="usuario_ad_email" id="usuario_ad_email" autocomplete="off">
                                 
                                 <!-- Campos manuales (si no hay AD) -->
                                 <div id="camposManuales" style="display: none;">
@@ -155,7 +155,7 @@
                                         <div class="col-md-4">
                                             <div class="mb-3">
                                                 <label class="form-label">Usuario</label>
-                                                <input type="text" class="form-control" id="usuarioManual" placeholder="usuario123">
+                                                <input type="text" class="form-control" id="usuarioManual" placeholder="usuario123" autocomplete="off">
                                             </div>
                                         </div>
                                         <div class="col-md-4">
@@ -167,7 +167,7 @@
                                         <div class="col-md-4">
                                             <div class="mb-3">
                                                 <label class="form-label">Email</label>
-                                                <input type="email" class="form-control" id="emailManual" placeholder="usuario@qualitascolombia.com.co">
+                                                <input type="email" class="form-control" id="emailManual" placeholder="usuario@qualitascolombia.com.co" autocomplete="off">
                                             </div>
                                         </div>
                                     </div>

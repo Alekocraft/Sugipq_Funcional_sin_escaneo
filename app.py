@@ -1006,6 +1006,31 @@ if __name__ == '__main__':
     # Configuración del puerto
     port = int(os.environ.get('PORT', 5010))
     logger.info(f"Servidor iniciado en puerto: {port}")
+
+    # =======================
+    # Seguridad de transporte
+    # =======================
+    # En producción, usa HTTPS (TLS) a través de un proxy (Nginx/Apache/Ingress)
+    # o habilita ssl_context para el servidor de desarrollo.
+    env_name = os.environ.get('FLASK_ENV', os.environ.get('ENV', '')).lower()
+    debug_env = os.environ.get('FLASK_DEBUG')
+    debug_mode = True if debug_env is None else (str(debug_env).lower() in ('1', 'true', 'yes', 'y'))
+    is_production = (env_name == 'production') and (not debug_mode)
+
+    # Permite forzar TLS por variable de entorno. En producción se recomienda activarlo.
+    force_ssl = os.environ.get('FLASK_USE_SSL', '').lower() in ('1', 'true', 'yes', 'y') or is_production
+
+    ssl_context = None
+    if force_ssl:
+        cert_path = os.environ.get('SSL_CERT_PATH')
+        key_path = os.environ.get('SSL_KEY_PATH')
+
+        if cert_path and key_path and os.path.exists(cert_path) and os.path.exists(key_path):
+            ssl_context = (cert_path, key_path)
+        else:
+            # Certificado auto-firmado para pruebas (no usar para internet público).
+            ssl_context = 'adhoc'
+
     
     # Verificar estructura de carpetas
     required_folders = ['templates', 'static', 'static/uploads', 'logs']
@@ -1016,7 +1041,8 @@ if __name__ == '__main__':
             logger.info(f"Carpeta creada: {folder_path}")
     
     app.run(
-        debug=True,
+        debug=debug_mode,
         host='0.0.0.0',
-        port=port
+        port=port,
+        ssl_context=ssl_context
     )
