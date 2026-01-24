@@ -1,862 +1,502 @@
 {% extends "base.html" %}
-{% block title %}Prestamos de Material - Sistema de Gestion{% endblock %}
+{% block title %}Préstamos - Sistema de Gestión{% endblock %}
 
 {% block content %}
-<div class="container-fluid fade-in">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h1 class="fw-bold mb-3">
-                <i class="fas fa-exchange-alt me-2"></i>Prestamos de Material
-            </h1>
-            <p class="text-muted mb-0">Control y seguimiento de prestamos de material</p>
+<div class="container-fluid py-4">
+
+  {# =========================
+     Permisos (solo template)
+     - Evitamos can_view_actions() porque en tu proyecto no siempre existe / cambia firma
+     - Usamos can_access(), que el módulo de préstamos ya utiliza en backend
+     ========================= #}
+  {% set can_create = (can_access('prestamos', 'create') if can_access is defined else false) %}
+  {% set can_approve = (can_access('prestamos', 'approve') if can_access is defined else false) %}
+  {% set can_reject = (can_access('prestamos', 'reject') if can_access is defined else false) %}
+  {% set can_return = (can_access('prestamos', 'return') if can_access is defined else false) %}
+  {% set show_actions = can_approve or can_reject or can_return %}
+  {% set can_export = ((can_access('prestamos', 'view') or can_access('prestamos', 'view_all') or can_access('prestamos', 'view_own')) if can_access is defined else false) %}
+
+  {# Querystring para exportar con los mismos filtros #}
+  {% set _qs = request.query_string %}
+  {% if _qs %}
+    {% set qs = _qs.decode('utf-8') if _qs is not string else _qs %}
+  {% else %}
+    {% set qs = '' %}
+  {% endif %}
+
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+      <h1 class="fw-bold mb-1"><i class="fas fa-exchange-alt me-2"></i>Préstamos de Material</h1>
+      <div class="text-muted">Control y seguimiento de préstamos</div>
+    </div>
+
+    <div class="d-flex gap-2">
+      {% if can_create %}
+      <a class="btn btn-primary" href="/prestamos/crear">
+        <i class="fas fa-plus me-2"></i>Nuevo Préstamo
+      </a>
+      {% endif %}
+
+      {% if can_export %}
+      <a class="btn btn-success" href="/prestamos/exportar/excel{% if qs %}?{{ qs }}{% endif %}">
+        <i class="fas fa-file-excel me-2"></i>Exportar Excel
+      </a>
+      <a class="btn btn-danger" href="/prestamos/exportar/pdf{% if qs %}?{{ qs }}{% endif %}">
+        <i class="fas fa-file-pdf me-2"></i>Exportar PDF
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="alert alert-info mb-4">
+    <strong>📊 Vista de préstamos:</strong>
+    {% if session.rol in ['administrador', 'lider_inventario'] %}
+      Mostrando préstamos de <strong>TODAS</strong> las oficinas.
+    {% else %}
+      Mostrando préstamos únicamente de su oficina: <strong>{{ session.oficina_nombre }}</strong>
+    {% endif %}
+  </div>
+
+  {# =========================
+     Resumen
+     ========================= #}
+  <div class="row g-3 mb-4">
+    <div class="col-md-2">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="text-muted">Total</div>
+          <div class="fs-3 fw-bold">{{ prestamos|length }}</div>
         </div>
+      </div>
     </div>
-
-    <div class="alert alert-info mb-4">
-        <strong>📊 Vista de prestamos:</strong>
-        {% if session.rol in ['administrador', 'lider_inventario'] %}
-        Mostrando prestamos de TODAS las oficinas (acceso total)
-        {% else %}
-        Mostrando prestamos unicamente de su oficina: <strong>{{ session.oficina_nombre }}</strong>
-        {% endif %}
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Acciones</h5>
-                        <div class="d-flex gap-2">
-                            <a href="/prestamos/crear" class="btn btn-primary d-flex align-items-center">
-                                <i class="fas fa-plus me-2"></i>Nuevo Prestamo
-                            </a>
-                            <button class="btn btn-success d-flex align-items-center" onclick="exportarExcelPrestamos()">
-                                <i class="fas fa-file-excel me-2"></i>Exportar Excel
-                            </button>
-                            <button class="btn btn-danger d-flex align-items-center" onclick="exportarPDFPrestamos()">
-                                <i class="fas fa-file-pdf me-2"></i>Exportar PDF
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="col-md-2">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="text-muted">Pendientes</div>
+          <div class="fs-3 fw-bold text-warning">
+            {{ prestamos|selectattr('estado', 'equalto', 'PENDIENTE')|list|length }}
+          </div>
         </div>
+      </div>
     </div>
-
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">📊 Resumen General de Prestamos</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-3 border-end">
-                            <h4 class="fw-bold mb-0 text-primary" id="total-prestamos">{{ prestamos|length }}</h4>
-                            <small class="text-muted">Total Prestamos</small>
-                        </div>
-                        <div class="col-md-3 border-end">
-                            <h4 class="fw-bold mb-0 text-warning" id="pendientes">{{ prestamos|selectattr('estado', 'equalto', 'PENDIENTE')|list|length }}</h4>
-                            <small class="text-muted">Pendientes</small>
-                        </div>
-                        <div class="col-md-3 border-end">
-                            <h4 class="fw-bold mb-0 text-success" id="aprobados">
-                                {{ (prestamos|selectattr('estado', 'equalto', 'APROBADO')|list|length) + 
-                                   (prestamos|selectattr('estado', 'equalto', 'APROBADO_PARCIAL')|list|length) }}
-                            </h4>
-                            <small class="text-muted">Aprobados</small>
-                        </div>
-                        <div class="col-md-3">
-                            <h4 class="fw-bold mb-0 text-info" id="devueltos">{{ prestamos|selectattr('estado', 'equalto', 'DEVUELTO')|list|length }}</h4>
-                            <small class="text-muted">Devueltos</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="col-md-2">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="text-muted">Aprobados</div>
+          <div class="fs-3 fw-bold text-success">
+            {{ (prestamos|selectattr('estado', 'equalto', 'APROBADO')|list|length) +
+               (prestamos|selectattr('estado', 'equalto', 'APROBADO_PARCIAL')|list|length) }}
+          </div>
         </div>
+      </div>
     </div>
-
-    <!-- Seccion de Filtros Actualizada -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros de Busqueda Avanzados</h5>
-                </div>
-                <div class="card-body">
-                    <form method="GET" action="{{ url_for('reportes.reporte_solicitudes') }}" class="row g-3">
-                        <div class="col-md-2">
-                            <label class="form-label">Estado</label>
-                            <select name="estado" class="form-select" id="filtro-estado">
-                                <option value="">Todos los estados</option>
-                                <option value="PENDIENTE">Pendiente</option>
-                                <option value="APROBADO">Aprobado</option>
-                                <option value="APROBADO_PARCIAL">Aprobado Parcial</option>
-                                <option value="RECHAZADO">Rechazado</option>
-                                <option value="DEVUELTO">Devuelto</option>
-                            </select>
-                        </div>
-                        
-                        {% if session.rol in ['administrador', 'lider_inventario'] %}
-                        <div class="col-md-2">
-                            <label class="form-label">Oficina</label>
-                            <select name="oficina" class="form-select">
-                                <option value="todas" {% if filtro_oficina == 'todas' %}selected{% endif %}>Todas las oficinas</option>
-                                {% for oficina in oficinas %}
-                                <option value="{{ oficina.id }}" {% if filtro_oficina == oficina.id|string %}selected{% endif %}>
-                                    {{ oficina.nombre }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="col-md-2">
-                            <label class="form-label">Material (busqueda parcial)</label>
-                            <input type="text" name="material" class="form-control" 
-                                   placeholder="Ej: lapiz, papel" 
-                                   value="{{ filtro_material }}">
-                            <small class="form-text text-muted">Buscar por parte del nombre</small>
-                        </div>
-                        
-                        <div class="col-md-2">
-                            <label class="form-label">Solicitante (busqueda parcial)</label>
-                            <input type="text" name="solicitante" class="form-control" 
-                                   placeholder="Ej: Juan, Maria" 
-                                   value="{{ filtro_solicitante }}">
-                            <small class="form-text text-muted">Buscar por parte del nombre</small>
-                        </div>
-                        
-                        <div class="col-md-2">
-                            <label class="form-label">Fecha desde</label>
-                            <input type="date" name="fecha_inicio" class="form-control" 
-                                   value="{{ filtro_fecha_inicio }}">
-                        </div>
-                        
-                        <div class="col-md-2">
-                            <label class="form-label">Fecha hasta</label>
-                            <input type="date" name="fecha_fin" class="form-control" 
-                                   value="{{ filtro_fecha_fin }}">
-                        </div>
-                        
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-primary d-flex align-items-center">
-                                <i class="fas fa-filter me-2"></i>Aplicar Filtros
-                            </button>
-                            <a href="/prestamos" class="btn btn-secondary d-flex align-items-center">
-                                <i class="fas fa-times me-2"></i>Limpiar Filtros
-                            </a>
-                            
-                            <!-- Boton de exportacion -->
-                            <a href="{{ url_for('reportes.exportar_solicitudes_excel', 
-                                              estado=filtro_estado, 
-                                              oficina=filtro_oficina,
-                                              material=filtro_material,
-                                              solicitante=filtro_solicitante,
-                                              fecha_inicio=filtro_fecha_inicio,
-                                              fecha_fin=filtro_fecha_fin) }}" 
-                               class="btn btn-success d-flex align-items-center">
-                                <i class="fas fa-file-excel me-2"></i>Exportar a Excel
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    <div class="col-md-2">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="text-muted">Rechazados</div>
+          <div class="fs-3 fw-bold text-danger">
+            {{ prestamos|selectattr('estado', 'equalto', 'RECHAZADO')|list|length }}
+          </div>
         </div>
+      </div>
     </div>
-
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Lista de Prestamos</h5>
-                    <span class="badge bg-light text-dark rounded-pill" id="total-registros">{{ prestamos|length }} registros</span>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive" style="max-height: 600px; overflow: auto;">
-                        <table class="table table-striped table-hover table-sm align-middle mb-0" id="tablaPrestamos">
-                            <thead class="table-dark sticky-top">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Material</th>
-                                    <th class="text-end">Cant.</th>
-                                    <th class="text-end">V. Unitario</th>
-                                    <th class="text-end">Subtotal</th>
-                                    <th>Solicitante</th>
-                                    <th>Oficina</th>
-                                    <th>Fecha</th>
-                                    <th>Prevista</th>
-                                    <th>Estado</th>
-                                    {% if can_view_actions() %}
-                                        <th class="text-center">Acciones</th>
-                                    {% endif %}
-                                </tr>
-                            </thead>
-                            <tbody id="prestamos-body">
-                                {% for r in prestamos %}
-                                <tr id="prestamo-{{ r.id }}" data-estado="{{ r.estado }}">
-                                    <td class="fw-semibold">{{ r.id }}</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-box me-2 text-muted"></i>
-                                            <span>{{ r.material }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-end fw-semibold">{{ r.cantidad }}</td>
-                                    <td class="text-end">${{ "%.2f"|format(r.valor_unitario) }}</td>
-                                    <td class="text-end fw-bold text-primary">${{ "%.2f"|format(r.subtotal) }}</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-user me-2 text-muted"></i>
-                                            <span>{{ r.solicitante_nombre }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-building me-2 text-muted"></i>
-                                            <span>{{ r.oficina_nombre }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <small class="text-muted">{{ r.fecha.strftime('%Y-%m-%d %H:%M') if r.fecha }}</small>
-                                    </td>
-                                    <td>
-                                        <small class="text-muted">{{ r.fecha_prevista.strftime('%Y-%m-%d %H:%M') if r.fecha_prevista }}</small>
-                                    </td>
-                                    <td>
-                                        {% if r.estado == 'PENDIENTE' %}
-                                            <span class="badge bg-warning text-dark py-2 px-3" style="font-size: 0.85rem;">
-                                                <i class="fas fa-clock me-1"></i>PENDIENTE
-                                            </span>
-                                        {% elif r.estado == 'APROBADO' %}
-                                            <span class="badge bg-success py-2 px-3" style="font-size: 0.85rem;">
-                                                <i class="fas fa-check me-1"></i>APROBADO
-                                            </span>
-                                        {% elif r.estado == 'APROBADO_PARCIAL' %}
-                                            <span class="badge bg-info py-2 px-3" style="font-size: 0.85rem;">
-                                                <i class="fas fa-check-double me-1"></i>APROBADO PARCIAL
-                                            </span>
-                                        {% elif r.estado == 'RECHAZADO' %}
-                                            <span class="badge bg-danger py-2 px-3" style="font-size: 0.85rem;">
-                                                <i class="fas fa-times me-1"></i>RECHAZADO
-                                            </span>
-                                        {% elif r.estado == 'DEVUELTO' %}
-                                            <span class="badge bg-secondary py-2 px-3" style="font-size: 0.85rem;">
-                                                <i class="fas fa-undo me-1"></i>DEVUELTO
-                                            </span>
-                                        {% else %}
-                                            <span class="badge bg-dark py-2 px-3" style="font-size: 0.85rem;">
-                                                {{ r.estado }}
-                                            </span>
-                                        {% endif %}
-                                    </td>
-
-                                    {% if can_view_actions() %}
-                                    <td class="text-center">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            {% if r.estado == 'PENDIENTE' %}
-                                            <button type="button" class="btn btn-outline-success" onclick="aprobarPrestamo({{ r.id }})"
-                                                    title="Aprobar Prestamo">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-warning"
-                                                    onclick="mostrarModalAprobarParcial({{ r.id }}, {{ r.cantidad }})"
-                                                    title="Aprobar Parcialmente">
-                                                <i class="fas fa-check-double"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger"
-                                                    onclick="mostrarModalRechazar({{ r.id }})"
-                                                    title="Rechazar Prestamo">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                            {% elif r.estado in ['APROBADO', 'APROBADO_PARCIAL'] %}
-                                            <button type="button" class="btn btn-outline-info"
-                                                    onclick="mostrarModalDevolucion({{ r.id }})"
-                                                    title="Registrar Devolucion">
-                                                <i class="fas fa-undo"></i>
-                                            </button>
-                                            {% else %}
-                                            <span class="text-muted small">N/A</span>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                    {% endif %}
-                                </tr>
-                                {% endfor %}
-
-                                {% if not prestamos %}
-                                <tr>
-                                    <td colspan="{% if can_view_actions() %}11{% else %}10{% endif %}" class="text-center py-5">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                            <h5 class="text-muted">No se encontraron prestamos</h5>
-                                            <p class="text-muted">No hay prestamos que coincidan con los criterios de busqueda</p>
-                                            <a href="/prestamos/crear" class="btn btn-primary mt-2">
-                                                <i class="fas fa-plus me-2"></i>Crear primer prestamo
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <div class="col-md-2">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="text-muted">Devueltos</div>
+          <div class="fs-3 fw-bold text-secondary">
+            {{ prestamos|selectattr('estado', 'equalto', 'DEVUELTO')|list|length }}
+          </div>
         </div>
+      </div>
     </div>
+  </div>
+
+  {# =========================
+     Filtros
+     ========================= #}
+  <div class="card mb-4">
+    <div class="card-header bg-info text-white">
+      <i class="fas fa-filter me-2"></i>Filtros de búsqueda
+    </div>
+    <div class="card-body">
+      <form method="GET" action="/prestamos/">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Estado</label>
+            <select name="estado" class="form-select">
+              <option value="">Todos</option>
+              {% for e in estados %}
+                <option value="{{ e }}" {% if filtro_estado == e %}selected{% endif %}>{{ e }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Oficina</label>
+            {% if session.rol in ['administrador', 'lider_inventario'] %}
+              <select name="oficina" class="form-select">
+                <option value="todas" {% if filtro_oficina == 'todas' %}selected{% endif %}>Todas</option>
+                {% for o in oficinas %}
+                  <option value="{{ o.id }}" {% if filtro_oficina == o.id|string %}selected{% endif %}>{{ o.nombre }}</option>
+                {% endfor %}
+              </select>
+            {% else %}
+              <input type="text" class="form-control" value="{{ session.oficina_nombre }}" disabled>
+              <input type="hidden" name="oficina" value="{{ filtro_oficina }}">
+            {% endif %}
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Material</label>
+            <input type="text" class="form-control" name="material" value="{{ filtro_material }}" placeholder="Buscar por material...">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Solicitante</label>
+            <input type="text" class="form-control" name="solicitante" value="{{ filtro_solicitante }}" placeholder="Buscar por solicitante...">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Fecha inicio</label>
+            <input type="date" class="form-control" name="fecha_inicio" value="{{ filtro_fecha_inicio }}">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Fecha fin</label>
+            <input type="date" class="form-control" name="fecha_fin" value="{{ filtro_fecha_fin }}">
+          </div>
+
+          <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
+            <button class="btn btn-primary" type="submit">
+              <i class="fas fa-search me-2"></i>Aplicar
+            </button>
+            <a class="btn btn-secondary" href="/prestamos/">
+              <i class="fas fa-undo me-2"></i>Limpiar
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# =========================
+     Tabla (filas sin acciones abajo)
+     ========================= #}
+  <div class="card">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+      <div><i class="fas fa-list me-2"></i>Lista de Préstamos</div>
+      <span class="badge bg-light text-dark rounded-pill">{{ prestamos|length }} registros</span>
+    </div>
+
+    <div class="card-body">
+      <div class="table-responsive" style="max-height: 650px; overflow: auto;">
+        <table class="table table-striped table-hover table-sm align-middle mb-0">
+          <thead class="table-dark sticky-top">
+            <tr>
+              <th>#</th>
+              <th>Material</th>
+              <th class="text-end">Cant.</th>
+              <th class="text-end">V. Unitario</th>
+              <th class="text-end">Subtotal</th>
+              <th>Solicitante</th>
+              <th>Oficina</th>
+              <th>Fecha</th>
+              <th>Prevista</th>
+              <th>Estado</th>
+              {% if show_actions %}<th class="text-center">Acciones</th>{% endif %}
+            </tr>
+          </thead>
+
+          <tbody>
+            {% set ns = namespace(actionable=[], nonactionable=[]) %}
+            {% for r in prestamos %}
+              {% set fila_actionable = false %}
+              {% if r.estado == 'PENDIENTE' and (can_approve or can_reject) %}
+                {% set fila_actionable = true %}
+              {% elif r.estado in ['APROBADO', 'APROBADO_PARCIAL'] and can_return %}
+                {% set fila_actionable = true %}
+              {% endif %}
+
+              {% if fila_actionable %}
+                {% set ns.actionable = ns.actionable + [r] %}
+              {% else %}
+                {% set ns.nonactionable = ns.nonactionable + [r] %}
+              {% endif %}
+            {% endfor %}
+
+            {% set prestamos_ordenados = ns.actionable + ns.nonactionable %}
+
+            {% for r in prestamos_ordenados %}
+            <tr id="prestamo-{{ r.id }}" data-estado="{{ r.estado }}">
+              <td class="fw-semibold">{{ r.id }}</td>
+              <td><i class="fas fa-box me-2 text-muted"></i>{{ r.material }}</td>
+              <td class="text-end fw-semibold">{{ r.cantidad }}</td>
+              <td class="text-end">${{ "%.2f"|format(r.valor_unitario) }}</td>
+              <td class="text-end fw-bold text-primary">${{ "%.2f"|format(r.subtotal) }}</td>
+              <td><i class="fas fa-user me-2 text-muted"></i>{{ r.solicitante_nombre }}</td>
+              <td><i class="fas fa-building me-2 text-muted"></i>{{ r.oficina_nombre }}</td>
+              <td><small class="text-muted">{{ format_date(r.fecha, '%Y-%m-%d %H:%M') }}</small></td>
+              <td><small class="text-muted">{{ format_date(r.fecha_prevista, '%Y-%m-%d') }}</small></td>
+              <td>
+                {% if r.estado == 'PENDIENTE' %}
+                  <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>PENDIENTE</span>
+                {% elif r.estado == 'APROBADO' %}
+                  <span class="badge bg-success"><i class="fas fa-check me-1"></i>APROBADO</span>
+                {% elif r.estado == 'APROBADO_PARCIAL' %}
+                  <span class="badge bg-info"><i class="fas fa-check-double me-1"></i>APROBADO PARCIAL</span>
+                {% elif r.estado == 'RECHAZADO' %}
+                  <span class="badge bg-danger"><i class="fas fa-times me-1"></i>RECHAZADO</span>
+                {% elif r.estado == 'DEVUELTO' %}
+                  <span class="badge bg-secondary"><i class="fas fa-undo me-1"></i>DEVUELTO</span>
+                {% else %}
+                  <span class="badge bg-dark">{{ r.estado }}</span>
+                {% endif %}
+              </td>
+
+              {% if show_actions %}
+              <td class="text-center">
+                <div class="btn-group btn-group-sm" role="group">
+                  {% if r.estado == 'PENDIENTE' %}
+                    {% if can_approve %}
+                      <button class="btn btn-outline-success" type="button" title="Aprobar"
+                              onclick="aprobarPrestamo({{ r.id }})">
+                        <i class="fas fa-check"></i>
+                      </button>
+                      <button class="btn btn-outline-warning" type="button" title="Aprobar parcial"
+                              onclick="openAprobarParcial({{ r.id }}, {{ r.cantidad }})">
+                        <i class="fas fa-check-double"></i>
+                      </button>
+                    {% endif %}
+                    {% if can_reject %}
+                      <button class="btn btn-outline-danger" type="button" title="Rechazar"
+                              onclick="openRechazar({{ r.id }})">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    {% endif %}
+                    {% if not (can_approve or can_reject) %}
+                      <span class="text-muted small">N/A</span>
+                    {% endif %}
+
+                  {% elif r.estado in ['APROBADO', 'APROBADO_PARCIAL'] %}
+                    {% if can_return %}
+                      <button class="btn btn-outline-info" type="button" title="Registrar devolución"
+                              onclick="openDevolucion({{ r.id }})">
+                        <i class="fas fa-undo"></i>
+                      </button>
+                    {% else %}
+                      <span class="text-muted small">N/A</span>
+                    {% endif %}
+                  {% else %}
+                    <span class="text-muted small">N/A</span>
+                  {% endif %}
+                </div>
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+
+            {% if not prestamos %}
+            <tr>
+              <td colspan="{% if show_actions %}11{% else %}10{% endif %}" class="text-center py-5">
+                <div class="d-flex flex-column align-items-center">
+                  <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                  <h5 class="text-muted">No se encontraron préstamos</h5>
+                  <p class="text-muted mb-0">No hay registros con los filtros seleccionados.</p>
+                </div>
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<div class="modal fade" id="aprobarParcialModal" tabindex="-1" aria-labelledby="aprobarParcialModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="aprobarParcialModalLabel">
-                    <i class="fas fa-check-double me-2"></i>Aprobar Parcialmente
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1">¿Esta seguro de que desea aprobar parcialmente este prestamo?</h6>
-                        <p class="mb-0 text-muted">Solo se aprobara la cantidad especificada.</p>
-                    </div>
-                </div>
-                <form id="formAprobarParcial">
-                    <input type="hidden" id="aprobar_parcial_prestamo_id">
-                    <div class="mb-3">
-                        <label for="cantidad_aprobada" class="form-label fw-semibold">Cantidad Aprobada</label>
-                        <input type="number" class="form-control" id="cantidad_aprobada" name="cantidad_aprobada"
-                               min="1" required>
-                        <div class="form-text">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Cantidad maxima disponible: <span id="max_cantidad" class="fw-semibold">0</span>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Cancelar
-                </button>
-                <button type="button" class="btn btn-warning" onclick="aprobarParcial()">
-                    <i class="fas fa-check-double me-2"></i>Aprobar Parcial
-                </button>
-            </div>
-        </div>
+{# =========================
+   Modales
+   ========================= #}
+
+<div class="modal fade" id="modalAprobarParcial" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title"><i class="fas fa-check-double me-2"></i>Aprobar parcial</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formAprobarParcial">
+          <input type="hidden" id="ap_id">
+          <div class="mb-3">
+            <label class="form-label">Cantidad a aprobar</label>
+            <input type="number" class="form-control" id="ap_cantidad" min="1" required>
+            <div class="form-text">Máximo: <span id="ap_max"></span></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Observación (opcional)</label>
+            <textarea class="form-control" id="ap_obs" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-warning">
+            <i class="fas fa-check-double me-2"></i>Confirmar
+          </button>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 
-<div class="modal fade" id="rechazarModal" tabindex="-1" aria-labelledby="rechazarModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="rechazarModalLabel">
-                    <i class="fas fa-times-circle me-2"></i>Rechazar Prestamo
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1">¿Esta seguro de que desea rechazar este prestamo?</h6>
-                        <p class="mb-0 text-muted">Esta accion no se puede deshacer.</p>
-                    </div>
-                </div>
-                <form id="formRechazar">
-                    <input type="hidden" id="rechazar_prestamo_id">
-                    <div class="mb-3">
-                        <label for="observacion" class="form-label fw-semibold">Observacion <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="observacion" name="observacion" rows="3"
-                                  placeholder="Ingrese la razon del rechazo..." required></textarea>
-                        <div class="form-text">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Esta observacion sera registrada en el historial del prestamo.
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Cancelar
-                </button>
-                <button type="button" class="btn btn-danger" onclick="rechazarPrestamo()">
-                    <i class="fas fa-times me-2"></i>Rechazar
-                </button>
-            </div>
-        </div>
+<div class="modal fade" id="modalRechazar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="fas fa-times me-2"></i>Rechazar préstamo</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formRechazar">
+          <input type="hidden" id="rj_id">
+          <div class="mb-3">
+            <label class="form-label">Motivo / Observación</label>
+            <textarea class="form-control" id="rj_obs" rows="3" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-times me-2"></i>Rechazar
+          </button>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 
-<div class="modal fade" id="devolucionModal" tabindex="-1" aria-labelledby="devolucionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="devolucionModalLabel">
-                    <i class="fas fa-undo me-2"></i>Registrar Devolucion
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-question-circle fa-2x text-info"></i>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1">¿Esta seguro de que desea registrar la devolucion de este prestamo?</h6>
-                        <p class="mb-0 text-muted">El material sera marcado como devuelto.</p>
-                    </div>
-                </div>
-                <form id="formDevolucion">
-                    <input type="hidden" id="devolucion_prestamo_id">
-                    <div class="mb-3">
-                        <label for="observacion_devolucion" class="form-label fw-semibold">Observacion (opcional)</label>
-                        <textarea class="form-control" id="observacion_devolucion" name="observacion" rows="3"
-                                  placeholder="Ingrese una observacion sobre la devolucion..."></textarea>
-                        <div class="form-text">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Esta observacion sera registrada en el historial del prestamo.
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Cancelar
-                </button>
-                <button type="button" class="btn btn-info" onclick="registrarDevolucion()">
-                    <i class="fas fa-undo me-2"></i>Registrar Devolucion
-                </button>
-            </div>
-        </div>
+<div class="modal fade" id="modalDevolucion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title"><i class="fas fa-undo me-2"></i>Registrar devolución</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formDevolucion">
+          <input type="hidden" id="dv_id">
+          <div class="mb-3">
+            <label class="form-label">Observación (opcional)</label>
+            <textarea class="form-control" id="dv_obs" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-info">
+            <i class="fas fa-undo me-2"></i>Registrar
+          </button>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
-
-<style>
-    .sticky-top {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
-
-    .table th {
-        white-space: nowrap;
-        position: relative;
-    }
-
-    .table td {
-        vertical-align: middle;
-    }
-
-    .btn-sm {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-    }
-
-    .estado-badge {
-        font-size: 0.75rem;
-    }
-    
-    .estado-pendiente {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-    
-    .estado-aprobado {
-        background-color: #d1edff;
-        color: #0d6efd;
-    }
-    
-    .estado-rechazado {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-    
-    .estado-aprobado-parcial {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-    
-    .estado-devuelto {
-        background-color: #d1e7dd;
-        color: #0f5132;
-    }
-</style>
-{% endblock %}
-
-{% block scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-    // Funcion: aprobarPrestamo
-    // Proposito: Aprobar completamente un prestamo pendiente
-    // Parametros: prestamoId - ID del prestamo a aprobar
-    function aprobarPrestamo(prestamoId) {
-        if (confirm('¿Esta seguro de que desea aprobar este prestamo?')) {
-            fetch(`/prestamos/${prestamoId}/aprobar`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    mostrarNotificacion('Prestamo aprobado correctamente', 'success');
-                    actualizarEstadoPrestamo(prestamoId, data.estado);
-                } else {
-                    mostrarNotificacion(data.message || 'No se pudo aprobar el préstamo', 'error');
-                }
-            })
-            .catch(error => {
-                mostrarNotificacion('Error al aprobar el prestamo', 'error');
-            });
-        }
-    }
+  function postJSON(url, payload) {
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload || {})
+    }).then(r => r.json().then(j => ({ ok: r.ok, status: r.status, json: j })));
+  }
 
-    // Funcion: mostrarModalAprobarParcial
-    // Proposito: Mostrar modal para aprobacion parcial de prestamo
-    // Parametros: prestamoId - ID del prestamo, cantidadMaxima - cantidad maxima disponible
-    function mostrarModalAprobarParcial(prestamoId, cantidadMaxima) {
-        document.getElementById('aprobar_parcial_prestamo_id').value = prestamoId;
-        document.getElementById('cantidad_aprobada').value = cantidadMaxima;
-        document.getElementById('cantidad_aprobada').max = cantidadMaxima;
-        document.getElementById('max_cantidad').textContent = cantidadMaxima;
-        
-        const modal = new bootstrap.Modal(document.getElementById('aprobarParcialModal'));
-        modal.show();
-    }
-
-    // Funcion: aprobarParcial
-    // Proposito: Aprobar parcialmente un prestamo con cantidad especifica
-    function aprobarParcial() {
-        const prestamoId = document.getElementById('aprobar_parcial_prestamo_id').value;
-        const cantidadAprobada = document.getElementById('cantidad_aprobada').value;
-        
-        if (!cantidadAprobada || cantidadAprobada <= 0) {
-            mostrarNotificacion('Por favor ingrese una cantidad valida', 'error');
-            return;
-        }
-        
-        fetch(`/prestamos/${prestamoId}/aprobar_parcial`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ cantidad_aprobada: parseInt(cantidadAprobada) })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                mostrarNotificacion('Prestamo aprobado parcialmente', 'success');
-                actualizarEstadoPrestamo(prestamoId, data.estado);
-                const modal = bootstrap.Modal.getInstance(document.getElementById('aprobarParcialModal'));
-                modal.hide();
-            } else {
-                mostrarNotificacion(data.message || 'No se pudo aprobar parcialmente', 'error');
-            }
-        })
-        .catch(error => {
-            mostrarNotificacion('Error al aprobar parcialmente', 'error');
-        });
-    }
-
-    // Funcion: mostrarModalRechazar
-    // Proposito: Mostrar modal para rechazar un prestamo
-    // Parametros: prestamoId - ID del prestamo a rechazar
-    function mostrarModalRechazar(prestamoId) {
-        document.getElementById('rechazar_prestamo_id').value = prestamoId;
-        document.getElementById('observacion').value = '';
-        
-        const modal = new bootstrap.Modal(document.getElementById('rechazarModal'));
-        modal.show();
-    }
-
-    // Funcion: rechazarPrestamo
-    // Proposito: Rechazar un prestamo con observacion obligatoria
-    function rechazarPrestamo() {
-        const prestamoId = document.getElementById('rechazar_prestamo_id').value;
-        const observacion = document.getElementById('observacion').value.trim();
-        
-        if (!observacion) {
-            mostrarNotificacion('Por favor ingrese una observacion', 'error');
-            return;
-        }
-        
-        fetch(`/prestamos/${prestamoId}/rechazar`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ observacion: observacion })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                mostrarNotificacion('Prestamo rechazado correctamente', 'success');
-                actualizarEstadoPrestamo(prestamoId, data.estado);
-                const modal = bootstrap.Modal.getInstance(document.getElementById('rechazarModal'));
-                modal.hide();
-            } else {
-                mostrarNotificacion(data.message || 'No se pudo rechazar el préstamo', 'error');
-            }
-        })
-        .catch(error => {
-            mostrarNotificacion('Error al rechazar el prestamo', 'error');
-        });
-    }
-
-    // Funcion: mostrarModalDevolucion
-    // Proposito: Mostrar modal para registrar devolucion de prestamo
-    // Parametros: prestamoId - ID del prestamo a devolver
-    function mostrarModalDevolucion(prestamoId) {
-        document.getElementById('devolucion_prestamo_id').value = prestamoId;
-        document.getElementById('observacion_devolucion').value = '';
-        
-        const modal = new bootstrap.Modal(document.getElementById('devolucionModal'));
-        modal.show();
-    }
-
-    // Funcion: registrarDevolucion
-    // Proposito: Registrar la devolucion de un prestamo aprobado
-    function registrarDevolucion() {
-        const prestamoId = document.getElementById('devolucion_prestamo_id').value;
-        const observacion = document.getElementById('observacion_devolucion').value.trim();
-        
-        fetch(`/prestamos/${prestamoId}/devolucion`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ observacion: observacion })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                mostrarNotificacion('Devolucion registrada correctamente', 'success');
-                actualizarEstadoPrestamo(prestamoId, data.estado);
-                const modal = bootstrap.Modal.getInstance(document.getElementById('devolucionModal'));
-                modal.hide();
-            } else {
-                mostrarNotificacion(data.message || 'No se pudo registrar la devolución', 'error');
-            }
-        })
-        .catch(error => {
-            mostrarNotificacion('Error al registrar la devolucion', 'error');
-        });
-    }
-
-    // Funcion: actualizarEstadoPrestamo
-    // Proposito: Actualizar la interfaz visual despues de cambiar estado
-    // Parametros: prestamoId - ID del prestamo, nuevoEstado - nuevo estado a mostrar
-    function actualizarEstadoPrestamo(prestamoId, nuevoEstado) {
-        const fila = document.getElementById(`prestamo-${prestamoId}`);
-        if (!fila) return;
-        
-        fila.setAttribute('data-estado', nuevoEstado);
-        
-        const estadoTd = fila.querySelector('td:nth-child(10)');
-        
-        // Actualizar badge con nuevos estilos mejorados
-        let nuevoBadge = '';
-        if (nuevoEstado === 'PENDIENTE') {
-            nuevoBadge = `<span class="badge bg-warning text-dark py-2 px-3" style="font-size: 0.85rem;">
-                            <i class="fas fa-clock me-1"></i>PENDIENTE
-                          </span>`;
-        } else if (nuevoEstado === 'APROBADO') {
-            nuevoBadge = `<span class="badge bg-success py-2 px-3" style="font-size: 0.85rem;">
-                            <i class="fas fa-check me-1"></i>APROBADO
-                          </span>`;
-        } else if (nuevoEstado === 'APROBADO_PARCIAL') {
-            nuevoBadge = `<span class="badge bg-info py-2 px-3" style="font-size: 0.85rem;">
-                            <i class="fas fa-check-double me-1"></i>APROBADO PARCIAL
-                          </span>`;
-        } else if (nuevoEstado === 'RECHAZADO') {
-            nuevoBadge = `<span class="badge bg-danger py-2 px-3" style="font-size: 0.85rem;">
-                            <i class="fas fa-times me-1"></i>RECHAZADO
-                          </span>`;
-        } else if (nuevoEstado === 'DEVUELTO') {
-            nuevoBadge = `<span class="badge bg-secondary py-2 px-3" style="font-size: 0.85rem;">
-                            <i class="fas fa-undo me-1"></i>DEVUELTO
-                          </span>`;
+  function aprobarPrestamo(id) {
+    if (!confirm("¿Aprobar este préstamo?")) return;
+    postJSON(`/prestamos/${id}/aprobar`, {})
+      .then(({ok, json}) => {
+        if (ok && json.success) {
+          alert("✅ Préstamo aprobado.");
+          window.location.reload();
         } else {
-            nuevoBadge = `<span class="badge bg-dark py-2 px-3" style="font-size: 0.85rem;">
-                            ${nuevoEstado}
-                          </span>`;
+          alert("❌ " + (json.message || "No fue posible aprobar."));
         }
-        
-        estadoTd.innerHTML = nuevoBadge;
-        
-        const accionesTd = fila.querySelector('td.text-center');
-        if (accionesTd) {
-            let nuevosBotones = '';
-            
-            if (nuevoEstado === 'PENDIENTE') {
-                nuevosBotones = `
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-success" onclick="aprobarPrestamo(${prestamoId})"
-                                title="Aprobar Prestamo">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-warning"
-                                onclick="mostrarModalAprobarParcial(${prestamoId}, ${fila.querySelector('td:nth-child(3)').textContent})"
-                                title="Aprobar Parcialmente">
-                            <i class="fas fa-check-double"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-danger"
-                                onclick="mostrarModalRechazar(${prestamoId})"
-                                title="Rechazar Prestamo">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
-            } else if (nuevoEstado === 'APROBADO' || nuevoEstado === 'APROBADO_PARCIAL') {
-                nuevosBotones = `
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-info"
-                                onclick="mostrarModalDevolucion(${prestamoId})"
-                                title="Registrar Devolucion">
-                            <i class="fas fa-undo"></i>
-                        </button>
-                    </div>
-                `;
-            } else {
-                nuevosBotones = '<span class="text-muted small">N/A</span>';
-            }
-            
-            accionesTd.innerHTML = nuevosBotones;
+      })
+      .catch(() => alert("❌ Error de conexión."));
+  }
+
+  function openAprobarParcial(id, maxCant) {
+    document.getElementById("ap_id").value = id;
+    document.getElementById("ap_max").textContent = maxCant;
+    const input = document.getElementById("ap_cantidad");
+    input.max = maxCant;
+    input.value = "";
+    document.getElementById("ap_obs").value = "";
+    new bootstrap.Modal(document.getElementById("modalAprobarParcial")).show();
+  }
+
+  function openRechazar(id) {
+    document.getElementById("rj_id").value = id;
+    document.getElementById("rj_obs").value = "";
+    new bootstrap.Modal(document.getElementById("modalRechazar")).show();
+  }
+
+  function openDevolucion(id) {
+    document.getElementById("dv_id").value = id;
+    document.getElementById("dv_obs").value = "";
+    new bootstrap.Modal(document.getElementById("modalDevolucion")).show();
+  }
+
+  document.getElementById("formAprobarParcial").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const id = document.getElementById("ap_id").value;
+    const cantidad = parseInt(document.getElementById("ap_cantidad").value || "0", 10);
+    const obs = (document.getElementById("ap_obs").value || "").trim();
+
+    if (!cantidad || cantidad <= 0) {
+      alert("Ingrese una cantidad válida.");
+      return;
+    }
+
+    postJSON(`/prestamos/${id}/aprobar_parcial`, { cantidad_aprobada: cantidad, observaciones: obs })
+      .then(({ok, json}) => {
+        if (ok && json.success) {
+          alert("✅ Aprobación parcial registrada.");
+          window.location.reload();
+        } else {
+          alert("❌ " + (json.message || "No fue posible aprobar parcialmente."));
         }
-        
-        actualizarContadores();
+      })
+      .catch(() => alert("❌ Error de conexión."));
+  });
+
+  document.getElementById("formRechazar").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const id = document.getElementById("rj_id").value;
+    const obs = (document.getElementById("rj_obs").value || "").trim();
+    if (!obs) {
+      alert("La observación es obligatoria.");
+      return;
     }
 
-    // Funcion: actualizarContadores
-    // Proposito: Actualizar los contadores de resumen en tiempo real
-    function actualizarContadores() {
-        const filas = document.querySelectorAll('#prestamos-body tr');
-        let total = 0;
-        let pendientes = 0;
-        let aprobados = 0;
-        let devueltos = 0;
-        
-        filas.forEach(fila => {
-            const estado = fila.getAttribute('data-estado');
-            total++;
-            
-            switch(estado) {
-                case 'PENDIENTE':
-                    pendientes++;
-                    break;
-                case 'APROBADO':
-                    aprobados++;
-                    break;
-                case 'DEVUELTO':
-                    devueltos++;
-                    break;
-                case 'APROBADO_PARCIAL':
-                    aprobados++;
-                    break;
-            }
-        });
-        
-        document.getElementById('total-prestamos').textContent = total;
-        document.getElementById('pendientes').textContent = pendientes;
-        document.getElementById('aprobados').textContent = aprobados;
-        document.getElementById('devueltos').textContent = devueltos;
-        document.getElementById('total-registros').textContent = `${total} registros`;
-    }
-
-    // Funcion: exportarExcelPrestamos
-    // Proposito: Exportar tabla de prestamos a formato Excel
-    function exportarExcelPrestamos() {
-        try {
-            const tabla = document.getElementById('tablaPrestamos');
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.table_to_sheet(tabla);
-            XLSX.utils.book_append_sheet(wb, ws, 'Prestamos');
-            XLSX.writeFile(wb, `Reporte_Prestamos_${new Date().toISOString().split('T')[0]}.xlsx`);
-            mostrarNotificacion('Exportacion a Excel completada', 'success');
-        } catch (error) {
-            mostrarNotificacion('Error al exportar a Excel', 'error');
+    postJSON(`/prestamos/${id}/rechazar`, { observacion: obs })
+      .then(({ok, json}) => {
+        if (ok && json.success) {
+          alert("✅ Préstamo rechazado.");
+          window.location.reload();
+        } else {
+          alert("❌ " + (json.message || "No fue posible rechazar."));
         }
-    }
+      })
+      .catch(() => alert("❌ Error de conexión."));
+  });
 
-    // Funcion: exportarPDFPrestamos
-    // Proposito: Exportar tabla de prestamos a formato PDF
-    function exportarPDFPrestamos() {
-        try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            const totalPrestamos = document.getElementById('total-prestamos').textContent;
-            const pendientes = document.getElementById('pendientes').textContent;
-            const aprobados = document.getElementById('aprobados').textContent;
-            const devueltos = document.getElementById('devueltos').textContent;
+  document.getElementById("formDevolucion").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const id = document.getElementById("dv_id").value;
+    const obs = (document.getElementById("dv_obs").value || "").trim();
 
-            doc.setFontSize(16);
-            doc.text('Reporte de Prestamos - Sistema de Gestion', 14, 15);
-            doc.setFontSize(10);
-            doc.text(`Generado el: ${new Date().toLocaleDateString()}`, 14, 22);
-            doc.text(`Total de prestamos: ${totalPrestamos}`, 14, 29);
-            doc.text(`Pendientes: ${pendientes} | Aprobados: ${aprobados} | Devueltos: ${devueltos}`, 14, 36);
-
-            doc.autoTable({
-                html: '#tablaPrestamos',
-                startY: 45,
-                theme: 'grid',
-                headStyles: { fillColor: [111, 66, 193] },
-                styles: { fontSize: 8 }
-            });
-
-            doc.save(`Reporte_Prestamos_${new Date().toISOString().split('T')[0]}.pdf`);
-            mostrarNotificacion('Exportacion a PDF completada', 'success');
-        } catch (error) {
-            mostrarNotificacion('Error al exportar a PDF', 'error');
+    postJSON(`/prestamos/${id}/devolucion`, { observacion: obs })
+      .then(({ok, json}) => {
+        if (ok && json.success) {
+          alert("✅ Devolución registrada.");
+          window.location.reload();
+        } else {
+          alert("❌ " + (json.message || "No fue posible registrar la devolución."));
         }
-    }
-
-    // Funcion: mostrarNotificacion
-    // Proposito: Mostrar notificacion toast al usuario
-    // Parametros: mensaje - texto a mostrar, tipo - 'success' o 'error'
-    function mostrarNotificacion(mensaje, tipo) {
-        const toast = document.createElement('div');
-        toast.className = `toast align-items-center text-white bg-${tipo === 'success' ? 'success' : 'danger'} border-0 position-fixed`;
-        toast.style.zIndex = '1060';
-        toast.style.top = '20px';
-        toast.style.right = '20px';
-        
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    ${mensaje}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        `;
-        
-        document.body.appendChild(toast);
-        
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-        
-        toast.addEventListener('hidden.bs.toast', function() {
-            document.body.removeChild(toast);
-        });
-    }
+      })
+      .catch(() => alert("❌ Error de conexión."));
+  });
 </script>
 {% endblock %}

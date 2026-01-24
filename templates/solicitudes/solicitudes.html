@@ -3,6 +3,14 @@
 
 {% block content %}
 <div class="container-fluid">
+    {# Permisos para ocultar botones por rol/permisos #}
+    {% set _can_solic_return = can_access('solicitudes','return') %}
+    {% set _can_solic_approve = can_access('solicitudes','approve') %}
+    {% set _can_solic_reject = can_access('solicitudes','reject') %}
+    {% set _can_solic_partial = can_access('solicitudes','partial_approve') %}
+    {% set _can_nov_create = can_access('novedades','create') %}
+    {% set _can_nov_manage = can_access('novedades','manage') %}
+
     <h1>Solicitudes de Materiales</h1>
 
     <!-- Filtros -->
@@ -175,7 +183,7 @@
                 <div class="card-body">
                     {% if solicitudes %}
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
+                            <table class="table table-striped table-hover" id="tablaSolicitudes">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>ID</th>
@@ -191,7 +199,17 @@
 
                                 <tbody>
                                     {% for solicitud in solicitudes %}
-                                    <tr>
+                                    {% set has_accion = (
+                                        (should_show_devolucion_button(solicitud) and _can_solic_return) or
+                                        (should_show_novedad_button(solicitud) and _can_nov_create) or
+                                        (should_show_gestion_novedad_button(solicitud) and _can_nov_manage) or
+                                        (should_show_aprobacion_buttons(solicitud) and (
+                                            (_can_solic_approve and can_approve_solicitud()) or
+                                            (_can_solic_reject and can_reject_solicitud()) or
+                                            (_can_solic_partial and can_approve_partial_solicitud())
+                                        ))
+                                    ) %}
+                                    <tr data-has-actions="{{ 1 if has_accion else 0 }}">
                                         <td>#{{ solicitud.id }}</td>
                                         <td>{{ solicitud.material_nombre }}</td>
                                         <td>
@@ -242,7 +260,7 @@
                                                 </button>
                                                 
                                                 <!-- Botón de Devolución (condicional) -->
-                                                {% if should_show_devolucion_button(solicitud) %}
+                                                {% if should_show_devolucion_button(solicitud) and _can_solic_return %}
                                                 <button type="button" class="btn btn-warning btn-sm" 
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#devolucionModal"
@@ -264,7 +282,7 @@
                                                 {% endif %}
                                                 
                                                 <!-- Botón de Crear Novedad (condicional) -->
-                                                {% if should_show_novedad_button(solicitud) %}
+                                                {% if should_show_novedad_button(solicitud) and _can_nov_create %}
                                                 <button type="button" class="btn btn-danger btn-sm" 
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#novedadModal"
@@ -275,7 +293,7 @@
                                                 {% endif %}
                                                 
                                                 <!-- Botón de Gestionar Novedad (condicional) -->
-                                                {% if should_show_gestion_novedad_button(solicitud) %}
+                                                {% if should_show_gestion_novedad_button(solicitud) and _can_nov_manage %}
                                                 <button type="button" class="btn btn-secondary btn-sm" 
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#gestionNovedadModal"
@@ -287,7 +305,7 @@
                                                 
                                                 <!-- Botones de Aprobación/Rechazo (condicional) -->
                                                 {% if should_show_aprobacion_buttons(solicitud) %}
-                                                    {% if can_approve_solicitud() %}
+                                                    {% if _can_solic_approve and can_approve_solicitud() %}
                                                     <button type="button" class="btn btn-success btn-sm" 
                                                             onclick="aprobarSolicitud({{ solicitud.id }})"
                                                             title="Aprobar solicitud">
@@ -295,7 +313,7 @@
                                                     </button>
                                                     {% endif %}
                                                     
-                                                    {% if can_reject_solicitud() %}
+                                                    {% if _can_solic_reject and can_reject_solicitud() %}
                                                     <button type="button" class="btn btn-danger btn-sm" 
                                                             onclick="rechazarSolicitud({{ solicitud.id }})"
                                                             title="Rechazar solicitud">
@@ -303,7 +321,7 @@
                                                     </button>
                                                     {% endif %}
                                                     
-                                                    {% if can_approve_partial_solicitud() %}
+                                                    {% if _can_solic_partial and can_approve_partial_solicitud() %}
                                                     <button type="button" class="btn btn-primary btn-sm" 
                                                             data-bs-toggle="modal" 
                                                             data-bs-target="#aprobarParcialModal"
@@ -1355,4 +1373,21 @@ document.addEventListener('DOMContentLoaded', function() {
         margin: 1px;
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const tbody = document.querySelector('#tablaSolicitudes tbody');
+    if (!tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const sortable = rows.filter(r => r.dataset.hasActions !== undefined);
+    if (sortable.length === 0) return;
+
+    // Ordena para que las filas con acciones queden arriba y las "sin acciones" abajo
+    sortable.sort((a, b) => (parseInt(b.dataset.hasActions || '0', 10) - parseInt(a.dataset.hasActions || '0', 10)));
+
+    sortable.forEach(r => tbody.appendChild(r));
+});
+</script>
+
 {% endblock %}

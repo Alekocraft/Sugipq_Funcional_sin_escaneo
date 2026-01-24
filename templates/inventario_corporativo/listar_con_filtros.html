@@ -14,6 +14,22 @@
 {% block content %}
 <div class="container-fluid">
 
+  {# ==========================
+     Permisos (con fallback a variables legacy si el backend las envía)
+     ========================== #}
+  {% set _legacy_gestionar = (puede_gestionar_inventario if puede_gestionar_inventario is defined else false) %}
+  {% set _legacy_acciones = (puede_ver_acciones_inventario if puede_ver_acciones_inventario is defined else false) %}
+  {% set _puede_ver = can_access('inventario_corporativo','view') or can_access('inventario_corporativo','view_own') or can_access('inventario_corporativo','view_global') %}
+  {% set _puede_crear = can_access('inventario_corporativo','create') %}
+  {% set _puede_editar = can_access('inventario_corporativo','edit') %}
+  {% set _puede_asignar = can_access('inventario_corporativo','assign') %}
+  {% set _puede_solicitar_mov = can_access('inventario_corporativo','request_movements') %}
+
+  {% set puede_gestionar_inventario = _legacy_gestionar or _puede_crear %}
+  {% set puede_ver_acciones_inventario = _legacy_acciones or _puede_ver or _puede_editar or _puede_asignar %}
+  {% set puede_solicitar_devolucion = (puede_solicitar_devolucion if puede_solicitar_devolucion is defined else false) or _puede_solicitar_mov %}
+  {% set puede_solicitar_traslado = (puede_solicitar_traslado if puede_solicitar_traslado is defined else false) or _puede_solicitar_mov %}
+
   <div class="row mb-4">
     <div class="col-md-8">
       <h1 class="text-primary">{{ titulo or 'Inventario Corporativo' }}</h1>
@@ -257,7 +273,18 @@
             </tr>
           </thead>
           <tbody>
-            {% for producto in productos %}
+            {% set ns = namespace(ok=[], bajo=[]) %}
+            {% for producto in (productos or []) %}
+              {% set _qty = (producto.cantidad or producto.CantidadDisponible or 0) %}
+              {% set _min_qty = (producto.cantidad_minima or producto.CantidadMinima or 5) %}
+              {% if _qty <= _min_qty %}
+                {% set ns.bajo = ns.bajo + [producto] %}
+              {% else %}
+                {% set ns.ok = ns.ok + [producto] %}
+              {% endif %}
+            {% endfor %}
+
+            {% for producto in ns.ok %}
             <tr>
               <td class="nowrap"><strong class="codigo">{{ producto.codigo_unico or producto.CodigoUnico or '' }}</strong></td>
               <td class="nombre">{{ producto.nombre or producto.NombreProducto or '' }}</td>
@@ -274,27 +301,81 @@
               </td>
               {% if puede_ver_acciones_inventario %}
               <td class="text-end nowrap">
-                <a href="{{ url_for('inventario_corporativo.ver_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-primary">
+                {% if _puede_ver %}
+                <a href="{{ url_for('inventario_corporativo.ver_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-primary" title="Ver">
                   <i class="fas fa-eye"></i>
                 </a>
-                <a href="{{ url_for('inventario_corporativo.editar_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-warning">
+                {% endif %}
+
+                {% if _puede_editar %}
+                <a href="{{ url_for('inventario_corporativo.editar_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-warning" title="Editar">
                   <i class="fas fa-edit"></i>
                 </a>
-                {% if producto.es_asignable or producto.EsAsignable %}
-                <a href="{{ url_for('inventario_corporativo.asignar_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-info">
+                {% endif %}
+
+                {% if _puede_asignar and (producto.es_asignable or producto.EsAsignable) %}
+                <a href="{{ url_for('inventario_corporativo.asignar_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-info" title="Asignar">
                   <i class="fas fa-share"></i>
                 </a>
                 {% endif %}
               </td>
               {% endif %}
             </tr>
-            {% else %}
+            {% endfor %}
+
+            {% if ns.bajo|length %}
+            <tr class="table-warning">
+              <td colspan="{% if puede_ver_acciones_inventario %}8{% else %}7{% endif %}" class="fw-semibold">
+                <i class="fas fa-exclamation-triangle me-2"></i>Productos con stock bajo
+              </td>
+            </tr>
+            {% for producto in ns.bajo %}
+            <tr>
+              <td class="nowrap"><strong class="codigo">{{ producto.codigo_unico or producto.CodigoUnico or '' }}</strong></td>
+              <td class="nombre">{{ producto.nombre or producto.NombreProducto or '' }}</td>
+              <td class="categoria">{{ producto.categoria or producto.NombreCategoria or '' }}</td>
+              <td class="proveedor">{{ producto.proveedor or producto.NombreProveedor or '' }}</td>
+              <td class="oficina">{{ producto.oficina or producto.NombreOficina or producto.Oficina or '' }}</td>
+              <td class="nowrap">${{ "{:,.0f}".format(producto.valor_unitario or producto.ValorUnitario or 0) }}</td>
+              <td class="nowrap">
+                {% set qty = (producto.cantidad or producto.CantidadDisponible or 0) %}
+                {% set min_qty = (producto.cantidad_minima or producto.CantidadMinima or 5) %}
+                <span class="badge {% if qty <= min_qty %}bg-warning{% else %}bg-success{% endif %}">
+                  {{ qty }} u
+                </span>
+              </td>
+              {% if puede_ver_acciones_inventario %}
+              <td class="text-end nowrap">
+                {% if _puede_ver %}
+                <a href="{{ url_for('inventario_corporativo.ver_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-primary" title="Ver">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% endif %}
+
+                {% if _puede_editar %}
+                <a href="{{ url_for('inventario_corporativo.editar_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-warning" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </a>
+                {% endif %}
+
+                {% if _puede_asignar and (producto.es_asignable or producto.EsAsignable) %}
+                <a href="{{ url_for('inventario_corporativo.asignar_inventario_corporativo', producto_id=producto.id or producto.ProductoId) }}" class="btn btn-sm btn-info" title="Asignar">
+                  <i class="fas fa-share"></i>
+                </a>
+                {% endif %}
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+            {% endif %}
+
+            {% if (ns.ok|length + ns.bajo|length) == 0 %}
             <tr>
               <td colspan="{% if puede_ver_acciones_inventario %}8{% else %}7{% endif %}" class="text-center text-muted py-4">
                 No hay productos para mostrar.
               </td>
             </tr>
-            {% endfor %}
+            {% endif %}
           </tbody>
         </table>
       </div>
