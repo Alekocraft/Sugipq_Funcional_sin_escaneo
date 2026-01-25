@@ -78,12 +78,17 @@ class NotificationService:
             return forced
 
         # Rutas absolutas sugeridas (preferir PNG)
-        abs_png = r"C:\Users\sinventarios\source\repos\sugipq\static\images\Qualitas_Logo.png"
+        # Preferida (según tu ruta real actual)
+        abs_png = r"C:\Users\sinventarios\source\repos\sugipq\static\images\qualitas_logo.png"
+
+        # Fallbacks por si el nombre del archivo cambia
+        abs_png_alt = r"C:\Users\sinventarios\source\repos\sugipq\static\images\Qualitas_Logo.png"
         abs_jpg = r"C:\Users\sinventarios\source\repos\sugipq\static\images\Qualitas_Logo.jpg"
         abs_jpeg = r"C:\Users\sinventarios\source\repos\sugipq\static\images\Qualitas_Logo.jpeg"
         abs_svg = r"C:\Users\sinventarios\source\repos\sugipq\static\images\Qualitas_Logo.svg"
 
-        for p in (abs_png, abs_jpg, abs_jpeg, abs_svg):
+
+        for p in (abs_png, abs_png_alt, abs_jpg, abs_jpeg, abs_svg):
             if os.path.exists(p):
                 return p
 
@@ -92,10 +97,21 @@ class NotificationService:
             root = Path(__file__).resolve().parent.parent
             base = root / "static" / "images"
             rel_candidates = [
+
+                base / "qualitas_logo.png",
+
+                base / "qualitas_logo.jpg",
+
+                base / "qualitas_logo.jpeg",
+
                 base / "Qualitas_Logo.png",
+
                 base / "Qualitas_Logo.jpg",
+
                 base / "Qualitas_Logo.jpeg",
+
                 base / "Qualitas_Logo.svg",  # fallback
+
             ]
             for c in rel_candidates:
                 if c.exists():
@@ -116,7 +132,7 @@ class NotificationService:
         if not logo_path:
             logger.warning(
                 "Logo para emails no encontrado. "
-                "Recomendado para Outlook: Qualitas_Logo.png en static/images/ y/o EMAIL_LOGO_PATH."
+                "Recomendado para Outlook: qualitas_logo.png en static/images/ y/o EMAIL_LOGO_PATH."
             )
             return False
 
