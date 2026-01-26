@@ -21,7 +21,13 @@ import os
 import html
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict, Any
+
+
+try:
+    from utils.helpers import sanitizar_email, sanitizar_log_text, sanitizar_ip, sanitizar_username  # type: ignore
+except Exception:
+    from helpers import sanitizar_email, sanitizar_log_text, sanitizar_ip, sanitizar_username  # type: ignore
 
 from email.mime.base import MIMEBase
 from email import encoders
@@ -301,7 +307,7 @@ class NotificationService:
             port = NotificationService.SMTP_CONFIG["port"]
             use_tls = NotificationService.SMTP_CONFIG["use_tls"]
 
-            logger.info("Conectando SMTP: %s:%s", server, port)
+            logger.info("Conectando SMTP: %s:%s", sanitizar_ip(server) if server else "[smtp]", port)
             smtp = smtplib.SMTP(server, port, timeout=10)
             smtp.ehlo()
 
@@ -321,6 +327,9 @@ class NotificationService:
 
     @staticmethod
     def _send_email_smtp(msg):
+        if not NotificationService.notifications_enabled():
+            logger.info("Notificaciones deshabilitadas (NOTIFICATIONS_ENABLED=false)")
+            return False
         smtp = None
         try:
             smtp = NotificationService._connect_smtp()
@@ -329,7 +338,7 @@ class NotificationService:
                 return False
 
             smtp.send_message(msg)
-            logger.info("Email enviado exitosamente a %s", msg.get("To"))
+            logger.info("Email enviado exitosamente a %s", sanitizar_email(msg.get("To")))
             return True
 
         except Exception:
@@ -684,14 +693,26 @@ Mensaje automático. No responder.
             return {
                 "success": False,
                 "message": "No se pudo conectar al servidor SMTP",
-                "config": NotificationService.SMTP_CONFIG,
+                "config": {
+                    "server": NotificationService.SMTP_CONFIG.get("server"),
+                    "port": NotificationService.SMTP_CONFIG.get("port"),
+                    "use_tls": NotificationService.SMTP_CONFIG.get("use_tls"),
+                    "from_email": NotificationService.SMTP_CONFIG.get("from_email"),
+                    "auth_configured": bool(NotificationService.SMTP_CONFIG.get("username") and NotificationService.SMTP_CONFIG.get("password")),
+                },
             }
 
         except Exception as e:
             return {
                 "success": False,
                 "message": "Error: %s" % str(e),
-                "config": NotificationService.SMTP_CONFIG,
+                "config": {
+                    "server": NotificationService.SMTP_CONFIG.get("server"),
+                    "port": NotificationService.SMTP_CONFIG.get("port"),
+                    "use_tls": NotificationService.SMTP_CONFIG.get("use_tls"),
+                    "from_email": NotificationService.SMTP_CONFIG.get("from_email"),
+                    "auth_configured": bool(NotificationService.SMTP_CONFIG.get("username") and NotificationService.SMTP_CONFIG.get("password")),
+                },
             }
 
 
@@ -712,21 +733,190 @@ Mensaje automático. No responder.
     # Notificaciones adicionales
     # ==============================
 
+    # ==============================
+    # Destinatarios (Solicitante + Aprobadores)
+    # ==============================
+
+    @staticmethod
+    def notifications_enabled() -> bool:
+        v = os.getenv("NOTIFICATIONS_ENABLED", "true").strip().lower()
+        return v not in ("0", "false", "no", "n", "off")
+
+    @staticmethod
+    def _normalizar_username(username: Optional[str]) -> str:
+        u = (username or "").strip()
+        if not u:
+            return ""
+        # DOMINIO\usuario -> usuario
+        if "\\" in u:
+            u = u.split("\\")[-1]
+        # usuario@dominio -> usuario
+        if "@" in u:
+            u = u.split("@")[0]
+        return u.strip()
+
+    @staticmethod
+    def _obtener_email_por_username(username: Optional[str]) -> Optional[str]:
+        u = NotificationService._normalizar_username(username)
+        if not u:
+            return None
+
+        # 1) BD (tabla Usuarios)
+        try:
+            from database import get_database_connection
+            conn = get_database_connection()
+            if conn:
+                cur = conn.cursor()
+                try:
+                    queries = [
+                        "SELECT TOP 1 Email FROM Usuarios WHERE NombreUsuario = ?",
+                        "SELECT TOP 1 Email FROM dbo.Usuarios WHERE NombreUsuario = ?",
+                    ]
+                    for q in queries:
+                        try:
+                            cur.execute(q, (u,))
+                            row = cur.fetchone()
+                            if row and row[0]:
+                                e = str(row[0]).strip()
+                                if "@" in e:
+                                    return e
+                        except Exception:
+                            continue
+                finally:
+                    try: cur.close()
+                    except Exception: pass
+                    try: conn.close()
+                    except Exception: pass
+        except Exception:
+            pass
+
+        # 2) LDAP
+        try:
+            from ldap_auth import ad_auth  # instancia ADAuth
+            details = ad_auth.get_user_details(u)
+            if details and details.get("email"):
+                e = str(details.get("email") or "").strip()
+                if "@" in e:
+                    return e
+        except Exception:
+            pass
+
+        return None
+
+    @staticmethod
+    def _obtener_aprobadores_activos() -> List[Dict[str, Any]]:
+        """Lee aprobadores activos desde la tabla Aprobadores."""
+        try:
+            from database import get_database_connection
+            conn = get_database_connection()
+            if not conn:
+                return []
+            cur = conn.cursor()
+            try:
+                queries = [
+                    "SELECT NombreAprobador, Email FROM Aprobadores WHERE Activo = 1 AND Email IS NOT NULL AND LTRIM(RTRIM(Email)) <> ''",
+                    "SELECT NombreAprobador, Email FROM dbo.Aprobadores WHERE Activo = 1 AND Email IS NOT NULL AND LTRIM(RTRIM(Email)) <> ''",
+                ]
+                rows = None
+                for q in queries:
+                    try:
+                        cur.execute(q)
+                        rows = cur.fetchall()
+                        break
+                    except Exception:
+                        continue
+
+                if not rows:
+                    return []
+
+                out = []
+                seen = set()
+                for r in rows:
+                    nombre = (r[0] or "").strip() or "Aprobador"
+                    email = (r[1] or "").strip()
+                    if "@" not in email:
+                        continue
+                    key = email.lower()
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    out.append({"nombre": nombre, "email": email})
+                return out
+            finally:
+                try: cur.close()
+                except Exception: pass
+                try: conn.close()
+                except Exception: pass
+        except Exception:
+            return []
+
+    @staticmethod
+    def _build_destinatarios(info: dict, include_gestor: bool = False) -> List[Dict[str, Any]]:
+        """Devuelve destinatarios (solicitante + aprobadores + opcional gestor), sin duplicados."""
+        info = info or {}
+        destinatarios: List[Dict[str, Any]] = []
+
+        # Solicitante
+        email_sol = (info.get("email_solicitante") or info.get("correo") or info.get("email") or "").strip()
+        if not email_sol:
+            email_sol = NotificationService._obtener_email_por_username(info.get("usuario_solicitante") or info.get("usuario"))
+        if email_sol and "@" in email_sol:
+            nombre_sol = info.get("usuario_solicitante") or info.get("solicitante_nombre") or info.get("usuario") or "Solicitante"
+            destinatarios.append({"nombre": str(nombre_sol), "email": email_sol})
+
+        # Aprobadores
+        destinatarios.extend(NotificationService._obtener_aprobadores_activos())
+
+        # Gestor
+        if include_gestor:
+            ug = info.get("usuario_gestion") or info.get("usuario_responsable") or info.get("usuario_aprobador") or info.get("usuario_rechazador")
+            email_g = (info.get("email_gestor") or "").strip()
+            if not email_g:
+                email_g = NotificationService._obtener_email_por_username(ug)
+            if email_g and "@" in email_g:
+                destinatarios.append({"nombre": str(ug or "Gestor"), "email": email_g})
+
+        # Dedupe final
+        seen = set()
+        out = []
+        for d in destinatarios:
+            e = (d.get("email") or "").strip()
+            if not e:
+                continue
+            key = e.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append({"nombre": d.get("nombre") or "Usuario", "email": e})
+        return out
+
+    @staticmethod
+    def _enviar_a_destinatarios(destinatarios: List[Dict[str, Any]], subject: str, html_body: str, text_body: str) -> bool:
+        """Envía el mismo contenido a todos los destinatarios (uno por uno)."""
+        ok_total = True
+        for d in destinatarios:
+            to_email = d.get("email")
+            to_name = d.get("nombre") or "Usuario"
+            ok = NotificationService.enviar_notificacion_general(to_email, to_name, subject, html_body, text_body)
+            if not ok:
+                ok_total = False
+        return ok_total
     @staticmethod
     def notificar_cambio_estado_solicitud(
         solicitud_info: dict,
         estado_anterior: str,
         estado_nuevo: str,
-        usuario_gestion: str | None = None,
-        observaciones: str | None = None,
+        usuario_gestion: Optional[str] = None,
+        observaciones: Optional[str] = None,
     ) -> bool:
-        """Notifica al solicitante el cambio de estado de una solicitud.
-
-        Cubre: aprobaciones, rechazos, aprobado parcial, devuelto y gestión de novedades.
-        """
+        """Notifica cambio de estado: solicitante + aprobadores (+ gestor si aplica)."""
         info = solicitud_info or {}
-        email = info.get("email_solicitante")
-        if not email:
+        if usuario_gestion:
+            info["usuario_gestion"] = usuario_gestion
+
+        destinatarios = NotificationService._build_destinatarios(info, include_gestor=True)
+        if not destinatarios:
+            logger.warning("Notificación omitida: sin destinatarios [evento=cambio_estado_solicitud]")
             return False
 
         nombre = info.get("usuario_solicitante", "Usuario")
@@ -754,13 +944,13 @@ Mensaje automático. No responder.
         table = "<table class='details'>" + "".join(rows) + "</table>"
 
         html_body = (
-            f"<p>Hola <b>{NotificationService._escape_html(nombre)}</b>,</p>"
-            f"<p>Tu solicitud ha cambiado de estado.</p>"
+            f"<p>Hola,</p>"
+            f"<p>La solicitud ha cambiado de estado.</p>"
             f"{table}"
         )
 
         txt_lines = [
-            f"Hola {nombre}, tu solicitud #{sid} cambió de estado.",
+            f"Solicitud #{sid} cambió de estado.",
             f"Estado anterior: {estado_anterior}",
             f"Estado nuevo: {estado_nuevo}",
         ]
@@ -775,16 +965,16 @@ Mensaje automático. No responder.
         if observaciones:
             txt_lines.append(f"Observaciones: {observaciones}")
 
-        return NotificationService.enviar_notificacion_general(
-            email, nombre, subject, html_body, "\n".join(txt_lines)
+        return NotificationService._enviar_a_destinatarios(
+            destinatarios, subject, html_body, "\n".join(txt_lines)
         )
-
     @staticmethod
-    def notificar_novedad_registrada(solicitud_info: dict, novedad_info: dict | None = None) -> bool:
-        """Notifica al solicitante cuando se registra una novedad."""
+    def notificar_novedad_registrada(solicitud_info: dict, novedad_info: Optional[dict] = None) -> bool:
+        """Notifica registro de novedad: solicitante + aprobadores."""
         info = solicitud_info or {}
-        email = info.get("email_solicitante")
-        if not email:
+        destinatarios = NotificationService._build_destinatarios(info, include_gestor=False)
+        if not destinatarios:
+            logger.warning("Notificación omitida: sin destinatarios [evento=novedad_registrada]")
             return False
 
         nombre = info.get("usuario_solicitante", "Usuario")
@@ -814,13 +1004,13 @@ Mensaje automático. No responder.
         table = "<table class='details'>" + "".join(rows) + "</table>"
 
         html_body = (
-            f"<p>Hola <b>{NotificationService._escape_html(nombre)}</b>,</p>"
-            f"<p>Se registró una novedad asociada a tu solicitud.</p>"
+            f"<p>Hola,</p>"
+            f"<p>Se registró una novedad asociada a la solicitud.</p>"
             f"{table}"
         )
 
         txt_lines = [
-            f"Hola {nombre}, se registró una novedad asociada a tu solicitud #{sid}.",
+            f"Novedad registrada para solicitud #{sid}.",
             f"Tipo: {tipo}",
         ]
         if cantidad_afectada is not None:
@@ -830,19 +1020,19 @@ Mensaje automático. No responder.
         if descripcion:
             txt_lines.append(f"Descripción: {descripcion}")
 
-        return NotificationService.enviar_notificacion_general(
-            email, nombre, subject, html_body, "\n".join(txt_lines)
+        return NotificationService._enviar_a_destinatarios(
+            destinatarios, subject, html_body, "\n".join(txt_lines)
         )
-
     @staticmethod
     def notificar_prestamo_creado(prestamo_info: dict) -> bool:
-        """Notifica al solicitante cuando se registra un préstamo."""
+        """Notifica creación de préstamo: solicitante + aprobadores."""
         info = prestamo_info or {}
-        email = info.get("email_solicitante")
-        if not email:
+        destinatarios = NotificationService._build_destinatarios(info, include_gestor=False)
+        if not destinatarios:
+            logger.warning("Notificación omitida: sin destinatarios [evento=prestamo_creado]")
             return False
 
-        nombre = info.get("solicitante_nombre", "Usuario")
+        nombre = info.get("solicitante_nombre", info.get("usuario_solicitante", "Usuario"))
         pid = info.get("id", "N/A")
         material = info.get("material") or ""
         cantidad = info.get("cantidad")
@@ -868,12 +1058,12 @@ Mensaje automático. No responder.
         table = "<table class='details'>" + "".join(rows) + "</table>"
 
         html_body = (
-            f"<p>Hola <b>{NotificationService._escape_html(nombre)}</b>,</p>"
-            f"<p>Tu préstamo fue registrado en el sistema.</p>"
+            f"<p>Hola,</p>"
+            f"<p>Se registró un préstamo en el sistema.</p>"
             f"{table}"
         )
 
-        txt_lines = [f"Hola {nombre}, tu préstamo #{pid} fue registrado."]
+        txt_lines = [f"Préstamo #{pid} registrado."]
         if material:
             txt_lines.append(f"Material: {material}")
         if cantidad is not None:
@@ -885,24 +1075,27 @@ Mensaje automático. No responder.
         if fecha_prevista:
             txt_lines.append(f"Fecha prevista: {fecha_prevista}")
 
-        return NotificationService.enviar_notificacion_general(
-            email, nombre, subject, html_body, "\n".join(txt_lines)
+        return NotificationService._enviar_a_destinatarios(
+            destinatarios, subject, html_body, "\n".join(txt_lines)
         )
-
     @staticmethod
     def notificar_cambio_estado_prestamo(
         prestamo_info: dict,
         estado_nuevo: str,
-        usuario_responsable: str | None = None,
-        comentario: str | None = None,
+        usuario_responsable: Optional[str] = None,
+        comentario: Optional[str] = None,
     ) -> bool:
-        """Notifica al solicitante el cambio de estado de un préstamo."""
+        """Notifica cambio de estado de préstamo: solicitante + aprobadores (+ gestor)."""
         info = prestamo_info or {}
-        email = info.get("email_solicitante")
-        if not email:
+        if usuario_responsable:
+            info["usuario_responsable"] = usuario_responsable
+
+        destinatarios = NotificationService._build_destinatarios(info, include_gestor=True)
+        if not destinatarios:
+            logger.warning("Notificación omitida: sin destinatarios [evento=cambio_estado_prestamo]")
             return False
 
-        nombre = info.get("solicitante_nombre", "Usuario")
+        nombre_sol = info.get("solicitante_nombre", info.get("usuario_solicitante", "Usuario"))
         pid = info.get("id", "N/A")
         material = info.get("material") or ""
         cantidad = info.get("cantidad")
@@ -918,23 +1111,23 @@ Mensaje automático. No responder.
             rows.append(f"<tr><td><b>Cantidad</b></td><td>{NotificationService._escape_html(cantidad)}</td></tr>")
         if oficina:
             rows.append(f"<tr><td><b>Oficina</b></td><td>{NotificationService._escape_html(oficina)}</td></tr>")
-        rows.append(f"<tr><td><b>Estado nuevo</b></td><td>{NotificationService._escape_html(estado_nuevo)}</td></tr>")
+        rows.append(f"<tr><td><b>Nuevo estado</b></td><td>{NotificationService._escape_html(estado_nuevo)}</td></tr>")
         if usuario_responsable:
             rows.append(f"<tr><td><b>Gestionado por</b></td><td>{NotificationService._escape_html(usuario_responsable)}</td></tr>")
         if comentario:
-            rows.append(f"<tr><td><b>Observaciones</b></td><td>{NotificationService._escape_html(comentario)}</td></tr>")
+            rows.append(f"<tr><td><b>Observación</b></td><td>{NotificationService._escape_html(comentario)}</td></tr>")
 
         table = "<table class='details'>" + "".join(rows) + "</table>"
 
         html_body = (
-            f"<p>Hola <b>{NotificationService._escape_html(nombre)}</b>,</p>"
-            f"<p>Tu préstamo ha cambiado de estado.</p>"
+            f"<p>Hola,</p>"
+            f"<p>El préstamo ha cambiado de estado.</p>"
             f"{table}"
         )
 
         txt_lines = [
-            f"Hola {nombre}, tu préstamo #{pid} cambió de estado.",
-            f"Estado nuevo: {estado_nuevo}",
+            f"Préstamo #{pid} cambió de estado.",
+            f"Nuevo estado: {estado_nuevo}",
         ]
         if material:
             txt_lines.insert(1, f"Material: {material}")
@@ -945,33 +1138,42 @@ Mensaje automático. No responder.
         if usuario_responsable:
             txt_lines.append(f"Gestionado por: {usuario_responsable}")
         if comentario:
-            txt_lines.append(f"Observaciones: {comentario}")
+            txt_lines.append(f"Observación: {comentario}")
 
-        return NotificationService.enviar_notificacion_general(
-            email, nombre, subject, html_body, "\n".join(txt_lines)
+        return NotificationService._enviar_a_destinatarios(
+            destinatarios, subject, html_body, "\n".join(txt_lines)
         )
-    # Compatibilidad (por si otros módulos lo llaman)
+
     @staticmethod
     def notificar_solicitud_creada(solicitud_info: dict) -> bool:
-        email = (solicitud_info or {}).get("email_solicitante")
-        if not email:
+        info = solicitud_info or {}
+        destinatarios = NotificationService._build_destinatarios(info, include_gestor=False)
+        if not destinatarios:
+            logger.warning("Notificación omitida: sin destinatarios [evento=solicitud_creada]")
             return False
-        nombre = (solicitud_info or {}).get("usuario_solicitante", "Usuario")
-        sid = (solicitud_info or {}).get("id", "N/A")
-        html = """
-        <p>Hola <b>%s</b>, tu solicitud fue creada exitosamente.</p>
-        <p><b>ID:</b> %s</p>
-        """ % (nombre, sid)
-        txt = "Solicitud creada. Hola %s. ID: %s" % (nombre, sid)
-        return NotificationService.enviar_notificacion_general(email, nombre, "📝 Solicitud #%s creada" % sid, html, txt)
+
+        nombre = info.get("usuario_solicitante", "Usuario")
+        sid = info.get("id", "N/A")
+
+        html = (
+            f"<p>Hola <b>{NotificationService._escape_html(nombre)}</b>,</p>"
+            f"<p>Tu solicitud fue creada exitosamente.</p>"
+            f"<p><b>ID:</b> {NotificationService._escape_html(sid)}</p>"
+        )
+        txt = f"Solicitud creada. Hola {nombre}. ID: {sid}"
+
+        subject = f"📝 Solicitud #{sid} creada"
+        return NotificationService._enviar_a_destinatarios(destinatarios, subject, html, txt)
+
 
 
 def servicio_notificaciones_disponible() -> bool:
-    if os.getenv("NOTIFICATIONS_ENABLED", "true").strip().lower() in ("0", "false", "no", "n"):
+    if not NotificationService.notifications_enabled():
         return False
 
     cfg = getattr(NotificationService, "SMTP_CONFIG", {}) or {}
     return bool(cfg.get("server")) and bool(cfg.get("port")) and bool(cfg.get("from_email"))
+
 
 
 def notificar_solicitud(solicitud_info: dict) -> bool:

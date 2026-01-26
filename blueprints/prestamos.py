@@ -942,14 +942,14 @@ def aprobar_prestamo(prestamo_id):
         conn.commit()
         
         # ====== NOTIFICACIÓN: Préstamo aprobado ======
-        if NOTIFICACIONES_ACTIVAS and prestamo_info and prestamo_info.get('email_solicitante'):
+        if NOTIFICACIONES_ACTIVAS and prestamo_info:
             try:
-                NotificationService.notificar_cambio_estado_prestamo(
+                ok = NotificationService.notificar_cambio_estado_prestamo(
                     prestamo_info,
                     'APROBADO',
                     usuario_aprobador
                 )
-                logger.info(f"📧 Notificación enviada: Préstamo #{prestamo_id} aprobado")
+                logger.info(f"📧 Notificación OK: Préstamo #{prestamo_id} aprobado") if ok else logger.warning(f"📧 Notificación FAIL: Préstamo #{prestamo_id} aprobado")
             except Exception as e:
                 logger.error("Error enviando notificación de aprobación préstamo: [error](%s)", type(e).__name__)
         # =============================================
@@ -1081,15 +1081,15 @@ def aprobar_parcial_prestamo(prestamo_id):
         conn.commit()
         
         # ====== NOTIFICACIÓN: Préstamo aprobado parcialmente ======
-        if NOTIFICACIONES_ACTIVAS and prestamo_info and prestamo_info.get('email_solicitante'):
+        if NOTIFICACIONES_ACTIVAS and prestamo_info:
             try:
-                NotificationService.notificar_cambio_estado_prestamo(
+                ok = NotificationService.notificar_cambio_estado_prestamo(
                     prestamo_info,
                     'APROBADO_PARCIAL',
                     usuario_aprobador,
                     f'Cantidad aprobada: {cantidad_aprobada} de {cantidad_total}'
                 )
-                logger.info(f"📧 Notificación enviada: Préstamo #{prestamo_id} aprobado parcialmente")
+                logger.info(f"📧 Notificación OK: Préstamo #{prestamo_id} aprobado parcialmente") if ok else logger.warning(f"📧 Notificación FAIL: Préstamo #{prestamo_id} aprobado parcialmente")
             except Exception as e:
                 logger.error("Error enviando notificación de aprobación parcial préstamo: [error](%s)", type(e).__name__)
         # =============================================
@@ -1185,15 +1185,15 @@ def rechazar_prestamo(prestamo_id):
         conn.commit()
         
         # ====== NOTIFICACIÓN: Préstamo rechazado ======
-        if NOTIFICACIONES_ACTIVAS and prestamo_info and prestamo_info.get('email_solicitante'):
+        if NOTIFICACIONES_ACTIVAS and prestamo_info:
             try:
-                NotificationService.notificar_cambio_estado_prestamo(
+                ok = NotificationService.notificar_cambio_estado_prestamo(
                     prestamo_info,
                     'RECHAZADO',
                     usuario_rechazador,
                     observacion
                 )
-                logger.info(f"📧 Notificación enviada: Préstamo #{prestamo_id} rechazado")
+                logger.info(f"📧 Notificación OK: Préstamo #{prestamo_id} rechazado") if ok else logger.warning(f"📧 Notificación FAIL: Préstamo #{prestamo_id} rechazado")
             except Exception as e:
                 logger.error("Error enviando notificación de rechazo préstamo: [error](%s)", type(e).__name__)
         # =============================================
@@ -1284,9 +1284,9 @@ def registrar_devolucion_prestamo(prestamo_id):
         conn.commit()
         
         # ====== NOTIFICACIÓN: Devolución registrada ======
-        if NOTIFICACIONES_ACTIVAS and prestamo_info and prestamo_info.get('email_solicitante'):
+        if NOTIFICACIONES_ACTIVAS and prestamo_info:
             try:
-                NotificationService.notificar_cambio_estado_prestamo(
+                ok = NotificationService.notificar_cambio_estado_prestamo(
                     prestamo_info,
                     'DEVUELTO',
                     usuario_devolucion,

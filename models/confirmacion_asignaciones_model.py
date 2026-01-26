@@ -6,7 +6,7 @@ CORREGIDO: Usa authenticate_user en lugar de authenticate
 """
 from database import get_database_connection
 import logging
-from utils.helpers import sanitizar_username, sanitizar_log_text
+from utils.helpers import sanitizar_username, sanitizar_identificacion, sanitizar_ip, sanitizar_log_text
 import secrets
 import hashlib
 from datetime import datetime, timedelta
@@ -478,15 +478,14 @@ class ConfirmacionAsignacionesModel:
             conn.commit()
             
             # Registrar en log
-            logger.info(f"""
-                ✅ Confirmación exitosa:
-                - Asignación: {asignacion_id}
-                - Usuario: {username}
-                - Cédula: {numero_identificacion[:3]}***
-                - Producto: {validacion_token.get('producto_nombre')}
-                - IP: {direccion_ip}
-            """)
-            
+            logger.info(
+                "✅ Confirmación exitosa [asignacion=%s usuario=%s cedula=%s producto=%s ip=%s]",
+                asignacion_id,
+                sanitizar_username(username),
+                sanitizar_identificacion(numero_identificacion),
+                sanitizar_log_text(validacion_token.get('producto_nombre'), max_len=80),
+                sanitizar_ip(direccion_ip),
+            )
             return {
                 'success': True,
                 'message': 'Asignación confirmada exitosamente',
@@ -494,7 +493,7 @@ class ConfirmacionAsignacionesModel:
                 'producto_nombre': validacion_token.get('producto_nombre'),
                 'oficina_nombre': validacion_token.get('oficina_nombre'),
                 'usuario_nombre': username,
-                'cedula': numero_identificacion,
+                'cedula': sanitizar_identificacion(numero_identificacion),
                 'fecha_confirmacion': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
             

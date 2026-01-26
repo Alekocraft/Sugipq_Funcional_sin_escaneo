@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # blueprints/confirmacion_asignaciones.py 
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional, Tuple
 from flask import Blueprint, render_template, request, session, flash, redirect, jsonify
 
 from models.confirmacion_asignaciones_model import ConfirmacionAsignacionesModel
+from utils.helpers import sanitizar_username, sanitizar_ip, sanitizar_log_text
 
 logger = logging.getLogger(__name__)
 
@@ -180,14 +181,15 @@ def verificar_token(token):
     Requiere autenticación contra Active Directory y número de cédula.
     """
     try:
-        logger.info(f"Solicitud para verificar token: {token[:10]}...")
+        token_safe = sanitizar_log_text((token or "")[:6], max_len=12) + "***"
+        logger.info("Solicitud para verificar token: %s", token_safe)
 
         # Validar el token
         validacion = ConfirmacionAsignacionesModel.validar_token(token)
 
         if not validacion.get('es_valido'):
             mensaje_error = validacion.get('mensaje_error', 'Token inválido')
-            logger.warning(f"Token inválido: {mensaje_error}")
+            logger.warning("Token inválido: %s", sanitizar_log_text(mensaje_error, max_len=160))
             return safe_render_template(
                 'confirmacion/error.html',
                 error=mensaje_error,
@@ -214,7 +216,9 @@ def verificar_token(token):
             user_agent = request.headers.get('User-Agent', 'Unknown')
 
             logger.info(
-                f"Intentando confirmar asignación {validacion['asignacion_id']} para usuario: {usuario_ad_username}"
+                "Intentando confirmar asignación %s para usuario: %s",
+                validacion.get("asignacion_id"),
+                sanitizar_username(usuario_ad_username)
             )
 
             # Validar campos requeridos
@@ -245,10 +249,17 @@ def verificar_token(token):
                 user_agent=user_agent
             )
 
-            logger.info(f"RESULTADO COMPLETO DE CONFIRMACIÓN: {resultado}")
+            logger.info(
+                "Resultado confirmación [success=%s asignacion=%s msg=%s usuario=%s ip=%s]",
+                bool((resultado or {}).get("success")),
+                (resultado or {}).get("asignacion_id", validacion.get("asignacion_id")),
+                sanitizar_log_text((resultado or {}).get("message", ""), max_len=160),
+                sanitizar_username(usuario_ad_username),
+                sanitizar_ip(direccion_ip),
+            )
 
             if resultado.get('success'):
-                logger.info(f"✅ Asignación {validacion['asignacion_id']} confirmada exitosamente")
+                logger.info("✅ Asignación confirmada exitosamente [asignacion=%s usuario=%s]", validacion.get("asignacion_id"), sanitizar_username(usuario_ad_username))
 
                 # Asegurar datos completos para plantilla
                 datos_confirmacion: Dict[str, Any] = {
