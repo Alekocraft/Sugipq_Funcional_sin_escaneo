@@ -6,7 +6,7 @@ CORREGIDO: Usa authenticate_user en lugar de authenticate
 """
 from database import get_database_connection
 import logging
-from utils.helpers import sanitizar_username, sanitizar_identificacion, sanitizar_ip, sanitizar_log_text
+from utils.helpers import sanitizar_username, sanitizar_log_text
 import secrets
 import hashlib
 from datetime import datetime, timedelta
@@ -356,15 +356,29 @@ class ConfirmacionAsignacionesModel:
             if usuario_ad_email:
                 # Buscar usuario en AD por email para verificar
                 if LDAP_AVAILABLE:
+                    # Nota: ad_auth.search_user_by_email devuelve LISTA de usuarios (dicts)
+                    # Compatibilidad: si retorna dict, también lo soportamos.
                     user_info = ad_auth.search_user_by_email(usuario_ad_email)
-                    if user_info and user_info.get('usuario', '').lower() == username.lower():
+
+                    def _match_username(obj):
+                        try:
+                            return (obj.get('usuario', '') or '').lower() == username.lower()
+                        except Exception:
+                            return False
+
+                    coincide = False
+                    if isinstance(user_info, dict):
+                        coincide = _match_username(user_info)
+                    elif isinstance(user_info, list):
+                        coincide = any(_match_username(u) for u in user_info)
+
+                    if coincide:
                         return {
                             'coincide': True,
                             'message': 'Usuario válido (verificado por email)',
                             'usuario_ad_nombre': usuario_ad_nombre,
                             'usuario_ad_email': usuario_ad_email
                         }
-            
             return {
                 'coincide': False,
                 'message': 'El usuario no coincide con la asignación'
@@ -478,14 +492,15 @@ class ConfirmacionAsignacionesModel:
             conn.commit()
             
             # Registrar en log
-            logger.info(
-                "✅ Confirmación exitosa [asignacion=%s usuario=%s cedula=%s producto=%s ip=%s]",
-                asignacion_id,
-                sanitizar_username(username),
-                sanitizar_identificacion(numero_identificacion),
-                sanitizar_log_text(validacion_token.get('producto_nombre'), max_len=80),
-                sanitizar_ip(direccion_ip),
-            )
+            logger.info(f"""
+                ✅ Confirmación exitosa:
+                - Asignación: {asignacion_id}
+                - Usuario: {username}
+                - Cédula: {numero_identificacion[:3]}***
+                - Producto: {validacion_token.get('producto_nombre')}
+                - IP: {direccion_ip}
+            """)
+            
             return {
                 'success': True,
                 'message': 'Asignación confirmada exitosamente',
@@ -493,7 +508,7 @@ class ConfirmacionAsignacionesModel:
                 'producto_nombre': validacion_token.get('producto_nombre'),
                 'oficina_nombre': validacion_token.get('oficina_nombre'),
                 'usuario_nombre': username,
-                'cedula': sanitizar_identificacion(numero_identificacion),
+                'cedula': numero_identificacion,
                 'fecha_confirmacion': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
             
