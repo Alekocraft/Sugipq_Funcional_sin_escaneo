@@ -10,6 +10,8 @@ Mejoras de robustez/seguridad:
 - Sin recursión ante LDAPSocketOpenError (se prueban opciones y se corta).
 - Escapado de filtros LDAP para evitar inyección.
 - Logs sanitizados.
+- FIX: El bind de servicio ahora normaliza usuario (DOMINIO\\user) y hace fallback a SIMPLE (user@dominio)
+  para evitar errores tipo LDAPUnknownAuthenticationMethodError cuando LDAP_SERVICE_USER viene sin dominio.
 """
 
 from __future__ import annotations
@@ -17,10 +19,15 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-from ldap3 import ALL, NTLM, SUBTREE, Connection, Server
-from ldap3.core.exceptions import LDAPBindError, LDAPException, LDAPSocketOpenError
+from ldap3 import ALL, NTLM, SIMPLE, SUBTREE, Connection, Server
+from ldap3.core.exceptions import (
+    LDAPBindError,
+    LDAPException,
+    LDAPSocketOpenError,
+    LDAPUnknownAuthenticationMethodError,
+)
 from ldap3.utils.conv import escape_filter_chars
 
 logger = logging.getLogger(__name__)
@@ -35,6 +42,7 @@ except Exception:
     try:
         from config import Config  # type: ignore
     except Exception:
+
         class Config:  # fallback mínimo
             LDAP_ENABLED = True
             LDAP_SERVER = os.getenv("LDAP_SERVER", "")
@@ -43,6 +51,7 @@ except Exception:
             LDAP_SEARCH_BASE = os.getenv("LDAP_SEARCH_BASE", "")
             LDAP_SERVICE_USER = os.getenv("LDAP_SERVICE_USER")
             LDAP_SERVICE_PASSWORD = os.getenv("LDAP_SERVICE_PASSWORD")
+
 
 try:
     from utils.helpers import sanitizar_username, sanitizar_log_text  # type: ignore
@@ -76,8 +85,12 @@ class ADAuth:
         self.domain: str = getattr(Config, "LDAP_DOMAIN", os.getenv("LDAP_DOMAIN", ""))
         self.search_base: str = getattr(Config, "LDAP_SEARCH_BASE", os.getenv("LDAP_SEARCH_BASE", ""))
 
-        self.service_user: Optional[str] = getattr(Config, "LDAP_SERVICE_USER", os.getenv("LDAP_SERVICE_USER"))
-        self.service_password: Optional[str] = getattr(Config, "LDAP_SERVICE_PASSWORD", os.getenv("LDAP_SERVICE_PASSWORD"))
+        self.service_user: Optional[str] = getattr(
+            Config, "LDAP_SERVICE_USER", os.getenv("LDAP_SERVICE_USER")
+        )
+        self.service_password: Optional[str] = getattr(
+            Config, "LDAP_SERVICE_PASSWORD", os.getenv("LDAP_SERVICE_PASSWORD")
+        )
 
         # Permite forzar SSL desde env si existe
         self.force_ssl: Optional[bool] = None
@@ -102,8 +115,9 @@ class ADAuth:
         if not self.server_address:
             return []
 
-        # 1) último bueno
         endpoints: List[_LdapEndpoint] = []
+
+        # 1) último bueno
         if self._last_good:
             endpoints.append(self._last_good)
 
@@ -136,28 +150,71 @@ class ADAuth:
             connect_timeout=self.connect_timeout,
         )
 
+    def _format_user_for_ntlm(self, user: str) -> str:
+        """Devuelve el usuario en formato DOMINIO\\usuario si aplica."""
+        u = (user or "").strip()
+        if not u:
+            return u
+        if "\\" in u or "@" in u:
+            return u
+        return f"{self.domain}\\{u}" if self.domain else u
+
+    def _format_user_for_simple(self, user: str) -> str:
+        """Devuelve el usuario preferiblemente en formato UPN (usuario@dominio)."""
+        u = (user or "").strip()
+        if not u:
+            return u
+        if "@" in u:
+            return u
+        if "\\" in u:
+            # DOMAIN\\user -> user
+            u = u.split("\\", 1)[1]
+        if self.domain and "." in self.domain:
+            return f"{u}@{self.domain}"
+        return u
+
     def _service_bind(self, server: Server) -> Optional[Connection]:
-        """Bind con cuenta de servicio para búsquedas. Retorna conexión si OK."""
+        """Bind con cuenta de servicio para búsquedas.
+
+        FIX clave: si LDAP_SERVICE_USER viene sin dominio (ej: 'userauge'), NTLM falla.
+        Aquí normalizamos a DOMINIO\\user y si falla intentamos SIMPLE con user@dominio.
+        """
         if not self.service_user or not self.service_password:
             return None
 
-        try:
-            conn = Connection(
-                server,
-                user=self.service_user,
-                password=self.service_password,
-                authentication=NTLM,
-                auto_bind=True,
-            )
-            return conn
-        except LDAPSocketOpenError:
-            raise
-        except Exception as e:
-            logger.error(
-                "❌ LDAP: Error autenticando con cuenta de servicio: [error](%s)",
-                type(e).__name__,
-            )
-            return None
+        principal_ntlm = self._format_user_for_ntlm(self.service_user)
+        principal_simple = self._format_user_for_simple(self.service_user)
+
+        last_error: str | None = None
+
+        for auth_name, auth_method, principal in (
+            ("NTLM", NTLM, principal_ntlm),
+            ("SIMPLE", SIMPLE, principal_simple),
+        ):
+            try:
+                conn = Connection(
+                    server,
+                    user=principal,
+                    password=self.service_password,
+                    authentication=auth_method,
+                    auto_bind=True,
+                )
+                return conn
+
+            except LDAPSocketOpenError:
+                raise
+            except (LDAPUnknownAuthenticationMethodError, LDAPBindError, LDAPException) as e:
+                last_error = f"{type(e).__name__} ({auth_name})"
+                continue
+            except Exception as e:
+                last_error = f"{type(e).__name__} ({auth_name})"
+                continue
+
+        logger.error(
+            "❌ LDAP: Error autenticando con cuenta de servicio: %s",
+            sanitizar_log_text(last_error or "Unknown"),
+        )
+        return None
 
     # ---------------------
     # API pública
@@ -175,7 +232,7 @@ class ADAuth:
         for ep in self._endpoints_to_try():
             try:
                 server = self._make_server(ep)
-                # Si hay cuenta de servicio, intentamos bind; si no, intentamos abrir conexión anónima.
+
                 if self.service_user and self.service_password:
                     conn = self._service_bind(server)
                     if conn:
@@ -190,7 +247,6 @@ class ADAuth:
                         }
                     last_err = "Bind de servicio falló"
                 else:
-                    # Conexión simple sin bind (auto_bind=False) para validar socket.
                     conn = Connection(server, auto_bind=False)
                     if conn.open():
                         conn.unbind()
@@ -214,11 +270,7 @@ class ADAuth:
         return {"success": False, "message": last_err or "No se pudo conectar a LDAP"}
 
     def authenticate_user(self, username: str, password: str) -> Optional[Dict[str, str]]:
-        """Autentica un usuario contra AD.
-
-        Retorna un dict con información mínima si autentica, o None si falla.
-        (Dict es truthy, por lo que también funciona donde se esperaba un bool.)
-        """
+        """Autentica un usuario contra AD. Retorna dict con info mínima o None."""
         if not getattr(Config, "LDAP_ENABLED", True):
             return None
 
@@ -226,8 +278,7 @@ class ADAuth:
         if not username_clean or not password:
             return None
 
-        # Construimos el user principal: DOMAIN\\user
-        user_principal = f"{self.domain}\\{username_clean}" if self.domain else username_clean
+        user_principal = self._format_user_for_ntlm(username_clean)
 
         last_error: Optional[str] = None
 
@@ -242,13 +293,11 @@ class ADAuth:
                     auto_bind=True,
                 )
 
-                # Si autentica, opcionalmente extraemos atributos
                 info = self.get_user_details(username_clean, conn=conn) or {}
                 conn.unbind()
 
                 self._last_good = ep
 
-                # Asegurar claves estándar
                 return {
                     "username": username_clean,
                     "nombre": info.get("nombre") or username_clean,
@@ -259,7 +308,6 @@ class ADAuth:
                 last_error = f"LDAPSocketOpenError ({ep.port}, ssl={ep.use_ssl})"
                 continue
             except LDAPBindError:
-                # Credenciales inválidas / usuario no permitido
                 last_error = "LDAPBindError"
                 break
             except LDAPException as e:
@@ -283,7 +331,6 @@ class ADAuth:
             return []
 
         safe_term = escape_filter_chars(term)
-        # Búsqueda por displayName/username
         ldap_filter = f"(|(displayName=*{safe_term}*)(sAMAccountName=*{safe_term}*))"
 
         return self._search_users(ldap_filter, max_results=max_results)
@@ -312,8 +359,7 @@ class ADAuth:
 
                 conn = self._service_bind(server)
                 if conn is None:
-                    # Sin cuenta de servicio, no podemos buscar
-                    last_error = "Cuenta de servicio no configurada"
+                    last_error = "Bind de servicio falló"
                     break
 
                 attrs = [
@@ -355,10 +401,7 @@ class ADAuth:
                 continue
             except Exception as e:
                 last_error = type(e).__name__
-                logger.error(
-                    "❌ LDAP: Error buscando usuarios: [error](%s)",
-                    type(e).__name__,
-                )
+                logger.error("❌ LDAP: Error buscando usuarios: [error](%s)", type(e).__name__)
                 break
 
         if last_error:
@@ -366,11 +409,7 @@ class ADAuth:
         return []
 
     def get_user_details(self, username: str, conn: Optional[Connection] = None) -> Optional[Dict[str, str]]:
-        """Obtiene detalles del usuario.
-
-        Si se pasa `conn`, se usa la conexión ya autenticada (recomendado).
-        Si no, se requiere cuenta de servicio para hacer lookup.
-        """
+        """Obtiene detalles del usuario."""
         user = (username or "").strip()
         if not user or not self.search_base:
             return None
@@ -378,7 +417,6 @@ class ADAuth:
         safe_user = escape_filter_chars(user)
         ldap_filter = f"(sAMAccountName={safe_user})"
 
-        # Si ya hay conexión autenticada, la usamos
         if conn is not None:
             try:
                 conn.search(
@@ -400,7 +438,6 @@ class ADAuth:
             except Exception:
                 return None
 
-        # Si no hay conexión, usamos bind de servicio
         for ep in self._endpoints_to_try():
             try:
                 server = self._make_server(ep)
