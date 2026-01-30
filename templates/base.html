@@ -183,7 +183,7 @@
                     </li>
                     {% endif %}
 
-                    {% if can_access is defined and can_access('materiales', 'view') %}
+                    {% if can_access is defined and can_access('materiales', 'view') and (session.rol or '')|lower != 'oficina_polo_club' %}
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/prestamos/materiales') %}active{% endif %}" 
                            href="/prestamos/materiales">
@@ -230,7 +230,7 @@
                         </a>
                     </li>
 
-                    {% if can_access is defined and can_access('materiales', 'view') %}
+                    {% if can_access is defined and can_access('materiales', 'view') and (session.rol or '')|lower != 'oficina_polo_club' %}
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/materiales') %}active{% endif %}" href="/materiales">
                             <i class="fas fa-box me-1"></i> Materiales

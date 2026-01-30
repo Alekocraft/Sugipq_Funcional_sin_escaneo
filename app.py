@@ -459,13 +459,30 @@ def has_gestion_completa():
     return get_user_role() in ROLES_GESTION_COMPLETA
 
 def is_oficina_role():
-    """Verifica si el usuario tiene rol de oficina"""
-    return get_user_role() in ROLES_OFICINA
+    """Verifica si el usuario tiene rol de oficina (incluye roles office-like)."""
+    rol = get_user_role()
+    if not rol:
+        return False
+
+    # Roles de oficina explícitos (compatibilidad)
+    if rol in ROLES_OFICINA:
+        return True
+
+    # Cualquier rol que empiece por 'oficina' se considera oficina
+    # (ej: oficina_polo_club, oficina_coq, oficina_regular, etc.)
+    if rol.startswith('oficina'):
+        return True
+
+    # Roles corporativos que deben comportarse como oficina COQ (UI y filtros)
+    if rol in {'gerencia_talento_humano', 'gerencia_comercial', 'comunicaciones', 'presidencia'}:
+        return True
+
+    return False
 
 def can_create_or_view():
     """Verifica si puede crear novedades o ver detalles"""
     rol = get_user_role()
-    return rol in ROLES_GESTION_COMPLETA or rol in ROLES_OFICINA
+    return rol in ROLES_GESTION_COMPLETA or is_oficina_role()
 
 def should_show_devolucion_button(solicitud):
     """Determina si mostrar botón de devolución"""
@@ -864,26 +881,16 @@ def listar_usuarios_backup():
 # ============================================================================
 
 @app.route('/reportes')
-def reportes_root():
-    """Ruta raíz /reportes (compatibilidad).
-
-    - Aplica permisos usando can_access (incluye tesorería).
-    - Redirige al blueprint de reportes (/reportes/) para evitar conflictos de slash.
-    """
+def reportes_backup():
+    """Ruta de respaldo para reportes"""
     if 'usuario_id' not in session:
         return redirect('/auth/login')
-
-    # Permitir a cualquier rol con permiso de ver reportes
-    if not (can_access('reportes', 'view_all') or can_access('reportes', 'view_own')):
+    
+    if not has_gestion_completa():
         flash('No tiene permisos para ver reportes', 'danger')
         return redirect('/dashboard')
-
-    # Redirigir al blueprint principal de reportes (normalmente /reportes/)
-    try:
-        return redirect(url_for('reportes.reportes_index'))
-    except Exception:
-        # Fallback defensivo si por alguna razón el blueprint no está disponible
-        return render_template('reportes/index.html')
+    
+    return render_template('reportes/index.html')
 
 # ============================================================================
 # 20. MANEJADORES DE ERRORES

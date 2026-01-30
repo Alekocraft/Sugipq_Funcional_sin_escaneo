@@ -17,7 +17,9 @@
 
     <!-- Tarjetas de reportes - Control de acceso por permisos -->
     <div class="row">
-        {% if can_access('materiales', 'view') %}
+        {# Permiso general para entrar al módulo de reportes #}
+        {% set can_reportes = (can_access('reportes', 'view_all') or can_access('reportes', 'view_own')) %}
+        {% if can_reportes or can_access('materiales', 'view') %}
         <div class="col-md-4 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-primary text-white py-3">
@@ -39,7 +41,7 @@
         </div>
         {% endif %}
 
-        {% if can_access('solicitudes', 'view') %}
+        {% if can_reportes or can_access('solicitudes', 'view') %}
         <div class="col-md-4 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-success text-white py-3">
@@ -61,7 +63,7 @@
         </div>
         {% endif %}
 
-        {% if can_access('prestamos', 'view') or can_access('prestamos', 'view_own') %}
+        {% if can_reportes or can_access('prestamos', 'view') or can_access('prestamos', 'view_own') %}
         <div class="col-md-4 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-info text-white py-3">
@@ -83,7 +85,7 @@
         </div>
         {% endif %}
 
-        {% if can_access('novedades', 'view') %}
+        {% if can_reportes or can_access('novedades', 'view') %}
         <div class="col-md-4 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-purple text-white py-3" style="background-color: #6f42c1;">
@@ -105,7 +107,7 @@
         </div>
         {% endif %}
 
-        {% if can_access('oficinas', 'view') %}
+        {% if can_reportes or can_access('oficinas', 'view') %}
         <div class="col-md-4 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-secondary text-white py-3">
@@ -129,9 +131,10 @@
     </div>
 
     <!-- Mensaje de ausencia de permisos -->
-    {% if not (can_access('materiales', 'view') or 
+    {% if not (can_reportes or can_access('materiales', 'view') or 
                can_access('solicitudes', 'view') or 
                can_access('prestamos', 'view') or 
+               can_access('prestamos', 'view_own') or 
                can_access('novedades', 'view') or 
                can_access('oficinas', 'view')) %}
     <div class="alert alert-info mt-4">

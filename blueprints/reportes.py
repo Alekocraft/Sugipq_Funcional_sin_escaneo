@@ -31,6 +31,15 @@ reportes_bp = Blueprint('reportes', __name__, url_prefix='/reportes')
 def _require_login():
     return 'usuario_id' in session
 
+def _can_view_reportes() -> bool:
+    """Permiso general de visualización del módulo de reportes.
+
+    - view_all: puede ver reportes de todas las oficinas (sin filtro)
+    - view_own: puede ver reportes pero filtrados por su oficina
+    """
+    return can_access('reportes', 'view_all') or can_access('reportes', 'view_own')
+
+
 # Helper para aplicar filtros según permisos
 def aplicar_filtro_permisos(datos, campo_oficina='oficina_id'):
     """
@@ -39,8 +48,8 @@ def aplicar_filtro_permisos(datos, campo_oficina='oficina_id'):
     if not datos:
         return []
     
-    # Si puede ver todo (administrador/lider_inventario), no filtra
-    if can_access('materiales', 'view') and can_access('solicitudes', 'view'):
+    # Si por configuración puede ver todas las oficinas (p.ej. administrador/tesorería), no filtra
+    if get_office_filter() is None:
         return datos
     
     # Para otros roles, filtrar por su oficina
@@ -71,13 +80,8 @@ def aplicar_filtro_permisos(datos, campo_oficina='oficina_id'):
 def reportes_index():
     """Página principal de reportes"""
     if not _require_login():
-        return redirect('/auth/login')
-
-    # Verificar permisos mínimos para entrar a reportes
-    if not (can_access('reportes', 'view_all') or can_access('reportes', 'view_own')):
-        flash('No tiene permisos para ver reportes', 'warning')
-        return redirect('/dashboard')
-
+        return redirect('/login')
+    
     return render_template('reportes/index.html')
 
 # ================================
@@ -88,10 +92,10 @@ def reportes_index():
 def reporte_solicitudes():
     """Reporte de solicitudes con filtros avanzados - VERSIÓN CORREGIDA"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
     # Verificar permisos
-    if not can_access('solicitudes', 'view'):
+    if not (_can_view_reportes() or can_access('solicitudes', 'view')):
         flash('No tiene permisos para ver reportes de solicitudes', 'warning')
         return redirect('/reportes')
     
@@ -108,7 +112,7 @@ def reporte_solicitudes():
         solicitudes = SolicitudModel.obtener_todas_con_detalle() or []
         
         # Aplicar filtro según permisos del usuario
-        if not (session.get('rol') in ['administrador', 'lider_inventario']):
+        if get_office_filter() == 'own':
             solicitudes = filtrar_por_oficina_usuario(solicitudes, 'oficina_id')
         
         # Aplicar filtros adicionales
@@ -275,10 +279,10 @@ def reporte_solicitudes():
 def exportar_solicitudes_excel():
     """Exporta las solicitudes filtradas a Excel - VERSIÓN CORREGIDA"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
     # Verificar permisos
-    if not can_access('solicitudes', 'view'):
+    if not (_can_view_reportes() or can_access('solicitudes', 'view')):
         flash('No tiene permisos para exportar reportes de solicitudes', 'warning')
         return redirect('/reportes')
     
@@ -295,7 +299,7 @@ def exportar_solicitudes_excel():
         solicitudes = SolicitudModel.obtener_todas_con_detalle() or []
         
         # Aplicar filtro según permisos
-        if not (session.get('rol') in ['administrador', 'lider_inventario']):
+        if get_office_filter() == 'own':
             solicitudes = filtrar_por_oficina_usuario(solicitudes, 'oficina_id')
         
         # Aplicar filtros adicionales (USANDO LA MISMA LÓGICA CORREGIDA)
@@ -448,9 +452,9 @@ def exportar_solicitudes_excel():
 def reporte_materiales():
     """Reporte de materiales"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
-    if not can_access('materiales', 'view'):
+    if not (_can_view_reportes() or can_access('materiales', 'view')):
         flash('No tiene permisos para ver reportes de materiales', 'warning')
         return redirect('/reportes')
     
@@ -458,7 +462,7 @@ def reporte_materiales():
         materiales = MaterialModel.obtener_todos() or []
         
         # Aplicar filtro según permisos
-        if not (session.get('rol') in ['administrador', 'lider_inventario']):
+        if get_office_filter() == 'own':
             materiales = filtrar_por_oficina_usuario(materiales, 'oficina_id')
         
         # Calcular estadísticas
@@ -493,9 +497,9 @@ def reporte_materiales():
 def reporte_inventario():
     """Reporte de inventario corporativo"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
-    if not can_access('inventario_corporativo', 'view'):
+    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
         flash('No tiene permisos para ver reportes de inventario', 'warning')
         return redirect('/reportes')
     
@@ -503,7 +507,7 @@ def reporte_inventario():
         materiales = MaterialModel.obtener_todos() or []
         
         # Aplicar filtro según permisos
-        if not (session.get('rol') in ['administrador', 'lider_inventario']):
+        if get_office_filter() == 'own':
             materiales = filtrar_por_oficina_usuario(materiales, 'oficina_id')
         
         # Calcular estadísticas
@@ -563,9 +567,9 @@ def reporte_inventario():
 def reporte_novedades():
     """Reporte de novedades"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
-    if not can_access('novedades', 'view'):
+    if not (_can_view_reportes() or can_access('novedades', 'view')):
         flash('No tiene permisos para ver reportes de novedades', 'warning')
         return redirect('/reportes')
     
@@ -606,7 +610,7 @@ def reporte_novedades():
         conn.close()
         
         # Aplicar filtro según permisos
-        if not (session.get('rol') in ['administrador', 'lider_inventario']):
+        if get_office_filter() == 'own':
             oficina_usuario = session.get('oficina_id')
             novedades = [n for n in novedades if n.get('oficina_id') == oficina_usuario]
         
@@ -699,9 +703,9 @@ def reporte_novedades():
 def reporte_oficinas():
     """Reporte de oficinas con inventario corporativo - VERSIÓN CORREGIDA COMPLETA"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
-    if not can_access('inventario_corporativo', 'view'):
+    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
         flash('No tiene permisos para ver el reporte de oficinas', 'warning')
         return redirect('/reportes')
     
@@ -858,9 +862,9 @@ def reporte_oficinas():
 def reporte_prestamos():
     """Reporte de préstamos"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
-    if not (can_access('prestamos', 'view') or can_access('prestamos', 'view_own')):
+    if not (_can_view_reportes() or can_access('prestamos', 'view') or can_access('prestamos', 'view_own')):
         flash('No tiene permisos para ver reportes de préstamos', 'warning')
         return redirect('/reportes')
     
@@ -1046,13 +1050,13 @@ def reporte_prestamos():
 def exportar_materiales_excel():
     """Exporta materiales a Excel"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
     try:
         materiales = MaterialModel.obtener_todos() or []
         
         # Aplicar filtro según permisos
-        if not (session.get('rol') in ['administrador', 'lider_inventario']):
+        if get_office_filter() == 'own':
             materiales = filtrar_por_oficina_usuario(materiales, 'oficina_id')
 
         data = []
@@ -1094,10 +1098,10 @@ def exportar_materiales_excel():
 def exportar_inventario_corporativo_pdf():
     """Exporta el inventario corporativo a PDF"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
     # Verificar permisos
-    if not can_access('inventario_corporativo', 'view'):
+    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
         flash('No tiene permisos para exportar inventario corporativo', 'warning')
         return redirect('/reportes')
     
@@ -1294,9 +1298,9 @@ def exportar_inventario_corporativo_pdf():
 def exportar_prestamos_pdf():
     """Exporta el reporte de préstamos a PDF"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
-    if not (can_access('prestamos', 'view') or can_access('prestamos', 'view_own')):
+    if not (_can_view_reportes() or can_access('prestamos', 'view') or can_access('prestamos', 'view_own')):
         flash('No tiene permisos para exportar reportes de préstamos', 'warning')
         return redirect('/reportes')
     
@@ -1467,9 +1471,9 @@ def exportar_prestamos_pdf():
 def exportar_materiales_pdf():
     """Exporta el reporte de materiales a PDF"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
-    if not can_access('materiales', 'view'):
+    if not (_can_view_reportes() or can_access('materiales', 'view')):
         flash('No tiene permisos para exportar reportes de materiales', 'warning')
         return redirect('/reportes')
     
@@ -1649,9 +1653,9 @@ def exportar_materiales_pdf():
 def material_detalle(material_id):
     """Detalle de material específico"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
-    if not can_access('materiales', 'view'):
+    if not (_can_view_reportes() or can_access('materiales', 'view')):
         flash('No tiene permisos para ver detalles de materiales', 'warning')
         return redirect('/reportes')
     
@@ -1665,7 +1669,7 @@ def material_detalle(material_id):
             return redirect('/reportes/materiales')
         
         # Verificar permisos de oficina
-        if not (session.get('rol') in ['administrador', 'lider_inventario']):
+        if get_office_filter() == 'own':
             if material.get('oficina_id') != session.get('oficina_id'):
                 flash('No tiene permisos para ver este material', 'danger')
                 return redirect('/reportes/materiales')
@@ -1768,10 +1772,10 @@ def material_detalle(material_id):
 def exportar_inventario_corporativo_excel():
     """Exporta TODO el inventario corporativo a Excel"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
     # Verificar permisos
-    if not can_access('inventario_corporativo', 'view'):
+    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
         flash('No tiene permisos para exportar inventario corporativo', 'warning')
         return redirect('/reportes')
     
@@ -1866,10 +1870,10 @@ def exportar_inventario_corporativo_excel():
 def exportar_oficina_inventario(oficina_id, formato):
     """Exporta el inventario de una oficina específica"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
     # Verificar permisos
-    if not can_access('inventario_corporativo', 'view'):
+    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
         flash('No tiene permisos para exportar inventario corporativo', 'warning')
         return redirect('/reportes')
     
@@ -2243,7 +2247,7 @@ def _exportar_oficina_csv(oficina, materiales, movimientos, total_materiales,
 def debug_oficina_data(oficina_id):
     """Endpoint para depurar datos de una oficina específica"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
     try:
         from database import get_database_connection
@@ -2315,9 +2319,9 @@ def debug_oficina_data(oficina_id):
 def material_historial(material_id):
     """Obtiene el historial completo de un material"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
-    if not can_access('materiales', 'view'):
+    if not (_can_view_reportes() or can_access('materiales', 'view')):
         flash('No tiene permisos para ver historial de materiales', 'warning')
         return redirect('/reportes')
     
@@ -2616,9 +2620,9 @@ def api_prestamo_devolver(prestamo_id):
 def reporte_inventario_corporativo():
     """Reporte de inventario corporativo con asignaciones - VERSIÓN SIMPLIFICADA"""
     if not _require_login():
-        return redirect('/auth/login')
+        return redirect('/login')
     
-    if not can_access('inventario_corporativo', 'view'):
+    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
         flash('No tiene permisos para ver el inventario corporativo', 'warning')
         return redirect('/reportes')
     
@@ -2670,7 +2674,7 @@ def reporte_inventario_corporativo():
         conn.close()
         
         # Aplicar filtro según permisos
-        if not (session.get('rol') in ['administrador', 'lider_inventario']):
+        if get_office_filter() == 'own':
             oficina_usuario = session.get('oficina_id')
             productos = [p for p in productos if p.get('OficinaId') == oficina_usuario]
         

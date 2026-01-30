@@ -18,7 +18,9 @@ logger = logging.getLogger(__name__)
 ROLES_GESTION_COMPLETA = ['administrador', 'lider_inventario', 'aprobador']
 
 # ROLES DE OFICINA (pueden crear novedades, solicitar devoluciones, ver detalles)
-ROLES_OFICINA = sorted(list(OFFICE_FILTERS.keys()) + ['oficina_regular'])
+EXTRA_OFICINA_ROLES = ['gerencia_talento_humano','gerencia_comercial','comunicaciones','presidencia']
+
+ROLES_OFICINA = sorted(list(OFFICE_FILTERS.keys()) + ['oficina_regular'] + EXTRA_OFICINA_ROLES)
 
 def get_user_role() -> str:
     """Obtiene el rol del usuario actual en minúsculas."""
@@ -38,7 +40,7 @@ def has_gestion_completa() -> bool:
 def is_oficina_role() -> bool:
     """Verifica si el usuario tiene rol de oficina."""
     rol = get_user_role()
-    result = rol in ROLES_OFICINA
+    result = rol in ROLES_OFICINA or rol.startswith('oficina')
     logger.debug("is_oficina_role: rol=%s result=%s", rol, result)
     return result
 
@@ -46,7 +48,7 @@ def is_oficina_role() -> bool:
 def can_create_or_view() -> bool:
     """Puede crear novedades o ver detalles (roles gestión completa u oficina)."""
     rol = get_user_role()
-    result = rol in ROLES_GESTION_COMPLETA or rol in ROLES_OFICINA
+    result = rol in ROLES_GESTION_COMPLETA or rol in ROLES_OFICINA or rol.startswith('oficina')
     logger.debug("can_create_or_view: rol=%s result=%s", rol, result)
     return result
 

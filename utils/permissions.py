@@ -1,5 +1,4 @@
 """
-utils/persmissions
 Módulo de permisos para el sistema.
 Wrapper para el PermissionManager con funciones específicas.
 """
@@ -65,6 +64,18 @@ class PermissionManager:
             if role_flat == key_flat:
                 logger.debug(f"Rol encontrado por comparación plana: {key}")
                 return key
+
+        # Roles corporativos que deben comportarse igual que oficina COQ
+        coq_like_roles = {
+            'gerencia_talento_humano',
+            'gerencia_comercial',
+            'comunicaciones',
+            'presidencia',
+        }
+        if role_normalized in coq_like_roles:
+            logger.debug(f"Rol corporativo COQ-like detectado: {role_raw}")
+            return 'oficina_coq'
+
         
         # Detección por contenido específico
         # Ahora 'admin' se mapea a 'administrador'
@@ -134,17 +145,22 @@ class PermissionManager:
     def has_module_access(module_name: str) -> bool:
         """Verifica si el usuario tiene acceso a un módulo completo"""
         perms = PermissionManager.get_user_permissions()
-        role_modules = perms.get('role', {}).get('modules', [])
+        role_modules = perms.get('role', {}).get('modules', []) or []
 
         module_norm = (module_name or '').strip().lower()
-        module_aliases = {
-            # alias UI -> clave usada en config.permissions['modules']
-            'materiales': 'material_pop',
-            'material_pop': 'material_pop',
-            'prestamos': 'prestamo_material',
-            'prestamo_material': 'prestamo_material',
+
+        # Equivalencias: UI/blueprints vs claves de config.permissions['modules']
+        module_equivalents = {
+            # Material POP
+            'materiales': {'materiales', 'material_pop'},
+            'material_pop': {'material_pop', 'materiales'},
+
+            # Préstamos
+            'prestamos': {'prestamos', 'prestamo_material'},
+            'prestamo_material': {'prestamo_material', 'prestamos'},
         }
-        candidates = {module_norm, module_aliases.get(module_norm, module_norm)}
+
+        candidates = module_equivalents.get(module_norm, {module_norm})
 
         has_access = any(m in role_modules for m in candidates)
         logger.debug("Acceso a módulo '%s' (candidatos=%s): %s", module_name, list(candidates), has_access)
@@ -152,11 +168,47 @@ class PermissionManager:
 
     @staticmethod
     def has_action_permission(module: str, action: str) -> bool:
-        """Verifica permiso para acción específica en módulo"""
+        """Verifica permiso para acción específica en módulo (con alias y compatibilidad)."""
         perms = PermissionManager.get_user_permissions()
-        role_actions = perms['role'].get('actions', {}).get(module, [])
-        has_permission = action in role_actions
-        logger.debug(f"Permiso para acción '{action}' en módulo '{module}': {has_permission}")
+        actions_map = (perms.get('role', {}) or {}).get('actions', {}) or {}
+
+        module_norm = (module or '').strip().lower()
+        action_norm = (action or '').strip().lower()
+
+        # Alias para que blueprints y config.permissions puedan usar claves distintas
+        module_aliases = {
+            # Material POP
+            'materiales': ['materiales', 'material_pop'],
+            'material_pop': ['material_pop', 'materiales'],
+
+            # Préstamos
+            'prestamos': ['prestamos', 'prestamo_material'],
+            'prestamo_material': ['prestamo_material', 'prestamos'],
+        }
+
+        modules_to_check = module_aliases.get(module_norm, [module_norm])
+
+        allowed_actions = set()
+        for mod_key in modules_to_check:
+            allowed_actions.update(actions_map.get(mod_key, []) or [])
+
+        # Fallback seguro: si el rol tiene acceso al módulo pero no tiene acciones explícitas,
+        # permitimos solo lectura ('view'). Esto mantiene consistencia entre 'modules' y 'actions'.
+        if not allowed_actions and action_norm == 'view':
+            if PermissionManager.has_module_access(module_norm):
+                logger.debug("Fallback view por acceso a módulo: module=%s", module_norm)
+                return True
+
+        # Compatibilidad: si el código pide 'view', aceptar también view_all / view_own
+        if action_norm == 'view':
+            has_permission = any(a in allowed_actions for a in ('view', 'view_all', 'view_own'))
+        else:
+            has_permission = action_norm in allowed_actions
+
+        logger.debug(
+            "Permiso acción '%s' en módulo '%s' (mods=%s, allowed=%s): %s",
+            action_norm, module_norm, modules_to_check, sorted(list(allowed_actions)), has_permission
+        )
         return has_permission
 
 

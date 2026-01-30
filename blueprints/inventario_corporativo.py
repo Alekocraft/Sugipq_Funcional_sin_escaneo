@@ -610,34 +610,70 @@ def api_obtener_usuario_ad(username):
 
 @inventario_corporativo_bp.route('/api/estadisticas-dashboard')
 def api_estadisticas_dashboard():
+    """Estadísticas rápidas para el modal del dashboard.
+
+    - Para roles con vista global (user_can_view_all=True): devuelve totales globales + sede + oficinas.
+    - Para roles de oficina (vista restringida): devuelve solo el inventario de su oficina en `mi_inventario`
+      (y en `total_productos` por compatibilidad del frontend).
+    """
     if not _require_login():
         return jsonify({'error': 'No autorizado'}), 401
 
+    if not can_access('inventario_corporativo', 'view'):
+        return jsonify({'error': 'Sin permisos'}), 403
+
     try:
-        productos_todos = InventarioCorporativoModel.obtener_todos() or []
+        puede_ver_todas = user_can_view_all()
+        oficina_id = session.get('oficina_id')
+
+        # -------------------------
+        # Vista restringida (oficina)
+        # -------------------------
+        if not puede_ver_todas and oficina_id:
+            productos_mi = InventarioCorporativoModel.obtener_por_oficina(int(oficina_id)) or []
+            stats_mi = _calculate_inventory_stats(productos_mi)
+
+            return jsonify({
+                'total_productos': stats_mi.get('total_productos', 0),
+                'mi_inventario': stats_mi.get('total_productos', 0),
+                'productos_sede': 0,
+                'productos_oficinas': 0,
+                'valor_total': stats_mi.get('valor_total', 0),
+                'bajo_stock': stats_mi.get('productos_bajo_stock', 0),
+                'asignables': stats_mi.get('productos_asignables', 0)
+            })
+
+        # -------------------------
+        # Vista global (admin / roles con office_filter=all)
+        # -------------------------
+        productos = InventarioCorporativoModel.obtener_todos() or []
+        stats = _calculate_inventory_stats(productos)
+
         productos_sede = InventarioCorporativoModel.obtener_por_sede_principal() or []
         productos_oficinas = InventarioCorporativoModel.obtener_por_oficinas_servicio() or []
-        
-        stats_todos = _calculate_inventory_stats(productos_todos)
-        
+
+        stats_sede = _calculate_inventory_stats(productos_sede)
+        stats_oficinas = _calculate_inventory_stats(productos_oficinas)
+
+        mi_inventario = 0
+        if oficina_id:
+            productos_mi = InventarioCorporativoModel.obtener_por_oficina(int(oficina_id)) or []
+            stats_mi = _calculate_inventory_stats(productos_mi)
+            mi_inventario = stats_mi.get('total_productos', 0)
+
         return jsonify({
-            "total_productos": stats_todos['total_productos'],
-            "valor_total": stats_todos['valor_total'],
-            "stock_bajo": stats_todos['productos_bajo_stock'],
-            "productos_sede": len(productos_sede),
-            "productos_oficinas": len(productos_oficinas)
-        })
-        
-    except Exception as e:
-        logger.error("Error en API estadisticas dashboard: [error](%s)", type(e).__name__)
-        return jsonify({
-            "total_productos": 0,
-            "valor_total": 0,
-            "stock_bajo": 0,
-            "productos_sede": 0,
-            "productos_oficinas": 0
+            'total_productos': stats.get('total_productos', 0),
+            'mi_inventario': mi_inventario,
+            'productos_sede': stats_sede.get('total_productos', 0),
+            'productos_oficinas': stats_oficinas.get('total_productos', 0),
+            'valor_total': stats.get('valor_total', 0),
+            'bajo_stock': stats.get('productos_bajo_stock', 0),
+            'asignables': stats.get('productos_asignables', 0)
         })
 
+    except Exception as e:
+        logger.error(f"Error en API estadísticas dashboard: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 @inventario_corporativo_bp.route('/api/estadisticas')
 def api_estadisticas_inventario():
     if not _require_login():

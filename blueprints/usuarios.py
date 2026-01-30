@@ -13,8 +13,9 @@ def _get_roles_disponibles():
     Se arma dinámicamente desde OFFICE_FILTERS para evitar desalineación con la BD.
     """
     roles_base = ['administrador', 'lider_inventario', 'tesoreria', 'aprobador']
+    roles_corporativos = ['gerencia_talento_humano', 'gerencia_comercial', 'comunicaciones', 'presidencia']
     roles_oficina = sorted(list(OFFICE_FILTERS.keys()))
-    return roles_base + roles_oficina + ['usuario']
+    return roles_base + roles_corporativos + roles_oficina + ['usuario']
 
 
 
