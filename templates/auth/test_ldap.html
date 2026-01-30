@@ -94,11 +94,10 @@
                                         <div class="col-md-6">
                                             <h6>Configuración LDAP:</h6>
                                             <ul class="list-unstyled">
-                                                <li><strong>Habilitado:</strong> {{ result.ldap_enabled }}</li>
-                                                <li><strong>Servidor:</strong> {{ result.ldap_server }}</li>
-                                                <li><strong>Dominio:</strong> {{ result.ldap_domain }}</li>
-                                                <li><strong>Usuario probado:</strong> {{ result.username }}</li>
-                                            </ul>
+                                                <li><strong>Habilitado:</strong> {{ 'Sí' if result.ldap_enabled else ('No' if result.ldap_enabled is not none else 'No configurado') }}</li>
+                                                <li><strong>Servidor:</strong> {{ result.ldap_server | default('No configurado', true) }}</li>
+                                                <li><strong>Dominio:</strong> {{ result.ldap_domain | default('No configurado', true) }}</li>
+                                             </ul>
                                         </div>
 
                                         {% if result.user_info %}
@@ -107,10 +106,7 @@
                                             <ul class="list-unstyled">
                                                 <li><strong>Usuario:</strong> {{ result.user_info.username }}</li>
                                                 <li><strong>Nombre:</strong> {{ result.user_info.full_name }}</li>
-                                                <li><strong>Email:</strong> {{ result.user_info.email }}</li>
-                                                <li><strong>Departamento:</strong> {{ result.user_info.department }}</li>
-                                                <li><strong>Rol AD:</strong> {{ result.user_info.role_from_ad }}</li>
-                                                <li><strong>Grupos:</strong> {{ result.user_info.groups_count }}</li>
+                                                <li><strong>Email:</strong> {{ result.user_info.email }}</li>                       
                                             </ul>
                                         </div>
                                         {% endif %}
@@ -172,7 +168,7 @@
                                                 <td>Reportes, solicitudes</td>
                                             </tr>
                                             <tr>
-                                                <td>Almacén / Logística</td>
+                                                <td>Talento Humano</td>
                                                 <td><span class="badge bg-success">Lider Inventario</span></td>
                                                 <td>Gestión de inventario</td>
                                             </tr>
@@ -191,11 +187,7 @@
                                                 <td><span class="badge bg-secondary">Oficina Polo Club</span></td>
                                                 <td>Acceso a oficina Polo Club</td>
                                             </tr>
-                                            <tr>
-                                                <td>Otros</td>
-                                                <td><span class="badge bg-light text-dark">Usuario</span></td>
-                                                <td>Acceso básico</td>
-                                            </tr>
+                                            
                                         </tbody>
                                     </table>
                                 </div>

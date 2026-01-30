@@ -161,6 +161,62 @@ class UsuarioModel:
             if conn:
                 conn.close()
 
+
+    @staticmethod
+    def get_by_username(username):
+        """Obtiene un usuario por username (NombreUsuario o UsuarioAD).
+
+        Devuelve un diccionario compatible con el resto del proyecto o None si no existe.
+        Este método se agrega para compatibilidad con funcionalidades LDAP (test/sync).
+        """
+        if not username:
+            return None
+
+        conn = get_database_connection()
+        if not conn:
+            return None
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT
+                    u.UsuarioId,
+                    u.NombreUsuario,
+                    u.CorreoElectronico,
+                    u.Rol,
+                    u.OficinaId,
+                    o.NombreOficina,
+                    u.Activo,
+                    u.EsLDAP,
+                    u.UsuarioAD
+                FROM Usuarios u
+                LEFT JOIN Oficinas o ON u.OficinaId = o.OficinaId
+                WHERE (u.NombreUsuario = ? OR u.UsuarioAD = ?)
+            """, (username, username))
+
+            row = cursor.fetchone()
+            if not row:
+                return None
+
+            return {
+                'id': row[0],
+                'usuario': row[1],
+                'nombre': row[2] if row[2] else row[1],
+                'rol': row[3],
+                'oficina_id': row[4],
+                'oficina_nombre': row[5] if row[5] else '',
+                'activo': int(row[6]) if row[6] is not None else 0,
+                'es_ldap': int(row[7]) if row[7] is not None else 0,
+                'usuario_ad': row[8] if row[8] else None,
+            }
+        except Exception as e:
+            logger.error(f"❌ Error en get_by_username: {e}")
+            return None
+        finally:
+            try:
+                conn.close()
+            except Exception:
+                pass
     @staticmethod
     def _verificar_localmente_corregido(usuario, contraseña):
         """

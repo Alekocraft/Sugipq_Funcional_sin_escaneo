@@ -71,8 +71,13 @@ def aplicar_filtro_permisos(datos, campo_oficina='oficina_id'):
 def reportes_index():
     """Página principal de reportes"""
     if not _require_login():
-        return redirect('/login')
-    
+        return redirect('/auth/login')
+
+    # Verificar permisos mínimos para entrar a reportes
+    if not (can_access('reportes', 'view_all') or can_access('reportes', 'view_own')):
+        flash('No tiene permisos para ver reportes', 'warning')
+        return redirect('/dashboard')
+
     return render_template('reportes/index.html')
 
 # ================================
@@ -83,7 +88,7 @@ def reportes_index():
 def reporte_solicitudes():
     """Reporte de solicitudes con filtros avanzados - VERSIÓN CORREGIDA"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     # Verificar permisos
     if not can_access('solicitudes', 'view'):
@@ -270,7 +275,7 @@ def reporte_solicitudes():
 def exportar_solicitudes_excel():
     """Exporta las solicitudes filtradas a Excel - VERSIÓN CORREGIDA"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     # Verificar permisos
     if not can_access('solicitudes', 'view'):
@@ -443,7 +448,7 @@ def exportar_solicitudes_excel():
 def reporte_materiales():
     """Reporte de materiales"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     if not can_access('materiales', 'view'):
         flash('No tiene permisos para ver reportes de materiales', 'warning')
@@ -488,7 +493,7 @@ def reporte_materiales():
 def reporte_inventario():
     """Reporte de inventario corporativo"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     if not can_access('inventario_corporativo', 'view'):
         flash('No tiene permisos para ver reportes de inventario', 'warning')
@@ -558,7 +563,7 @@ def reporte_inventario():
 def reporte_novedades():
     """Reporte de novedades"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     if not can_access('novedades', 'view'):
         flash('No tiene permisos para ver reportes de novedades', 'warning')
@@ -694,7 +699,7 @@ def reporte_novedades():
 def reporte_oficinas():
     """Reporte de oficinas con inventario corporativo - VERSIÓN CORREGIDA COMPLETA"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     if not can_access('inventario_corporativo', 'view'):
         flash('No tiene permisos para ver el reporte de oficinas', 'warning')
@@ -853,7 +858,7 @@ def reporte_oficinas():
 def reporte_prestamos():
     """Reporte de préstamos"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     if not (can_access('prestamos', 'view') or can_access('prestamos', 'view_own')):
         flash('No tiene permisos para ver reportes de préstamos', 'warning')
@@ -1041,7 +1046,7 @@ def reporte_prestamos():
 def exportar_materiales_excel():
     """Exporta materiales a Excel"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     try:
         materiales = MaterialModel.obtener_todos() or []
@@ -1089,7 +1094,7 @@ def exportar_materiales_excel():
 def exportar_inventario_corporativo_pdf():
     """Exporta el inventario corporativo a PDF"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     # Verificar permisos
     if not can_access('inventario_corporativo', 'view'):
@@ -1289,7 +1294,7 @@ def exportar_inventario_corporativo_pdf():
 def exportar_prestamos_pdf():
     """Exporta el reporte de préstamos a PDF"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     if not (can_access('prestamos', 'view') or can_access('prestamos', 'view_own')):
         flash('No tiene permisos para exportar reportes de préstamos', 'warning')
@@ -1462,7 +1467,7 @@ def exportar_prestamos_pdf():
 def exportar_materiales_pdf():
     """Exporta el reporte de materiales a PDF"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     if not can_access('materiales', 'view'):
         flash('No tiene permisos para exportar reportes de materiales', 'warning')
@@ -1644,7 +1649,7 @@ def exportar_materiales_pdf():
 def material_detalle(material_id):
     """Detalle de material específico"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     if not can_access('materiales', 'view'):
         flash('No tiene permisos para ver detalles de materiales', 'warning')
@@ -1763,7 +1768,7 @@ def material_detalle(material_id):
 def exportar_inventario_corporativo_excel():
     """Exporta TODO el inventario corporativo a Excel"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     # Verificar permisos
     if not can_access('inventario_corporativo', 'view'):
@@ -1861,7 +1866,7 @@ def exportar_inventario_corporativo_excel():
 def exportar_oficina_inventario(oficina_id, formato):
     """Exporta el inventario de una oficina específica"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     # Verificar permisos
     if not can_access('inventario_corporativo', 'view'):
@@ -2238,7 +2243,7 @@ def _exportar_oficina_csv(oficina, materiales, movimientos, total_materiales,
 def debug_oficina_data(oficina_id):
     """Endpoint para depurar datos de una oficina específica"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     try:
         from database import get_database_connection
@@ -2310,7 +2315,7 @@ def debug_oficina_data(oficina_id):
 def material_historial(material_id):
     """Obtiene el historial completo de un material"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     if not can_access('materiales', 'view'):
         flash('No tiene permisos para ver historial de materiales', 'warning')
@@ -2611,7 +2616,7 @@ def api_prestamo_devolver(prestamo_id):
 def reporte_inventario_corporativo():
     """Reporte de inventario corporativo con asignaciones - VERSIÓN SIMPLIFICADA"""
     if not _require_login():
-        return redirect('/login')
+        return redirect('/auth/login')
     
     if not can_access('inventario_corporativo', 'view'):
         flash('No tiene permisos para ver el inventario corporativo', 'warning')

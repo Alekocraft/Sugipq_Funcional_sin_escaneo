@@ -95,6 +95,17 @@ def sanitizar_log_text(text):
         logger.warning(f"Error sanitizando texto para log: {sanitizar_log_text(str(e))}")
         return "[ERROR_SANITIZACION]"
 
+
+def _is_ajax_request() -> bool:
+    """Detecta si la petición espera JSON (AJAX)."""
+    try:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return True
+        accept = (request.headers.get('Accept') or '').lower()
+        return 'application/json' in accept
+    except Exception:
+        return False
+
 # ======================
 # RUTAS DE GESTIÓN DE USUARIOS
 # ======================
@@ -398,6 +409,8 @@ def editar_usuario(usuario_id):
         conn = get_database_connection()
         if not conn:
             flash('Error de conexión a la base de datos', 'danger')
+            if _is_ajax_request():
+                return jsonify({'success': False, 'message': 'Error de conexión a la base de datos'}), 500
             return redirect('/usuarios')
                 
         cursor = conn.cursor()
@@ -523,6 +536,154 @@ def editar_usuario(usuario_id):
             except:
                 pass
 
+
+
+@usuarios_bp.route('/obtener/<int:usuario_id>', methods=['GET'])
+@admin_required
+def obtener_usuario(usuario_id):
+    """Obtiene datos de un usuario en JSON (para interfaces AJAX)."""
+    conn = None
+    cursor = None
+    try:
+        conn = get_database_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': 'Error de conexión a la base de datos'}), 500
+
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                u.UsuarioId,
+                u.NombreUsuario,
+                u.CorreoElectronico,
+                u.Rol,
+                u.OficinaId,
+                u.AprobadorId,
+                u.Activo,
+                CASE 
+                    WHEN u.ContraseñaHash = 'LDAP_USER' THEN 'LDAP'
+                    ELSE 'LOCAL'
+                END as Tipo_Autenticacion
+            FROM Usuarios u
+            WHERE u.UsuarioId = ?
+        """, (usuario_id,))
+        row = cursor.fetchone()
+
+        if not row:
+            return jsonify({'success': False, 'message': 'Usuario no encontrado'}), 404
+
+        usuario = {
+            'id': row[0],
+            'usuario': row[1],
+            # Algunas UIs antiguas usan "nombre" para el correo:
+            'nombre': row[2] or row[1],
+            'email': row[2],
+            'rol': row[3],
+            'oficina_id': row[4],
+            'aprobador_id': row[5],
+            'activo': bool(row[6]),
+            'tipo_auth': row[7]
+        }
+
+        return jsonify({'success': True, 'usuario': usuario})
+    except Exception as e:
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error obteniendo usuario ID:{usuario_id}: {error_sanitizado}")
+        return jsonify({'success': False, 'message': 'Error al obtener usuario'}), 500
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
+
+
+@usuarios_bp.route('/actualizar/<int:usuario_id>', methods=['POST'])
+@admin_required
+def actualizar_usuario_ajax(usuario_id):
+    """Actualiza un usuario (AJAX). Compatibilidad con interfaces antiguas."""
+    conn = None
+    cursor = None
+    try:
+        nuevo_rol = (request.form.get('rol') or '').strip()
+        nuevo_email = (request.form.get('email') or '').strip()
+        nueva_oficina = request.form.get('oficina_id')
+        nuevo_aprobador = request.form.get('aprobador_id') or None
+
+        activo_raw = (request.form.get('activo') or '').lower()
+        nuevo_activo = 1 if activo_raw in ['on', 'true', '1', 'yes'] else 0
+
+        if not nuevo_rol:
+            return jsonify({'success': False, 'message': 'El rol es obligatorio'}), 400
+        if not nueva_oficina:
+            return jsonify({'success': False, 'message': 'La oficina es obligatoria'}), 400
+
+        conn = get_database_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': 'Error de conexión a la base de datos'}), 500
+
+        cursor = conn.cursor()
+
+        # Obtener username/rol actual para validaciones y logs
+        cursor.execute("SELECT NombreUsuario, Rol FROM Usuarios WHERE UsuarioId = ?", (usuario_id,))
+        usuario_actual = cursor.fetchone()
+        if not usuario_actual:
+            return jsonify({'success': False, 'message': 'Usuario no encontrado'}), 404
+
+        username_sanitizado = sanitizar_username(usuario_actual[0])
+
+        # Evitar desactivar el último administrador activo
+        es_admin = (nuevo_rol in ['administrador', 'admin'])
+        if nuevo_activo == 0 and es_admin:
+            cursor.execute("""
+                SELECT COUNT(*) FROM Usuarios 
+                WHERE Rol IN ('administrador', 'admin') AND Activo = 1 AND UsuarioId != ?
+            """, (usuario_id,))
+            if cursor.fetchone()[0] == 0:
+                logger.warning(f"Intento de desactivar último administrador (AJAX): {sanitizar_log_text(username_sanitizado)}")
+                return jsonify({'success': False, 'message': 'No se puede desactivar el último administrador activo'}), 400
+
+        cursor.execute("""
+            UPDATE Usuarios 
+            SET Rol = ?,
+                CorreoElectronico = ?,
+                OficinaId = ?,
+                AprobadorId = ?,
+                Activo = ?
+            WHERE UsuarioId = ?
+        """, (
+            nuevo_rol,
+            nuevo_email,
+            nueva_oficina,
+            nuevo_aprobador,
+            nuevo_activo,
+            usuario_id
+        ))
+        conn.commit()
+
+        logger.info(f"Usuario actualizado (AJAX): {sanitizar_log_text(username_sanitizado)} -> Rol:{sanitizar_log_text(nuevo_rol)}")
+        return jsonify({'success': True})
+    except Exception as e:
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error actualizando usuario (AJAX) ID:{usuario_id}: {error_sanitizado}")
+        return jsonify({'success': False, 'message': 'Error al actualizar usuario'}), 500
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
+
+
 @usuarios_bp.route('/cambiar-contrasena/<int:usuario_id>', methods=['POST'])
 @admin_required
 def cambiar_contrasena(usuario_id):
@@ -615,6 +776,8 @@ def desactivar_usuario(usuario_id):
         conn = get_database_connection()
         if not conn:
             flash('Error de conexión a la base de datos', 'danger')
+            if _is_ajax_request():
+                return jsonify({'success': False, 'message': 'Error de conexión a la base de datos'}), 500
             return redirect('/usuarios')
                 
         cursor = conn.cursor()
@@ -634,6 +797,8 @@ def desactivar_usuario(usuario_id):
               
                 logger.warning(f"Intento de desactivar último administrador activo: {sanitizar_log_text(username_sanitizado)}")
                 flash('No se puede desactivar el último administrador activo', 'danger')
+                if _is_ajax_request():
+                    return jsonify({'success': False, 'message': 'No se puede desactivar el último administrador activo'})
                 return redirect('/usuarios')
         
         
@@ -647,6 +812,8 @@ def desactivar_usuario(usuario_id):
         
          
         logger.info(f"Usuario desactivado: {sanitizar_log_text(username_sanitizado)}")
+        if _is_ajax_request():
+            return jsonify({'success': True})
         flash('Usuario desactivado exitosamente', 'success')
         return redirect('/usuarios')
         
@@ -655,6 +822,8 @@ def desactivar_usuario(usuario_id):
         error_sanitizado = sanitizar_log_text(str(e))
         logger.error(f"Error desactivando usuario ID:{usuario_id}: {error_sanitizado}")
         flash('Error al desactivar usuario. Por favor, intente nuevamente.', 'danger')
+        if _is_ajax_request():
+            return jsonify({'success': False, 'message': 'Error al desactivar usuario'}), 500
         return redirect('/usuarios')
     finally:
         if cursor:
@@ -681,6 +850,8 @@ def reactivar_usuario(usuario_id):
         conn = get_database_connection()
         if not conn:
             flash('Error de conexión a la base de datos', 'danger')
+            if _is_ajax_request():
+                return jsonify({'success': False, 'message': 'Error de conexión a la base de datos'}), 500
             return redirect('/usuarios')
                 
         cursor = conn.cursor()
@@ -700,6 +871,8 @@ def reactivar_usuario(usuario_id):
         
          
         logger.info(f"Usuario reactivado: {sanitizar_log_text(username_sanitizado)}")
+        if _is_ajax_request():
+            return jsonify({'success': True})
         flash('Usuario reactivado exitosamente', 'success')
         return redirect('/usuarios')
         
@@ -708,6 +881,8 @@ def reactivar_usuario(usuario_id):
         error_sanitizado = sanitizar_log_text(str(e))
         logger.error(f"Error reactivando usuario ID:{usuario_id}: {error_sanitizado}")
         flash('Error al reactivar usuario. Por favor, intente nuevamente.', 'danger')
+        if _is_ajax_request():
+            return jsonify({'success': False, 'message': 'Error al reactivar usuario'})
         return redirect('/usuarios')
     finally:
         if cursor:
@@ -720,6 +895,14 @@ def reactivar_usuario(usuario_id):
                 conn.close()
             except:
                 pass
+
+
+
+@usuarios_bp.route('/activar/<int:usuario_id>', methods=['POST'])
+@admin_required
+def activar_usuario(usuario_id):
+    """Alias para compatibilidad con interfaces que usan /usuarios/activar/<id>."""
+    return reactivar_usuario(usuario_id)
 
 @usuarios_bp.route('/eliminar/<int:usuario_id>', methods=['POST'])
 @admin_required
@@ -734,6 +917,8 @@ def eliminar_usuario(usuario_id):
         conn = get_database_connection()
         if not conn:
             flash('Error de conexión a la base de datos', 'danger')
+            if _is_ajax_request():
+                return jsonify({'success': False, 'message': 'Error de conexión a la base de datos'}), 500
             return redirect('/usuarios')
                 
         cursor = conn.cursor()
@@ -744,6 +929,8 @@ def eliminar_usuario(usuario_id):
         
         if usuario and usuario[0] == 1:
             flash('No se puede eliminar un usuario activo. Desactívelo primero.', 'danger')
+            if _is_ajax_request():
+                return jsonify({'success': False, 'message': 'No se puede eliminar un usuario activo. Desactívelo primero.'})
             return redirect('/usuarios')
         
         username_sanitizado = sanitizar_username(usuario[1]) if usuario else f"ID:{usuario_id}"
@@ -759,6 +946,8 @@ def eliminar_usuario(usuario_id):
                  
                 logger.warning(f"Intento de eliminar único administrador: {sanitizar_log_text(username_sanitizado)}")
                 flash('No se puede eliminar el único administrador del sistema', 'danger')
+                if _is_ajax_request():
+                    return jsonify({'success': False, 'message': 'No se puede eliminar el único administrador del sistema'})
                 return redirect('/usuarios')
         
         # Eliminar usuario
@@ -768,6 +957,8 @@ def eliminar_usuario(usuario_id):
         
        
         logger.info(f"Usuario eliminado permanentemente: {sanitizar_log_text(username_sanitizado)}")
+        if _is_ajax_request():
+            return jsonify({'success': True})
         flash('Usuario eliminado permanentemente', 'success')
         return redirect('/usuarios')
         
@@ -776,6 +967,8 @@ def eliminar_usuario(usuario_id):
         error_sanitizado = sanitizar_log_text(str(e))
         logger.error(f"Error eliminando usuario ID:{usuario_id}: {error_sanitizado}")
         flash('Error al eliminar usuario. Por favor, intente nuevamente.', 'danger')
+        if _is_ajax_request():
+            return jsonify({'success': False, 'message': 'Error al eliminar usuario'})
         return redirect('/usuarios')
     finally:
         if cursor:
@@ -788,6 +981,64 @@ def eliminar_usuario(usuario_id):
                 conn.close()
             except:
                 pass
+
+
+
+@usuarios_bp.route('/buscar-ad', methods=['POST'])
+@admin_required
+def buscar_usuario_ad_ajax():
+    """Alias compatible con UIs que llaman /usuarios/buscar-ad (JSON)."""
+    try:
+        data = request.get_json(silent=True) or {}
+        search_term = (data.get('termino') or '').strip()
+
+        if not search_term:
+            return jsonify({'success': False, 'message': 'Término de búsqueda vacío', 'usuarios': []}), 400
+
+        if not Config.LDAP_ENABLED:
+            return jsonify({'success': False, 'message': 'LDAP deshabilitado', 'usuarios': []}), 400
+
+        from utils.ldap_auth import ad_auth
+
+        usuarios_encontrados = ad_auth.search_user_by_name(search_term)
+
+        resultados = []
+        for usuario in usuarios_encontrados:
+            resultados.append({
+                'usuario': usuario.get('usuario', ''),
+                'nombre': usuario.get('nombre', ''),
+                'email': usuario.get('email', ''),
+                'departamento': usuario.get('departamento', '')
+            })
+
+        return jsonify({'success': True, 'usuarios': resultados})
+    except Exception as e:
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error en búsqueda AD (AJAX): {error_sanitizado}")
+        return jsonify({'success': False, 'message': 'Error en la búsqueda de usuarios', 'usuarios': []}), 500
+
+
+@usuarios_bp.route('/sincronizar-ad', methods=['POST'])
+@admin_required
+def sincronizar_usuario_ad_ajax():
+    """Endpoint de compatibilidad para /usuarios/sincronizar-ad (JSON).
+
+    Nota: La sincronización automática desde AD depende de utils.ldap_auth y la lógica de negocio;
+    aquí se deja como stub seguro para no romper la interfaz.
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        username = (data.get('usuario_ad') or '').strip()
+        if not username:
+            return jsonify({'success': False, 'message': 'Usuario AD no proporcionado'}), 400
+
+        # Si quieres automatizar, aquí es donde se implementaría la creación desde AD.
+        return jsonify({'success': False, 'message': 'Función en desarrollo. Cree el usuario LDAP desde el formulario o permita el primer inicio de sesión.'}), 501
+    except Exception as e:
+        error_sanitizado = sanitizar_log_text(str(e))
+        logger.error(f"Error en sincronización AD (AJAX): {error_sanitizado}")
+        return jsonify({'success': False, 'message': 'Error sincronizando usuario'}), 500
+
 
 @usuarios_bp.route('/buscar-ldap', methods=['POST'])
 @admin_required

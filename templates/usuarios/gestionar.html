@@ -602,7 +602,7 @@
                                             <div class="col-md-6">
                                                 <div class="mb-3">
                                                     <label class="form-label">Email *</label>
-                                                    <input type="email" class="form-control" name="email" value="${usuario.nombre}" required autocomplete="off">
+                                                    <input type="email" class="form-control" name="email" value="${usuario.email || usuario.nombre || ''}" required autocomplete="off">
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
@@ -610,7 +610,7 @@
                                                     <label class="form-label">Rol *</label>
                                                     <select class="form-select" name="rol" required>
                                                         <option value="">Seleccione un rol</option>
-                                                        <option value="administrador" ${usuario.rol === 'admin' ? 'selected' : ''}>Administrador</option>
+                                                        <option value="administrador" ${(usuario.rol === 'admin' || usuario.rol === 'administrador') ? 'selected' : ''}>Administrador</option>
                                                         <option value="lider_inventario" ${usuario.rol === 'lider_inventario' ? 'selected' : ''}>Líder de Inventario</option>
                                                         <option value="tesoreria" ${usuario.rol === 'tesoreria' ? 'selected' : ''}>Tesorería</option>
                                                         <option value="aprobador" ${usuario.rol === 'aprobador' ? 'selected' : ''}>Aprobador</option>
@@ -717,7 +717,7 @@
         function activarUsuario(usuarioId) {
             if (confirm('¿Está seguro de activar este usuario?')) {
                 $.ajax({
-                    url: `/usuarios/activar/${usuarioId}`,
+                    url: `/usuarios/reactivar/${usuarioId}`,
                     method: 'POST',
                     success: function(response) {
                         if (response.success) {

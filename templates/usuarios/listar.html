@@ -148,14 +148,14 @@
                                     
                                     {% if usuario.activo %}
                                     <form method="POST" action="{{ url_for('usuarios.desactivar_usuario', usuario_id=usuario.id) }}" 
-                                          class="d-inline" onsubmit="return confirm('¿Desactivar usuario {{ usuario.usuario }}?')">
+                                          class="d-inline" onsubmit="if(!confirm('¿Desactivar usuario {{ usuario.usuario }}?')) return false; this.querySelector('button').disabled=true; return true;">
                                         <button type="submit" class="btn btn-outline-warning" title="Desactivar">
                                             <i class="bi bi-person-dash"></i>
                                         </button>
                                     </form>
                                     {% else %}
                                     <form method="POST" action="{{ url_for('usuarios.reactivar_usuario', usuario_id=usuario.id) }}" 
-                                          class="d-inline">
+                                          class="d-inline" onsubmit="if(!confirm('¿Reactivar usuario {{ usuario.usuario }}?')) return false; this.querySelector('button').disabled=true; return true;">
                                         <button type="submit" class="btn btn-outline-success" title="Reactivar">
                                             <i class="bi bi-person-check"></i>
                                         </button>
@@ -164,7 +164,7 @@
                                     
                                     {% if not usuario.activo %}
                                     <form method="POST" action="{{ url_for('usuarios.eliminar_usuario', usuario_id=usuario.id) }}" 
-                                          class="d-inline" onsubmit="return confirm('¿ELIMINAR permanentemente a {{ usuario.usuario }}? Esta acción no se puede deshacer.')">
+                                          class="d-inline" onsubmit="if(!confirm('¿ELIMINAR permanentemente a {{ usuario.usuario }}? Esta acción no se puede deshacer.')) return false; this.querySelector('button').disabled=true; return true;">
                                         <button type="submit" class="btn btn-outline-danger" title="Eliminar">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -209,20 +209,6 @@
     
     // Actualizar cada 30 segundos
     setInterval(actualizarEstadisticas, 30000);
-    
-    // Confirmación para acciones importantes
-    document.addEventListener('DOMContentLoaded', function() {
-        const forms = document.querySelectorAll('form[onsubmit]');
-        forms.forEach(form => {
-            form.addEventListener('submit', function(e) {
-                const message = this.getAttribute('onsubmit');
-                if (message) {
-                    const confirmText = message.replace('return confirm(\'', '').replace('\')', '');
-                    if (!confirm(confirmText)) {
-                        e.preventDefault();
-                    }
-                }
-            });
         });
     });
 </script>

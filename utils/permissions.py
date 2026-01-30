@@ -1,4 +1,5 @@
 """
+utils/persmissions
 Módulo de permisos para el sistema.
 Wrapper para el PermissionManager con funciones específicas.
 """

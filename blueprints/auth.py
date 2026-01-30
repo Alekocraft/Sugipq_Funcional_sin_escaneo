@@ -166,107 +166,154 @@ def logout():
 
 @auth_bp.route('/test-ldap', methods=['GET', 'POST'])
 def test_ldap():
-    try:
-        result = None
-        
-        if request.method == 'POST':
-            username = request.form.get('username', '').strip()
-            password = request.form.get('password', '')
-            
-            if not username or not password:
-                flash('Debe ingresar usuario y contraseña', 'danger')
-                return render_template('auth/test_ldap.html')
-            
-            try:
-                from utils.ldap_auth import ADAuth
-                from config.config import Config
-                
-                ldap_enabled = Config.LDAP_ENABLED
-                ldap_server = Config.LDAP_SERVER
-                ldap_domain = Config.LDAP_DOMAIN
-                
-                ad_auth = ADAuth()
-                
-                connection_ok = ad_auth.test_connection()
-                
-                user_data = ad_auth.authenticate_user(username, password)
-                
-                if user_data:
-                    sync_info = None
-                    sync_error = None
-                    
-                    try:
-                        from models.usuarios_model import UsuarioModel
-                        
-                        db_user = UsuarioModel.get_by_username(username)
-                        
-                        if db_user:
-                            sync_info = {
-                                'user_id': db_user.get('id'),
-                                'system_role': db_user.get('rol'),
-                                'office_id': db_user.get('oficina_id'),
-                                'sync_status': 'Usuario existente actualizado'
-                            }
-                        else:
-                            sync_info = {
-                                'user_id': None,
-                                'system_role': user_data.get('role', 'usuario'),
-                                'office_id': 1,
-                                'sync_status': 'Usuario nuevo - se creará en el primer login'
-                            }
-                    
-                    except Exception as sync_err:
-                        sync_error = str(sync_err)
-                    
-                    result = {
-                        'success': True,
-                        'message': 'Autenticación exitosa',
-                        'ldap_config': {
-                            'enabled': ldap_enabled,
-                            'server': ldap_server,
-                            'domain': ldap_domain
-                        },
-                        'connection': {
-                            'status': 'OK' if connection_ok else 'Error',
-                            'message': 'Conexión al servidor LDAP exitosa' if connection_ok else 'Error de conexión'
-                        },
-                        'user_data': {
-                            'username': user_data.get('username'),
-                            'full_name': user_data.get('full_name'),
-                            'email': user_data.get('email'),
-                            'department': user_data.get('department'),
-                            'role': user_data.get('role')
-                        },
-                        'sync_info': sync_info,
-                        'sync_error': sync_error
-                    }
-                    flash('Autenticación LDAP exitosa', 'success')
-                else:
-                    result = {
-                        'success': False,
-                        'message': 'Autenticación fallida',
-                        'ldap_config': {
-                            'enabled': ldap_enabled,
-                            'server': ldap_server,
-                            'domain': ldap_domain
-                        },
-                        'connection': {
-                            'status': 'OK' if connection_ok else 'Error',
-                            'message': 'Conexión al servidor LDAP exitosa' if connection_ok else 'Error de conexión'
+    """Prueba de autenticación LDAP/AD y verificación de sincronización.
+
+    - Autentica credenciales contra AD.
+    - Verifica si el usuario existe en la base de datos local.
+    - NO crea/actualiza usuarios aquí (solo reporta estado).
+    """
+    result = None
+
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+
+        if not username or not password:
+            flash('Debe ingresar usuario y contraseña', 'danger')
+            return render_template('auth/test_ldap.html', result=None)
+
+        try:
+            from utils.ldap_auth import ADAuth
+            from config.config import Config
+
+            ldap_enabled = getattr(Config, 'LDAP_ENABLED', False)
+            ldap_server = getattr(Config, 'LDAP_SERVER', '') or ''
+            ldap_domain = getattr(Config, 'LDAP_DOMAIN', '') or ''
+
+            ad_auth = ADAuth()
+
+            # test_connection en utils.ldap_auth devuelve dict {"success": bool, "message": ...}
+            conn_res = ad_auth.test_connection()
+            if isinstance(conn_res, dict):
+                connection_ok = bool(conn_res.get('success'))
+                connection_message = (conn_res.get('message') or '').strip()
+                conn_meta = {
+                    'server': conn_res.get('server'),
+                    'port': conn_res.get('port'),
+                    'use_ssl': conn_res.get('use_ssl'),
+                }
+            else:
+                connection_ok = bool(conn_res)
+                connection_message = 'Conexión al servidor LDAP exitosa' if connection_ok else 'Error de conexión'
+                conn_meta = {}
+
+            ad_user = ad_auth.authenticate_user(username, password)
+
+            if ad_user:
+                # Normalización de llaves (compatibilidad entre implementaciones)
+                full_name = ad_user.get('full_name') or ad_user.get('nombre') or ad_user.get('name') or ''
+                department = ad_user.get('department') or ad_user.get('departamento') or ''
+                role_from_ad = ad_user.get('role') or ad_user.get('rol') or ''
+
+                user_info = {
+                    'username': ad_user.get('username') or username,
+                    'full_name': full_name,
+                    'email': ad_user.get('email') or '',
+                    'department': department,
+                    'role_from_ad': role_from_ad,
+                    'groups_count': ad_user.get('groups_count') or '',
+                }
+
+                sync_info = None
+                sync_error = None
+
+                try:
+                    db_user = UsuarioModel.get_by_username(username)
+
+                    if db_user:
+                        sync_info = {
+                            'user_id': db_user.get('id'),
+                            'system_role': db_user.get('rol'),
+                            'office_id': db_user.get('oficina_id'),
+                            'sync_status': 'Usuario existe en BD',
                         }
-                    }
-                    flash('Usuario o contraseña incorrectos', 'danger')
-            
-            except Exception as e:
+                    else:
+                        sync_info = {
+                            'user_id': None,
+                            'system_role': role_from_ad or 'usuario',
+                            'office_id': 1,
+                            'sync_status': 'Usuario NO existe en BD (se creará en primer login)',
+                        }
+
+                except Exception as sync_err:
+                    sync_error = str(sync_err)
+
+                result = {
+                    'success': True,
+                    'message': 'Autenticación exitosa',
+
+                    # ✅ estructura actual (anidada)
+                    'ldap_config': {
+                        'enabled': ldap_enabled,
+                        'server': ldap_server,
+                        'domain': ldap_domain
+                    },
+                    'connection': {
+                        'status': 'OK' if connection_ok else 'Error',
+                        'message': connection_message,
+                        **{k: v for k, v in conn_meta.items() if v is not None}
+                    },
+                    'user_data': {
+                        'username': user_info['username'],
+                        'full_name': user_info['full_name'],
+                        'email': user_info['email'],
+                        'department': user_info['department'],
+                        'role': user_info['role_from_ad']
+                    },
+
+                    # ✅ compatibilidad con el template (llaves planas)
+                    'ldap_enabled': ldap_enabled,
+                    'ldap_server': ldap_server,
+                    'ldap_domain': ldap_domain,
+                    'username': username,
+                    'user_info': user_info,
+
+                    'sync_info': sync_info,
+                    'sync_error': sync_error
+                }
+
+                flash('Autenticación LDAP exitosa', 'success')
+
+            else:
                 result = {
                     'success': False,
-                    'message': f'Error: {str(e)}',
-                    'error_details': str(e)
+                    'message': 'Autenticación fallida',
+                    'ldap_config': {
+                        'enabled': ldap_enabled,
+                        'server': ldap_server,
+                        'domain': ldap_domain
+                    },
+                    'connection': {
+                        'status': 'OK' if connection_ok else 'Error',
+                        'message': connection_message,
+                        **{k: v for k, v in conn_meta.items() if v is not None}
+                    },
+
+                    # compatibilidad template
+                    'ldap_enabled': ldap_enabled,
+                    'ldap_server': ldap_server,
+                    'ldap_domain': ldap_domain,
+                    'username': username,
                 }
-                flash(f'Error en prueba LDAP: {str(e)}', 'danger')
-        
-        return render_template('auth/test_ldap.html', result=result)
-    
-    except Exception as e:
-        flash(f'Error: {str(e)}', 'danger')
-        return render_template('auth/test_ldap.html', result=None)
+
+                flash('Usuario o contraseña incorrectos', 'danger')
+
+        except Exception as e:
+            result = {
+                'success': False,
+                'message': f'Error: {str(e)}',
+                'error_details': str(e)
+            }
+            flash(f'Error en prueba LDAP: {str(e)}', 'danger')
+
+    return render_template('auth/test_ldap.html', result=result)

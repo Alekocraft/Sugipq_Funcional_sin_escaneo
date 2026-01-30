@@ -864,16 +864,26 @@ def listar_usuarios_backup():
 # ============================================================================
 
 @app.route('/reportes')
-def reportes_backup():
-    """Ruta de respaldo para reportes"""
+def reportes_root():
+    """Ruta raíz /reportes (compatibilidad).
+
+    - Aplica permisos usando can_access (incluye tesorería).
+    - Redirige al blueprint de reportes (/reportes/) para evitar conflictos de slash.
+    """
     if 'usuario_id' not in session:
         return redirect('/auth/login')
-    
-    if not has_gestion_completa():
+
+    # Permitir a cualquier rol con permiso de ver reportes
+    if not (can_access('reportes', 'view_all') or can_access('reportes', 'view_own')):
         flash('No tiene permisos para ver reportes', 'danger')
         return redirect('/dashboard')
-    
-    return render_template('reportes/index.html')
+
+    # Redirigir al blueprint principal de reportes (normalmente /reportes/)
+    try:
+        return redirect(url_for('reportes.reportes_index'))
+    except Exception:
+        # Fallback defensivo si por alguna razón el blueprint no está disponible
+        return render_template('reportes/index.html')
 
 # ============================================================================
 # 20. MANEJADORES DE ERRORES
