@@ -288,10 +288,29 @@ except ImportError as e:
         def obtener_aprobadores(): return []
     class InventarioCorporativoModel: pass
 
-# Importación de utilidades
+# Importación de utilidades (importación separada para evitar modo "allow-all")
+# 1) Filtros / oficina
 try:
     from utils.filters import filtrar_por_oficina_usuario, verificar_acceso_oficina
+except Exception as e:
+    logger.exception("Error cargando utils.filters (se aplicará fallback seguro)")
+    # Fallback seguro: no amplía acceso
+    def filtrar_por_oficina_usuario(data, *args, **kwargs):
+        # Si no hay filtro disponible, no devolvemos más datos; se mantiene lo que ya traiga el blueprint/modelo.
+        return data
+    def verificar_acceso_oficina(*args, **kwargs):
+        return False
+
+# 2) Inicialización
+try:
     from utils.initialization import inicializar_oficina_principal
+except Exception as e:
+    logger.exception("Error cargando utils.initialization (se omite inicialización)")
+    def inicializar_oficina_principal():
+        return None
+
+# 3) Permisos (FUENTE para UI/plantillas)
+try:
     from utils.permissions import (
         can_access, can_view_actions,
         get_accessible_modules,
@@ -300,24 +319,22 @@ try:
         can_reject_solicitud, can_return_solicitud,
         can_view_novedades, user_can_view_all
     )
-    logger.info("Utilidades cargadas correctamente")
-except ImportError as e:
-    logger.error("Error cargando utilidades")
-    # Definir funciones dummy
-    def filtrar_por_oficina_usuario(*args, **kwargs): return []
-    def verificar_acceso_oficina(*args, **kwargs): return True
-    def inicializar_oficina_principal(): pass
-    def can_access(*args, **kwargs): return True
-    def can_view_actions(*args, **kwargs): return True
+    logger.info("Permisos y utilidades cargadas correctamente")
+except Exception as e:
+    logger.exception("Error cargando utils.permissions (fallback seguro: deny-by-default)")
+    # Fallback seguro: deny-by-default (NO mostrar opciones ni conceder acceso)
+    def can_access(*args, **kwargs): return False
+    def can_view_actions(*args, **kwargs): return []
     def get_accessible_modules(*args, **kwargs): return []
-    def can_create_novedad(*args, **kwargs): return True
-    def can_manage_novedad(*args, **kwargs): return True
-    def can_approve_solicitud(*args, **kwargs): return True
-    def can_approve_partial_solicitud(*args, **kwargs): return True
-    def can_reject_solicitud(*args, **kwargs): return True
-    def can_return_solicitud(*args, **kwargs): return True
-    def can_view_novedades(*args, **kwargs): return True
-    def user_can_view_all(*args, **kwargs): return True
+    def can_create_novedad(*args, **kwargs): return False
+    def can_manage_novedad(*args, **kwargs): return False
+    def can_approve_solicitud(*args, **kwargs): return False
+    def can_approve_partial_solicitud(*args, **kwargs): return False
+    def can_reject_solicitud(*args, **kwargs): return False
+    def can_return_solicitud(*args, **kwargs): return False
+    def can_view_novedades(*args, **kwargs): return False
+    def user_can_view_all(*args, **kwargs): return False
+
 
 # Importar funciones de permisos para templates
 try:
@@ -889,17 +906,11 @@ def listar_usuarios_backup():
 # ============================================================================
 
 @app.route('/reportes')
-def reportes_backup():
-    """Ruta de respaldo para reportes"""
+def reportes_redirect():
+    """Compatibilidad: redirige /reportes -> /reportes/ (blueprint real)."""
     if 'usuario_id' not in session:
         return redirect('/auth/login')
-    
-    if not has_gestion_completa():
-        flash('No tiene permisos para ver reportes', 'danger')
-        return redirect('/dashboard')
-    
-    return render_template('reportes/index.html')
-
+    return redirect('/reportes/')
 # ============================================================================
 # 20. MANEJADORES DE ERRORES
 # ============================================================================

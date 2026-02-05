@@ -126,24 +126,6 @@
 {% endblock %}
 
 {% block content %}
-{% set is_office = is_oficina_role() %}
-{% set can_inv_any = (
-    can_access('inventario_corporativo', 'view') or
-    can_access('inventario_corporativo', 'view_all') or
-    can_access('inventario_corporativo', 'view_own') or
-    can_access('inventario_corporativo', 'view_oficinas_servicio') or
-    can_access('inventario_corporativo', 'manage_oficinas') or
-    can_access('inventario_corporativo', 'manage_sedes') or
-    can_access('inventario_corporativo', 'create') or
-    can_access('inventario_corporativo', 'edit') or
-    can_access('inventario_corporativo', 'delete')
-) %}
-{% set can_prest_any = (
-    can_access('prestamos', 'create') or
-    can_access('prestamos', 'view') or
-    can_access('prestamos', 'view_own') or
-    can_access('prestamos', 'manage_materials')
-) %}
 <div class="container fade-in mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -183,7 +165,7 @@
     </div>
 
     <div class="row g-4 mb-4">
-        {% if can_access('materiales', 'view') or can_access('materiales', 'view_own') or can_access('materiales', 'view_all') or can_access('materiales', 'create') or can_access('materiales', 'edit') or can_access('materiales', 'delete') or can_access('materiales', 'toggle_status') %}
+        {% if can_access('material_pop') %}
         <div class="col-md-6 col-lg-4">
             <div class="card card-modulo card-modulo-pop text-white text-center p-4"
                  data-bs-toggle="modal" data-bs-target="#modalMaterialPOP">
@@ -198,7 +180,7 @@
         </div>
         {% endif %}
 
-        {% if can_inv_any %}
+        {% if can_access('inventario_corporativo') %}
         <div class="col-md-6 col-lg-4">
             <div class="card card-modulo card-modulo-inventario text-white text-center p-4"
                  data-bs-toggle="modal" data-bs-target="#modalInventarioCorporativo">
@@ -213,7 +195,7 @@
         </div>
         {% endif %}
 
-        {% if can_prest_any %}
+        {% if can_access('prestamo_material') %}
         <div class="col-md-6 col-lg-4">
             <div class="card card-modulo card-modulo-prestamos text-center p-4"
                  data-bs-toggle="modal" data-bs-target="#modalPrestamos">
@@ -223,6 +205,21 @@
                     </div>
                     <h4 class="fw-bold mb-2">Préstamo de Material</h4>
                     <p class="mb-0 opacity-90">Control y seguimiento de préstamos</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if can_access('reportes', 'view_all') or can_access('reportes', 'view_own') %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card card-modulo bg-primary text-white text-center p-4"
+                 data-bs-toggle="modal" data-bs-target="#modalReportes">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2">Reportes</h4>
+                    <p class="mb-0 opacity-90">Consulta de reportes del sistema</p>
                 </div>
             </div>
         </div>
@@ -242,7 +239,7 @@
 
             <div class="modal-body text-dark" style="background-color: #F8F9FA;">
                 <div class="row g-4 mb-4">
-                    {% if can_access('materiales', 'view') and not is_office %}
+                    {% if can_access('materiales', 'view') %}
                     <div class="col-xl-3 col-md-6">
                         <div class="card stats-card border-0 shadow-sm text-center p-4 bg-white h-100 text-dark">
                             <div class="stats-icon mb-3" style="color: #A73493;">
@@ -314,15 +311,9 @@
                         </h5>
 
                         <div class="d-flex flex-wrap gap-3 acciones-rapidas">
-                            {% if can_access('materiales', 'create') and not is_office %}
+                            {% if can_access('materiales', 'create') %}
                             <a href="/materiales/crear" class="btn btn-primary btn-lg">
                                 <i class="fas fa-plus me-2"></i> Crear Material
-                            </a>
-                            {% endif %}
-
-                            {% if can_access('materiales', 'view') and not can_access('materiales', 'create') and not is_office %}
-                            <a href="{{ url_for('materiales.listar_materiales') }}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-box me-2"></i> Ver Materiales
                             </a>
                             {% endif %}
 
@@ -333,7 +324,7 @@
                             {% endif %}
 
                             {% if can_access('reportes', 'view_all') or can_access('reportes', 'view_own') %}
-                            <a href="/reportes" class="btn btn-info btn-lg">
+                            <a href="/reportes/" class="btn btn-info btn-lg">
                                 <i class="fas fa-chart-bar me-2"></i> Ver Reportes
                             </a>
                             {% endif %}
@@ -390,7 +381,7 @@
                                 <i class="fas fa-boxes fa-3x"></i>
                             </div>
                             <h5 class="fw-semibold mb-2 text-dark">Mi Inventario</h5>
-                            <div class="stats-number" style="color: #0098B1;" id="mi-inventario">0</div>
+                            <div class="stats-number" style="color: #0098B1;" id="total-productos">0</div>
                             <p class="stats-label">Productos asignados a mi oficina</p>
                             <a href="{{ url_for('inventario_corporativo.listar_oficinas_servicio') }}" class="btn btn-primary btn-sm w-100 btn-modulo">
                                 <i class="fas fa-list me-2"></i>Ver
@@ -419,8 +410,7 @@
 
                     
 
-                    {% if can_access('inventario_corporativo', 'manage_oficinas') or can_access('inventario_corporativo', 'manage_sedes') %}
-<div class="col-xl-4 col-md-6">
+                    <div class="col-xl-4 col-md-6">
                         <div class="card stats-card border-0 shadow-sm text-center p-4 bg-white h-100 text-dark">
                             <div class="stats-icon mb-3" style="color: #28a745;">
                                 <i class="fas fa-map-marker-alt fa-3x"></i>
@@ -433,7 +423,6 @@
                             </a>
                         </div>
                     </div>
-{% endif %}
                 </div>
 
                 <div class="card border-0 shadow-sm">
@@ -449,19 +438,12 @@
                             </a>
                             {% endif %}
 
-                            {% if can_access('inventario_corporativo', 'view') or can_access('inventario_corporativo', 'view_oficinas_servicio') or can_access('inventario_corporativo', 'manage_oficinas') or can_access('inventario_corporativo', 'manage_sedes') %}
-{% if can_access('inventario_corporativo', 'view') or can_access('inventario_corporativo', 'manage_oficinas') or can_access('inventario_corporativo', 'manage_sedes') %}
                             <a href="{{ url_for('inventario_corporativo.listar_inventario_corporativo') }}" class="btn btn-success btn-lg">
-{% else %}
-                            <a href="{{ url_for('inventario_corporativo.listar_oficinas_servicio') }}" class="btn btn-success btn-lg">
-{% endif %}
                                 <i class="fas fa-search me-2"></i> Buscar Productos
                             </a>
 
-                            {% endif %}
-
                             {% if can_access('reportes', 'view_all') or can_access('reportes', 'view_own') %}
-                            <a href="/reportes" class="btn btn-info btn-lg">
+                            <a href="/reportes/" class="btn btn-info btn-lg">
                                 <i class="fas fa-chart-bar me-2"></i> Ver Reportes
                             </a>
                             {% endif %}
@@ -493,7 +475,7 @@
         <p class="text-muted mb-4 fs-5">Elige una acción para gestionar los préstamos del sistema.</p>
 
         <div class="row g-4">
-          {% if can_access('prestamos', 'manage_materials') and not is_office %}
+          {% if can_access('prestamos', 'manage_materials') %}
           <div class="col-md-4">
             <div class="card h-100 border-0 shadow-sm stats-card">
               <div class="card-body text-dark d-flex flex-column">
@@ -530,7 +512,6 @@
             </div>
           </div>
           {% endif %}
-
 
           {% if can_access('prestamos', 'view') or can_access('prestamos', 'view_own') %}
           <div class="col-md-4">
@@ -611,30 +592,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     return response.json();
                 })
                 .then(data => {
-                    const totalEl = document.getElementById('total-productos');
-                    if (totalEl) totalEl.textContent = (data.total_productos ?? 0);
-
-                    const miEl = document.getElementById('mi-inventario');
-                    if (miEl) miEl.textContent = (data.mi_inventario ?? data.total_productos ?? 0);
-
-                    const sedeEl = document.getElementById('productos-sede');
-                    if (sedeEl) {
-                        sedeEl.textContent = (data.productos_sede ?? 0);
-                        // Ocultar tarjeta si es 0
-                        if (Number(sedeEl.textContent) === 0) {
-                            const card = sedeEl.closest('.col-xl-4, .col-md-6');
-                            if (card) card.style.display = 'none';
-                        }
-                    }
-
-                    const oficinasEl = document.getElementById('productos-oficinas');
-                    if (oficinasEl) {
-                        oficinasEl.textContent = (data.productos_oficinas ?? 0);
-                        if (Number(oficinasEl.textContent) === 0) {
-                            const card = oficinasEl.closest('.col-xl-4, .col-md-6');
-                            if (card) card.style.display = 'none';
-                        }
-                    }
+                    document.getElementById('total-productos').textContent = data.total_productos || 0;
+                    document.getElementById('productos-sede').textContent = data.productos_sede || 0;
+                    document.getElementById('productos-oficinas').textContent = data.productos_oficinas || 0;
                 })
                 .catch(error => {
                     console.error('Error cargando estadísticas:', error);
@@ -654,3 +614,25 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% endblock %}
+
+<!-- Modal Reportes -->
+<div class="modal fade" id="modalReportes" tabindex="-1" aria-labelledby="modalReportesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header bg-primary text-white rounded-top-4">
+                <h5 class="modal-title fw-bold" id="modalReportesLabel">
+                    <i class="fas fa-chart-bar me-2"></i> Reportes
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-4">Accede a los reportes disponibles según tu rol.</p>
+                <div class="d-grid gap-3">
+                    <a href="/reportes/" class="btn btn-primary btn-lg">
+                        <i class="fas fa-chart-bar me-2"></i> Ver Reportes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

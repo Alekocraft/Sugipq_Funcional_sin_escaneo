@@ -1,6 +1,5 @@
 #blueprints/reportes.py
 
-from utils.helpers import sanitizar_log_text
 """
 BLUEPRINT DE REPORTES - Versión mejorada con filtros avanzados
 Integra la funcionalidad original con la estructura actual del sistema
@@ -23,7 +22,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 import logging
-import uuid
 logger = logging.getLogger(__name__)
 
 # Crear blueprint de reportes
@@ -34,12 +32,8 @@ def _require_login():
     return 'usuario_id' in session
 
 def _can_view_reportes() -> bool:
-    """Permiso general de visualización del módulo de reportes.
-
-    - view_all: puede ver reportes de todas las oficinas (sin filtro)
-    - view_own: puede ver reportes pero filtrados por su oficina
-    """
-    return can_access('reportes', 'view_all') or can_access('reportes', 'view_own')
+    """Permiso general de visualización del módulo de reportes."""
+    return can_access('reportes', 'view')
 
 
 # Helper para aplicar filtros según permisos
@@ -82,7 +76,7 @@ def aplicar_filtro_permisos(datos, campo_oficina='oficina_id'):
 def reportes_index():
     """Página principal de reportes"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
     return render_template('reportes/index.html')
 
@@ -94,10 +88,10 @@ def reportes_index():
 def reporte_solicitudes():
     """Reporte de solicitudes con filtros avanzados - VERSIÓN CORREGIDA"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
     # Verificar permisos
-    if not (_can_view_reportes() or can_access('solicitudes', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para ver reportes de solicitudes', 'warning')
         return redirect('/reportes')
     
@@ -142,19 +136,19 @@ def reporte_solicitudes():
             if filtro_oficina != 'todas':
                 oficina_solicitud_id = solicitud.get('oficina_id')
                 # Intentar convertir ambos a string para comparación
-                if f"{oficina_solicitud_id}" != f"{filtro_oficina}":
+                if str(oficina_solicitud_id) != str(filtro_oficina):
                     continue
             
             # Filtro por material (búsqueda por parte del nombre) - CORRECCIÓN
             if filtro_material:
-                material_nombre = (f"{solicitud.get('material_nombre') or ''}").lower()
+                material_nombre = str(solicitud.get('material_nombre', '')).lower()
                 material_filtro = filtro_material.lower().strip()
                 if material_filtro not in material_nombre:
                     continue
             
             # Filtro por solicitante (búsqueda por parte del nombre) - CORRECCIÓN
             if filtro_solicitante:
-                solicitante = (f"{solicitud.get('usuario_solicitante') or ''}").lower()
+                solicitante = str(solicitud.get('usuario_solicitante', '')).lower()
                 solicitante_filtro = filtro_solicitante.lower().strip()
                 if solicitante_filtro not in solicitante:
                     continue
@@ -166,7 +160,7 @@ def reporte_solicitudes():
                     if fecha_solicitud_str:
                         # Manejar diferentes formatos de fecha
                         if isinstance(fecha_solicitud_str, str):
-                            fecha_solicitud = datetime.strptime(fecha_solicitud_str.split()[0], '%Y-%m-%d').date()
+                            fecha_solicitud = datetime.strptime(str(fecha_solicitud_str).split()[0], '%Y-%m-%d').date()
                         else:
                             fecha_solicitud = fecha_solicitud_str.date()
                         
@@ -182,7 +176,7 @@ def reporte_solicitudes():
                     if fecha_solicitud_str:
                         # Manejar diferentes formatos de fecha
                         if isinstance(fecha_solicitud_str, str):
-                            fecha_solicitud = datetime.strptime(fecha_solicitud_str.split()[0], '%Y-%m-%d').date()
+                            fecha_solicitud = datetime.strptime(str(fecha_solicitud_str).split()[0], '%Y-%m-%d').date()
                         else:
                             fecha_solicitud = fecha_solicitud_str.date()
                         
@@ -281,10 +275,10 @@ def reporte_solicitudes():
 def exportar_solicitudes_excel():
     """Exporta las solicitudes filtradas a Excel - VERSIÓN CORREGIDA"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
     # Verificar permisos
-    if not (_can_view_reportes() or can_access('solicitudes', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para exportar reportes de solicitudes', 'warning')
         return redirect('/reportes')
     
@@ -328,19 +322,19 @@ def exportar_solicitudes_excel():
             # Filtro por oficina - CORRECCIÓN
             if filtro_oficina != 'todas':
                 oficina_solicitud_id = solicitud.get('oficina_id')
-                if f"{oficina_solicitud_id}" != f"{filtro_oficina}":
+                if str(oficina_solicitud_id) != str(filtro_oficina):
                     continue
             
             # Filtro por material - CORRECCIÓN
             if filtro_material:
-                material_nombre = (f"{solicitud.get('material_nombre') or ''}").lower()
+                material_nombre = str(solicitud.get('material_nombre', '')).lower()
                 material_filtro = filtro_material.lower().strip()
                 if material_filtro not in material_nombre:
                     continue
             
             # Filtro por solicitante - CORRECCIÓN
             if filtro_solicitante:
-                solicitante = (f"{solicitud.get('usuario_solicitante') or ''}").lower()
+                solicitante = str(solicitud.get('usuario_solicitante', '')).lower()
                 solicitante_filtro = filtro_solicitante.lower().strip()
                 if solicitante_filtro not in solicitante:
                     continue
@@ -351,7 +345,7 @@ def exportar_solicitudes_excel():
                     fecha_solicitud_str = solicitud.get('fecha_solicitud', '')
                     if fecha_solicitud_str:
                         if isinstance(fecha_solicitud_str, str):
-                            fecha_solicitud = datetime.strptime(fecha_solicitud_str.split()[0], '%Y-%m-%d').date()
+                            fecha_solicitud = datetime.strptime(str(fecha_solicitud_str).split()[0], '%Y-%m-%d').date()
                         else:
                             fecha_solicitud = fecha_solicitud_str.date()
                         
@@ -366,7 +360,7 @@ def exportar_solicitudes_excel():
                     fecha_solicitud_str = solicitud.get('fecha_solicitud', '')
                     if fecha_solicitud_str:
                         if isinstance(fecha_solicitud_str, str):
-                            fecha_solicitud = datetime.strptime(fecha_solicitud_str.split()[0], '%Y-%m-%d').date()
+                            fecha_solicitud = datetime.strptime(str(fecha_solicitud_str).split()[0], '%Y-%m-%d').date()
                         else:
                             fecha_solicitud = fecha_solicitud_str.date()
                         
@@ -410,8 +404,8 @@ def exportar_solicitudes_excel():
                 column_letter = column[0].column_letter
                 for cell in column:
                     try:
-                        if len(f"{'' if cell.value is None else cell.value}") > max_length:
-                            max_length = len(f"{'' if cell.value is None else cell.value}")
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
                     except:
                         pass
                 adjusted_width = min(max_length + 2, 50)
@@ -454,9 +448,9 @@ def exportar_solicitudes_excel():
 def reporte_materiales():
     """Reporte de materiales"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
-    if not (_can_view_reportes() or can_access('materiales', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para ver reportes de materiales', 'warning')
         return redirect('/reportes')
     
@@ -499,9 +493,9 @@ def reporte_materiales():
 def reporte_inventario():
     """Reporte de inventario corporativo"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
-    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para ver reportes de inventario', 'warning')
         return redirect('/reportes')
     
@@ -569,9 +563,9 @@ def reporte_inventario():
 def reporte_novedades():
     """Reporte de novedades"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
-    if not (_can_view_reportes() or can_access('novedades', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para ver reportes de novedades', 'warning')
         return redirect('/reportes')
     
@@ -683,7 +677,7 @@ def reporte_novedades():
                              novedades_recientes=novedades_recientes)
     except Exception as e:
         flash('Error al generar el reporte de novedades: Error interno', 'danger')
-        logger.error("Error interno (%s)", 'Error')
+        logger.error("Error interno (%s)", type(e).__name__)
 
         return render_template('reportes/novedades.html',
                              novedades=[],
@@ -705,9 +699,9 @@ def reporte_novedades():
 def reporte_oficinas():
     """Reporte de oficinas con inventario corporativo - VERSIÓN CORREGIDA COMPLETA"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
-    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para ver el reporte de oficinas', 'warning')
         return redirect('/reportes')
     
@@ -856,7 +850,7 @@ def reporte_oficinas():
     
     except Exception as e:
         flash('Error al generar el reporte de oficinas: Error interno', 'danger')
-        logger.error("Error interno (%s)", 'Error')
+        logger.error("Error interno (%s)", type(e).__name__)
 
         return redirect('/reportes')
 
@@ -864,7 +858,7 @@ def reporte_oficinas():
 def reporte_prestamos():
     """Reporte de préstamos"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
     if not (_can_view_reportes() or can_access('prestamos', 'view') or can_access('prestamos', 'view_own')):
         flash('No tiene permisos para ver reportes de préstamos', 'warning')
@@ -1052,7 +1046,7 @@ def reporte_prestamos():
 def exportar_materiales_excel():
     """Exporta materiales a Excel"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
     try:
         materiales = MaterialModel.obtener_todos() or []
@@ -1100,10 +1094,10 @@ def exportar_materiales_excel():
 def exportar_inventario_corporativo_pdf():
     """Exporta el inventario corporativo a PDF"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
     # Verificar permisos
-    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para exportar inventario corporativo', 'warning')
         return redirect('/reportes')
     
@@ -1212,7 +1206,7 @@ def exportar_inventario_corporativo_pdf():
                     except (ValueError, TypeError):
                         formatted_row.append("$0.00")
                 else:
-                    formatted_row.append(f"{value}" if value is not None else 'N/A')
+                    formatted_row.append(str(value) if value is not None else 'N/A')
             data.append(formatted_row)
         
         total_materiales = len(resultados)
@@ -1220,7 +1214,7 @@ def exportar_inventario_corporativo_pdf():
         # Agregar fila de totales
         data.append([''])  # Espacio
         data.append(['<b>RESUMEN</b>', '', '', '', '', '', '', '', ''])
-        data.append(['Total Materiales:', f"{total_materiales}", '', '', '', '', '', '', ''])
+        data.append(['Total Materiales:', str(total_materiales), '', '', '', '', '', '', ''])
         data.append(['Valor Total Inventario:', f"${total_valor:,.2f}", '', '', '', '', '', '', ''])
         
         # Crear tabla
@@ -1300,7 +1294,7 @@ def exportar_inventario_corporativo_pdf():
 def exportar_prestamos_pdf():
     """Exporta el reporte de préstamos a PDF"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
     if not (_can_view_reportes() or can_access('prestamos', 'view') or can_access('prestamos', 'view_own')):
         flash('No tiene permisos para exportar reportes de préstamos', 'warning')
@@ -1393,7 +1387,7 @@ def exportar_prestamos_pdf():
         
         # Filas de datos
         for row in resultados:
-            data.append([f"{value}" if value is not None else '' for value in row])
+            data.append([str(value) if value is not None else '' for value in row])
         
         # Estadísticas
         total_prestamos = len(resultados)
@@ -1401,8 +1395,8 @@ def exportar_prestamos_pdf():
         
         data.append([''])  # Espacio
         data.append(['<b>ESTADÍSTICAS</b>', '', '', '', '', '', '', '', ''])
-        data.append(['Total Préstamos:', f"{total_prestamos}", '', '', '', '', '', '', ''])
-        data.append(['Préstamos Activos:', f"{prestamos_activos}", '', '', '', '', '', '', ''])
+        data.append(['Total Préstamos:', str(total_prestamos), '', '', '', '', '', '', ''])
+        data.append(['Préstamos Activos:', str(prestamos_activos), '', '', '', '', '', '', ''])
         
         # Crear tabla
         table = Table(data, repeatRows=3)  # Repetir encabezados
@@ -1473,9 +1467,9 @@ def exportar_prestamos_pdf():
 def exportar_materiales_pdf():
     """Exporta el reporte de materiales a PDF"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
-    if not (_can_view_reportes() or can_access('materiales', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para exportar reportes de materiales', 'warning')
         return redirect('/reportes')
     
@@ -1576,14 +1570,14 @@ def exportar_materiales_pdf():
                     except (ValueError, TypeError):
                         formatted_row.append("$0.00")
                 else:
-                    formatted_row.append(f"{value}" if value is not None else '')
+                    formatted_row.append(str(value) if value is not None else '')
             data.append(formatted_row)
         
         total_materiales = len(resultados)
         
         data.append([''])  # Espacio
         data.append(['<b>RESUMEN</b>', '', '', '', '', '', '', '', ''])
-        data.append(['Total Materiales:', f"{total_materiales}", '', '', '', '', '', '', ''])
+        data.append(['Total Materiales:', str(total_materiales), '', '', '', '', '', '', ''])
         data.append(['Valor Total Inventario:', f"${total_valor:,.2f}", '', '', '', '', '', '', ''])
         
         # Crear tabla
@@ -1655,9 +1649,9 @@ def exportar_materiales_pdf():
 def material_detalle(material_id):
     """Detalle de material específico"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
-    if not (_can_view_reportes() or can_access('materiales', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para ver detalles de materiales', 'warning')
         return redirect('/reportes')
     
@@ -1683,9 +1677,9 @@ def material_detalle(material_id):
         # Asegurar que material_id es un int
         material_id_int = int(material_id)
         
-        logger.info("%s", sanitizar_log_text(f"🔍 DEBUG: Buscando solicitudes para MaterialId = {material_id_int}"))
+        logger.info(f"🔍 DEBUG: Buscando solicitudes para MaterialId = {material_id_int}")
 
-        logger.info("%s", sanitizar_log_text(f"🔍 DEBUG: Material obtenido: {material.get('nombre', 'N/A')}"))
+        logger.info(f"🔍 DEBUG: Material obtenido: {material.get('nombre', 'N/A')}")
 
         # QUERY MEJORADO con mejor manejo
         query = """
@@ -1714,18 +1708,18 @@ def material_detalle(material_id):
             
             solicitudes = []
             rows = cursor.fetchall()
-            logger.info("%s", sanitizar_log_text(f"✅ DEBUG: Se encontraron {len(rows)} solicitudes en la BD"))
+            logger.info(f"✅ DEBUG: Se encontraron {len(rows)} solicitudes en la BD")
 
             if len(rows) == 0:
                 # Verificar si el MaterialId existe
                 cursor.execute("SELECT COUNT(*) FROM Materiales WHERE MaterialId = ?", (material_id_int,))
                 count_mat = cursor.fetchone()[0]
-                logger.info("%s", sanitizar_log_text(f"🔍 DEBUG: ¿MaterialId {material_id_int} existe en Materiales? {count_mat > 0}"))
+                logger.info(f"🔍 DEBUG: ¿MaterialId {material_id_int} existe en Materiales? {count_mat > 0}")
 
                 # Verificar si hay solicitudes para cualquier material
                 cursor.execute("SELECT COUNT(*) FROM SolicitudesMaterial WHERE MaterialId = ?", (material_id_int,))
                 count_sol = cursor.fetchone()[0]
-                logger.info("%s", sanitizar_log_text(f"🔍 DEBUG: Solicitudes directas encontradas: {count_sol}"))
+                logger.info(f"🔍 DEBUG: Solicitudes directas encontradas: {count_sol}")
 
             for row in rows:
                 estado_nombre = row[9] if row[9] else 'Pendiente'
@@ -1743,10 +1737,10 @@ def material_detalle(material_id):
                     'observacion': row[10]
                 }
                 solicitudes.append(solicitud)
-                logger.info("%s", sanitizar_log_text(f"  📋 Solicitud {row[0]}: Estado={estado_nombre}, Cantidad={row[5]}"))
+                logger.info(f"  📋 Solicitud {row[0]}: Estado={estado_nombre}, Cantidad={row[5]}")
 
         except Exception as query_error:
-            logger.error("Error interno (%s)", 'Error')
+            logger.error("Error interno (%s)", type(e).__name__)
 
             solicitudes = []
         
@@ -1756,7 +1750,7 @@ def material_detalle(material_id):
         total_solicitudes = len(solicitudes)
         solicitudes_aprobadas = len([s for s in solicitudes if 'aprobada' in s['estado'].lower()])
         
-        logger.info("%s", sanitizar_log_text(f"DEBUG: Total solicitudes = {total_solicitudes}, Aprobadas = {solicitudes_aprobadas}"))
+        logger.info(f"DEBUG: Total solicitudes = {total_solicitudes}, Aprobadas = {solicitudes_aprobadas}")
 
         return render_template('reportes/material_detalle.html',
                              material=material,
@@ -1765,7 +1759,7 @@ def material_detalle(material_id):
                              solicitudes_aprobadas=solicitudes_aprobadas)
         
     except Exception as e:
-        logger.error("Error interno (%s)", 'Error')
+        logger.error("Error interno (%s)", type(e).__name__)
 
         flash('Error al obtener el detalle del material: Error interno', 'danger')
         return redirect('/reportes/materiales')
@@ -1774,10 +1768,10 @@ def material_detalle(material_id):
 def exportar_inventario_corporativo_excel():
     """Exporta TODO el inventario corporativo a Excel"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
     # Verificar permisos
-    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para exportar inventario corporativo', 'warning')
         return redirect('/reportes')
     
@@ -1872,10 +1866,10 @@ def exportar_inventario_corporativo_excel():
 def exportar_oficina_inventario(oficina_id, formato):
     """Exporta el inventario de una oficina específica"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
     # Verificar permisos
-    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para exportar inventario corporativo', 'warning')
         return redirect('/reportes')
     
@@ -2080,7 +2074,7 @@ def _exportar_oficina_excel(oficina, materiales, movimientos, total_materiales,
                 if hasattr(fecha_creacion, 'strftime'):
                     fecha_str = fecha_creacion.strftime('%Y-%m-%d')
                 else:
-                    fecha_str = f"{fecha_creacion}" if fecha_creacion else 'N/A'
+                    fecha_str = str(fecha_creacion) if fecha_creacion else 'N/A'
                 
                 materiales_data.append({
                     'ID': mat['id'],
@@ -2108,7 +2102,7 @@ def _exportar_oficina_excel(oficina, materiales, movimientos, total_materiales,
                 if hasattr(fecha, 'strftime'):
                     fecha_str = fecha.strftime('%Y-%m-%d %H:%M')
                 else:
-                    fecha_str = f"{fecha}" if fecha else 'N/A'
+                    fecha_str = str(fecha) if fecha else 'N/A'
                 
                 movimientos_data.append({
                     'Fecha': fecha_str,
@@ -2136,8 +2130,8 @@ def _exportar_oficina_excel(oficina, materiales, movimientos, total_materiales,
                     column_letter = column[0].column_letter
                     for cell in column:
                         try:
-                            if len(f"{'' if cell.value is None else cell.value}") > max_length:
-                                max_length = len(f"{'' if cell.value is None else cell.value}")
+                            if len(str(cell.value)) > max_length:
+                                max_length = len(str(cell.value))
                         except:
                             pass
                     adjusted_width = min(max_length + 2, 50)
@@ -2249,7 +2243,7 @@ def _exportar_oficina_csv(oficina, materiales, movimientos, total_materiales,
 def debug_oficina_data(oficina_id):
     """Endpoint para depurar datos de una oficina específica"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
     try:
         from database import get_database_connection
@@ -2321,9 +2315,9 @@ def debug_oficina_data(oficina_id):
 def material_historial(material_id):
     """Obtiene el historial completo de un material"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
-    if not (_can_view_reportes() or can_access('materiales', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para ver historial de materiales', 'warning')
         return redirect('/reportes')
     
@@ -2622,9 +2616,9 @@ def api_prestamo_devolver(prestamo_id):
 def reporte_inventario_corporativo():
     """Reporte de inventario corporativo con asignaciones - VERSIÓN SIMPLIFICADA"""
     if not _require_login():
-        return redirect('/login')
+        return redirect(url_for('auth.login'))
     
-    if not (_can_view_reportes() or can_access('inventario_corporativo', 'view')):
+    if not _can_view_reportes():
         flash('No tiene permisos para ver el inventario corporativo', 'warning')
         return redirect('/reportes')
     
@@ -2671,7 +2665,7 @@ def reporte_inventario_corporativo():
             producto = dict(zip(columns, row))
             productos.append(producto)
             if producto.get('AsignacionId'):
-                logger.info("%s", sanitizar_log_text(f"DEBUG - Producto {producto['ProductoId']}: Estado='{producto.get('EstadoAsignacion')}', AsignacionId={producto.get('AsignacionId')}"))
+                logger.info(f"DEBUG - Producto {producto['ProductoId']}: Estado='{producto.get('EstadoAsignacion')}', AsignacionId={producto.get('AsignacionId')}")
 
         conn.close()
         
@@ -2687,7 +2681,7 @@ def reporte_inventario_corporativo():
         total_pendientes = len([p for p in productos if p.get('EstadoAsignacion') == 'ASIGNADO'])
         valor_total = sum([float(p.get('ValorCompra', 0) or 0) for p in productos if p.get('ProductoId')])
         
-        logger.info("%s", sanitizar_log_text(f"DEBUG - Total confirmados: {total_confirmados}, Total asignados: {total_asignados}"))
+        logger.info(f"DEBUG - Total confirmados: {total_confirmados}, Total asignados: {total_asignados}")
 
         return render_template('reportes/inventario_corporativo.html',
                              productos=productos,
@@ -2698,7 +2692,7 @@ def reporte_inventario_corporativo():
                              valor_total=valor_total)
     except Exception as e:
         flash('Error al generar el reporte de inventario corporativo: Error interno', 'danger')
-        logger.error("Error interno (%s)", 'Error')
+        logger.error("Error interno (%s)", type(e).__name__)
 
         return render_template('reportes/inventario_corporativo.html',
                              productos=[],

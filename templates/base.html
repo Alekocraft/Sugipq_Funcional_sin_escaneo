@@ -183,7 +183,7 @@
                     </li>
                     {% endif %}
 
-                    {% if can_access is defined and can_access('materiales', 'view') and (session.rol or '')|lower != 'oficina_polo_club' %}
+                    {% if can_access is defined and can_access('materiales', 'view') %}
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/prestamos/materiales') %}active{% endif %}" 
                            href="/prestamos/materiales">
@@ -217,20 +217,21 @@
                         </a>
                     </li>
                     {% endif %}
-
+                    {% if can_access is defined and can_access('aprobadores', 'view') %}
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/aprobadores') %}active{% endif %}" href="/aprobadores">
                             <i class="fas fa-user-check me-1"></i> Aprobadores
                         </a>
                     </li>
-
+                    {% endif %}
+                    {% if can_access is defined and can_access('oficinas', 'view') %}
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/oficinas') %}active{% endif %}" href="/oficinas">
                             <i class="fas fa-building me-1"></i> Oficinas
                         </a>
                     </li>
-
-                    {% if can_access is defined and can_access('materiales', 'view') and (session.rol or '')|lower != 'oficina_polo_club' %}
+                    {% endif %}
+                    {% if can_access is defined and can_access('materiales', 'view') %}
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/materiales') %}active{% endif %}" href="/materiales">
                             <i class="fas fa-box me-1"></i> Materiales
@@ -240,14 +241,14 @@
 
                     {% if can_access is defined and (can_access('reportes', 'view_all') or can_access('reportes', 'view_own')) %}
                     <li class="nav-item">
-                        <a class="nav-link {% if current_path.startswith('/reportes') %}active{% endif %}" href="/reportes">
+                        <a class="nav-link {% if current_path.startswith('/reportes') %}active{% endif %}" href="/reportes/">
                             <i class="fas fa-chart-bar me-1"></i> Reportes
                         </a>
                     </li>
                     {% endif %}
                     
                     <!-- Gestión de Usuarios - Solo visible para administrador -->
-                    {% if session.usuario and session.rol == 'administrador' %}
+                    {% if can_access is defined and (can_access('usuarios','view') or can_access('usuarios','create') or can_access('usuarios','edit') or can_access('usuarios','delete')) %}
                     <li class="nav-item">
                         <a class="nav-link {% if current_path.startswith('/usuarios') %}active{% endif %}" href="/usuarios">
                             <i class="fas fa-users me-1"></i>

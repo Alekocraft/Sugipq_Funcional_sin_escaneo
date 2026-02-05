@@ -1,9 +1,21 @@
 # -*- coding: utf-8 -*-
-"""config/permissions.py"""
+"""config/permissions.py
+
+Definición central de permisos por rol.
+
+Convenciones:
+- modules: módulos visibles / accesibles en UI (dashboard y navegación).
+- actions: acciones permitidas por sub-módulo (usadas por validación en rutas y templates).
+- office_filter:
+    - 'all' => sin filtro por oficina (ve todo)
+    - cualquier otro valor => se considera "solo su oficina" (filtro por session.oficina_id)
+      *NOTA*: PermissionManager actualmente interpreta cualquier valor != 'all' como 'own'.
+"""
 
 from __future__ import annotations
 
 from copy import deepcopy
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -106,14 +118,7 @@ APPROVER_LIKE_PERMS = {
     ],
     "actions": {
         "materiales": ["view"],
-        "solicitudes": [
-            "view",
-            "create",
-            "approve",
-            "reject",
-            "partial_approve",
-            "return",
-        ],
+        "solicitudes": ["view", "create", "approve", "reject", "partial_approve", "return"],
         "oficinas": ["view"],
         "aprobadores": ["view"],
         "prestamos": [
@@ -127,7 +132,6 @@ APPROVER_LIKE_PERMS = {
             "manage_materials",
         ],
         "reportes": ["view_all"],
-        # Inventario corporativo: acceso de gestión típico de inventario
         "inventario_corporativo": [
             "view",
             "create",
@@ -178,8 +182,15 @@ OFFICE_BASE_PERMS = {
         "aprobadores": ["view"],
         # Préstamos
         "prestamos": ["view_own", "create"],
-        # Inventario corporativo
-        "inventario_corporativo": ["view", "return", "transfer", "request_return", "request_transfer", "view_reports"],
+        # Inventario corporativo (oficinas: ver lo suyo / solicitudes de traslados-devoluciones)
+        "inventario_corporativo": [
+            "view",
+            "return",
+            "transfer",
+            "request_return",
+            "request_transfer",
+            "view_reports",
+        ],
     },
     "office_filter": "OFFICE_ONLY",
 }
@@ -217,7 +228,15 @@ OFFICE_FILTERS = {
     "oficina_usaquen": "USAQUEN",
 }
 
-for role_key, office_name in OFFICE_FILTERS.items():
+# Roles corporativos con comportamiento "office-like" (misma lógica/permisos que oficina_coq)
+OFFICE_LIKE_ROLES = {
+    "gerencia_talento_humano": "COQ",
+    "gerencia_comercial": "COQ",
+    "comunicaciones": "COQ",
+    "presidencia": "COQ",
+}
+
+for role_key, office_name in {**OFFICE_FILTERS, **OFFICE_LIKE_ROLES}.items():
     cfg = deepcopy(OFFICE_BASE_PERMS)
     cfg["office_filter"] = office_name
     ROLE_PERMISSIONS[role_key] = cfg
